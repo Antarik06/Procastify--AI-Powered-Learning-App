@@ -66,17 +66,7 @@ const Notes: React.FC<NotesProps> = ({ notes, setNotes, user, onNavigate }) => {
         await StorageService.deleteNote(id);
     };
 
-    const updateCanvasElements = (newElements: NoteElement[]) => {
-        if (!activeNote) return;
-        const updatedNote = {
-            ...activeNote,
-            canvas: { ...activeNote.canvas, elements: newElements },
-            elements: newElements, // Keep legacy sync for now
-            lastModified: Date.now()
-        };
-        StorageService.saveNote(updatedNote);
-        setNotes(notes.map(n => n.id === activeNote.id ? updatedNote : n));
-    };
+    // Old updateCanvasElements removed as CanvasBoard now handles persistence directly.
 
     const updateDocumentContent = (newContent: any) => {
         if (!activeNote) return;
@@ -269,8 +259,8 @@ const Notes: React.FC<NotesProps> = ({ notes, setNotes, user, onNavigate }) => {
                 {(viewMode === 'canvas' || viewMode === 'split') && (
                     <div className={`${viewMode === 'split' ? 'w-1/2' : 'w-full'} bg-[#1e1f22]`}>
                         <CanvasBoard
-                            elements={getCanvasElements(activeNote)}
-                            onUpdateElements={updateCanvasElements}
+                            canvasId={activeNote.id}
+                            readOnly={false}
                         />
                     </div>
                 )}

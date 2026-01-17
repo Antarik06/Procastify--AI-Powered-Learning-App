@@ -20,11 +20,14 @@
     "framer-motion": "^12.25.0",
     "lowlight": "^3.3.0",
     "lucide-react": "^0.562.0",
+    "perfect-freehand": "^1.2.2",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-markdown": "^10.1.0",
     "recharts": "^3.6.0",
+    "roughjs": "^4.6.6",
     "tailwind-merge": "^3.4.0",
+    "uuid": "^13.0.0",
     "youtube-transcript": "^1.2.1"
   },
   "devDependencies": {
