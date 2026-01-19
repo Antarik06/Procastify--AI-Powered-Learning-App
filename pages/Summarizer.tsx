@@ -16,7 +16,9 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
     const [attachments, setAttachments] = useState<Attachment[]>([]);
 
 
-    const [mode, setMode] = useState<'short' | 'detailed' | 'eli5' | 'exam'>('short');
+    const [mode, setMode] = useState<string>('short');
+    const [showCustomModeInput, setShowCustomModeInput] = useState(false);
+    const [customModeText, setCustomModeText] = useState('');
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState('');
     const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
@@ -255,19 +257,63 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
                 <div className="flex flex-col gap-4 overflow-y-auto">
 
 
-                    <div className="bg-discord-panel p-1 rounded-xl border border-white/5 flex gap-1">
-                        {(['short', 'detailed', 'eli5', 'exam'] as const).map((m) => (
-                            <button
-                                key={m}
-                                onClick={() => setMode(m)}
-                                className={`flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition-all
-                            ${mode === m
+                    <div>
+                        <div className="bg-discord-panel p-1 rounded-xl border border-white/5 flex gap-1 mb-3">
+                            {(['short', 'detailed', 'eli5', 'exam'] as const).map((m) => (
+                                <button
+                                    key={m}
+                                    onClick={() => setMode(m)}
+                                    className={`flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition-all
+                                ${mode === m
                                         ? 'bg-discord-accent text-white shadow-md'
                                         : 'text-discord-textMuted hover:bg-discord-hover'}`}
-                            >
-                                {m === 'eli5' ? 'ELI5' : m}
-                            </button>
-                        ))}
+                                >
+                                    {m === 'eli5' ? 'ELI5' : m}
+                                </button>
+                            ))}
+                            
+                            <div className="relative">
+                                <button
+                                    onClick={() => setShowCustomModeInput(!showCustomModeInput)}
+                                    className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center ${
+                                        showCustomModeInput ? 'bg-discord-accent text-white' : 'text-discord-textMuted hover:bg-discord-hover'
+                                    }`}
+                                    title="Add custom mode"
+                                >
+                                    +
+                                </button>
+                                
+                                {showCustomModeInput && (
+                                    <div className="absolute right-0 top-full mt-2 bg-discord-panel border border-white/10 rounded-lg shadow-2xl p-3 w-64 z-10 animate-in fade-in zoom-in-95">
+                                        <input
+                                            type="text"
+                                            value={customModeText}
+                                            onChange={(e) => setCustomModeText(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' && customModeText.trim()) {
+                                                    setMode(customModeText.trim());
+                                                    setCustomModeText('');
+                                                    setShowCustomModeInput(false);
+                                                } else if (e.key === 'Escape') {
+                                                    setShowCustomModeInput(false);
+                                                    setCustomModeText('');
+                                                }
+                                            }}
+                                            placeholder="e.g., creative, technical, casual..."
+                                            className="w-full bg-discord-bg border border-white/10 rounded px-3 py-2 text-sm text-white placeholder-discord-textMuted/50 focus:outline-none focus:border-discord-accent transition-colors"
+                                            autoFocus
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 px-2 py-1">
+                            <span className="text-xs font-bold text-discord-textMuted uppercase">Current Mode:</span>
+                            <span className="px-2 py-1 bg-discord-accent/20 border border-discord-accent/50 rounded text-xs font-bold text-discord-accent capitalize">
+                                {mode === 'eli5' ? 'ELI5' : mode}
+                            </span>
+                        </div>
                     </div>
 
 
