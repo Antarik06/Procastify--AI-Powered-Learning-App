@@ -7,11 +7,12 @@ import { ToolType, Shape } from "./canvas/types";
 import { MousePointer, Hand, Square, Circle, Minus, Pencil, Eraser, Type, Diamond, MoveRight } from "lucide-react";
 
 interface CanvasBoardProps {
-    canvasId: string;
+    canvasId?: string;
     readOnly?: boolean;
+    elements?: Shape[]; // For stateless/read-only rendering
 }
 
-export default function CanvasBoard({ canvasId, readOnly = false }: CanvasBoardProps) {
+export default function CanvasBoard({ canvasId, readOnly = false, elements }: CanvasBoardProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [engine, setEngine] = useState<CanvasEngine | null>(null);
     const [activeTool, setActiveTool] = useState<ToolType>("selection");
@@ -21,7 +22,9 @@ export default function CanvasBoard({ canvasId, readOnly = false }: CanvasBoardP
 
 
     useEffect(() => {
-        if (!canvasRef.current || !canvasId) return;
+        if (!canvasRef.current) return;
+        // If we have elements (Read Only / Stateless), we don't strictly need canvasId
+        // but CanvasEngine might expect it. If not provided, we can pass a dummy or skip persistence.
 
         // Loading State
         setLoading(true);
@@ -34,6 +37,11 @@ export default function CanvasBoard({ canvasId, readOnly = false }: CanvasBoardP
         if (!engineInstance) {
             engineInstance = new CanvasEngine(canvas, canvasId);
             setEngine(engineInstance);
+        }
+
+        // If elements are provided (Stateless/Read-Only mode), load them directly
+        if (elements && engineInstance) {
+            engineInstance.loadElements(elements);
         }
 
         const updateSize = () => {

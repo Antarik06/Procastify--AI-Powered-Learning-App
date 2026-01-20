@@ -19,6 +19,7 @@ const generateId = () => Math.random().toString(36).substr(2, 9);
 interface DocumentEditorProps {
     content: Block[];
     onUpdate: (newBlocks: Block[]) => void;
+    readOnly?: boolean;
 }
 
 const initialBlock: Block = {
@@ -27,7 +28,7 @@ const initialBlock: Block = {
     content: 'Untitled',
 };
 
-const DocumentEditor: React.FC<DocumentEditorProps> = ({ content, onUpdate }) => {
+const DocumentEditor: React.FC<DocumentEditorProps> = ({ content, onUpdate, readOnly = false }) => {
     // Initialize blocks with content prop, or default if empty
     const [blocks, setBlocks] = useState<Block[]>(() => {
         if (content && content.length > 0) return content;
@@ -44,6 +45,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ content, onUpdate }) =>
             // A better check implies deep equality or a timestamp, but for now strict ref check + ID check allows switching notes
             if (content.length > 0 && (blocks.length === 0 || content[0].id !== blocks[0].id)) {
                 setBlocks(content);
+            } else if (readOnly && content.length === 0) {
+                // Even if empty, ensure we respect it in readOnly
+                setBlocks([]);
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -158,58 +162,60 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ content, onUpdate }) =>
         <div className="bg-[#1e1f22] text-[#e5e7eb] flex flex-col h-full">
 
             {/* Top Toolbar */}
-            <div className="sticky top-0 z-40 w-full bg-[#2b2d31] border-b border-[#1e1f22] flex justify-center shadow-md shrink-0">
-                <div className="flex items-center gap-1 py-2 px-4 w-full overflow-x-auto">
-                    <div className="flex items-center gap-1 border-r border-gray-700 pr-2 mr-2">
-                        <ToolbarButton
-                            icon={Bold}
-                            onClick={() => toggleInlineStyle('bold')}
-                        />
-                        <ToolbarButton
-                            icon={Italic}
-                            onClick={() => toggleInlineStyle('italic')}
-                        />
-                    </div>
+            {!readOnly && (
+                <div className="sticky top-0 z-40 w-full bg-[#2b2d31] border-b border-[#1e1f22] flex justify-center shadow-md shrink-0">
+                    <div className="flex items-center gap-1 py-2 px-4 w-full overflow-x-auto">
+                        <div className="flex items-center gap-1 border-r border-gray-700 pr-2 mr-2">
+                            <ToolbarButton
+                                icon={Bold}
+                                onClick={() => toggleInlineStyle('bold')}
+                            />
+                            <ToolbarButton
+                                icon={Italic}
+                                onClick={() => toggleInlineStyle('italic')}
+                            />
+                        </div>
 
-                    <div className="flex items-center gap-1">
-                        <ToolbarButton
-                            icon={Type}
-                            isActive={activeBlock?.type === 'text'}
-                            onClick={() => toggleBlockType('text')}
-                        />
-                        <ToolbarButton
-                            icon={Heading1}
-                            isActive={activeBlock?.type === 'h1'}
-                            onClick={() => toggleBlockType('h1')}
-                        />
-                        <ToolbarButton
-                            icon={Heading2}
-                            isActive={activeBlock?.type === 'h2'}
-                            onClick={() => toggleBlockType('h2')}
-                        />
-                        <ToolbarButton
-                            icon={Heading3}
-                            isActive={activeBlock?.type === 'h3'}
-                            onClick={() => toggleBlockType('h3')}
-                        />
-                        <ToolbarButton
-                            icon={List}
-                            isActive={activeBlock?.type === 'bullet'}
-                            onClick={() => toggleBlockType('bullet')}
-                        />
-                        <ToolbarButton
-                            icon={CheckSquare}
-                            isActive={activeBlock?.type === 'todo'}
-                            onClick={() => toggleBlockType('todo')}
-                        />
-                        <ToolbarButton
-                            icon={Quote}
-                            isActive={activeBlock?.type === 'quote'}
-                            onClick={() => toggleBlockType('quote')}
-                        />
+                        <div className="flex items-center gap-1">
+                            <ToolbarButton
+                                icon={Type}
+                                isActive={activeBlock?.type === 'text'}
+                                onClick={() => toggleBlockType('text')}
+                            />
+                            <ToolbarButton
+                                icon={Heading1}
+                                isActive={activeBlock?.type === 'h1'}
+                                onClick={() => toggleBlockType('h1')}
+                            />
+                            <ToolbarButton
+                                icon={Heading2}
+                                isActive={activeBlock?.type === 'h2'}
+                                onClick={() => toggleBlockType('h2')}
+                            />
+                            <ToolbarButton
+                                icon={Heading3}
+                                isActive={activeBlock?.type === 'h3'}
+                                onClick={() => toggleBlockType('h3')}
+                            />
+                            <ToolbarButton
+                                icon={List}
+                                isActive={activeBlock?.type === 'bullet'}
+                                onClick={() => toggleBlockType('bullet')}
+                            />
+                            <ToolbarButton
+                                icon={CheckSquare}
+                                isActive={activeBlock?.type === 'todo'}
+                                onClick={() => toggleBlockType('todo')}
+                            />
+                            <ToolbarButton
+                                icon={Quote}
+                                isActive={activeBlock?.type === 'quote'}
+                                onClick={() => toggleBlockType('quote')}
+                            />
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             <div className="w-full flex-1 overflow-y-auto px-12 py-8">
                 {/* Editor Area */}
@@ -221,13 +227,14 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ content, onUpdate }) =>
                             block={block}
                             isFocused={activeBlockId === block.id}
                             activeId={activeBlockId}
-                            updateBlock={updateBlock}
-                            addBlock={addBlock}
-                            deleteBlock={deleteBlock}
-                            onFocus={handleFocus}
-                            onEnter={(id) => addBlock(id)}
+                            updateBlock={!readOnly ? updateBlock : () => { }}
+                            addBlock={!readOnly ? addBlock : () => { }}
+                            deleteBlock={!readOnly ? deleteBlock : () => { }}
+                            onFocus={!readOnly ? handleFocus : () => { }}
+                            onEnter={!readOnly ? (id) => addBlock(id) : () => { }}
                             onArrowUp={handleArrowUp}
                             onArrowDown={handleArrowDown}
+                            readOnly={readOnly}
                         />
                     ))}
                 </div>

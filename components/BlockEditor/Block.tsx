@@ -14,6 +14,7 @@ interface BlockProps {
     onArrowUp: (index: number) => void;
     onArrowDown: (index: number) => void;
     activeId: string | null;
+    readOnly?: boolean;
 }
 
 const BlockComponent: React.FC<BlockProps> = ({
@@ -27,6 +28,7 @@ const BlockComponent: React.FC<BlockProps> = ({
     onEnter,
     onArrowUp,
     onArrowDown,
+    readOnly = false
 }) => {
     const contentRef = useRef<HTMLDivElement>(null);
     const [showMenu, setShowMenu] = useState(false);
@@ -42,7 +44,7 @@ const BlockComponent: React.FC<BlockProps> = ({
 
     // Focus management
     useEffect(() => {
-        if (isFocused && contentRef.current) {
+        if (!readOnly && isFocused && contentRef.current) {
             const el = contentRef.current;
             if (document.activeElement !== el) {
                 el.focus();
@@ -57,10 +59,11 @@ const BlockComponent: React.FC<BlockProps> = ({
                 }
             }
         }
-    }, [isFocused]);
+    }, [isFocused, readOnly]);
 
     // Handle Input 
     const handleInput = useCallback((e: React.FormEvent<HTMLDivElement>) => {
+        if (readOnly) return;
         const html = e.currentTarget.innerHTML;
         const text = e.currentTarget.innerText;
 
@@ -90,9 +93,13 @@ const BlockComponent: React.FC<BlockProps> = ({
 
         // Normal Update
         updateBlock(block.id, html);
-    }, [block, updateBlock]);
+    }, [block, updateBlock, readOnly]);
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (readOnly) {
+            e.preventDefault();
+            return;
+        }
         if (e.key === 'Enter') {
             if (e.shiftKey) return;
             e.preventDefault();
@@ -138,8 +145,8 @@ const BlockComponent: React.FC<BlockProps> = ({
         if (block.type === 'todo') {
             return (
                 <div
-                    className="mr-2 cursor-pointer mt-1 text-gray-400 hover:text-blue-400"
-                    onClick={() => updateBlock(block.id, block.content, block.type, !block.isChecked)}
+                    className={`mr-2 cursor-pointer mt-1 text-gray-400 ${!readOnly && 'hover:text-blue-400'}`}
+                    onClick={() => !readOnly && updateBlock(block.id, block.content, block.type, !block.isChecked)}
                     contentEditable={false}
                 >
                     {block.isChecked ? <CheckSquare size={18} /> : <Square size={18} />}
@@ -156,18 +163,20 @@ const BlockComponent: React.FC<BlockProps> = ({
             onMouseLeave={() => setShowMenu(false)}
         >
             {/* Drag Handle */}
-            <div
-                className={`absolute left-0 top-1.5 flex items-center justify-center w-6 h-6 rounded hover:bg-gray-700 cursor-pointer transition-opacity duration-200 ${showMenu ? 'opacity-100' : 'opacity-0'}`}
-                contentEditable={false}
-            >
-                <GripVertical size={16} className="text-gray-500" />
-            </div>
+            {!readOnly && (
+                <div
+                    className={`absolute left-0 top-1.5 flex items-center justify-center w-6 h-6 rounded hover:bg-gray-700 cursor-pointer transition-opacity duration-200 ${showMenu ? 'opacity-100' : 'opacity-0'}`}
+                    contentEditable={false}
+                >
+                    <GripVertical size={16} className="text-gray-500" />
+                </div>
+            )}
 
             {renderPrefix()}
 
             <div
                 ref={contentRef}
-                contentEditable
+                contentEditable={!readOnly}
                 suppressContentEditableWarning
                 className={`flex-grow outline-none bg-transparent ${getStyles()} ${block.isChecked && block.type === 'todo' ? 'line-through opacity-50' : ''}`}
                 data-placeholder={placeholder}

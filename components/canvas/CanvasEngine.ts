@@ -97,6 +97,8 @@ export class CanvasEngine {
     }
 
     private async persistToStorage() {
+        if (!this.canvasId || this.canvasId === 'undefined') return; // Don't save if no ID (read-only mode)
+
         try {
             await StorageService.saveCanvasElements(this.canvasId, this.shapes);
         } catch (e) {
@@ -108,6 +110,11 @@ export class CanvasEngine {
     }
 
     // --- API ---
+    public loadElements(elements: Shape[]) {
+        this.shapes = elements;
+        this.render();
+    }
+
     public setTool(tool: ToolType) {
         this.activeTool = tool;
         this.isDrawing = false;

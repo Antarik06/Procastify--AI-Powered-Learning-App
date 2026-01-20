@@ -35,22 +35,60 @@ const NotesStore: React.FC<NotesStoreProps> = ({ user, onImportNote, onNavigate 
 
     const handleImport = async (note: Note) => {
         if (!user || !onImportNote) return;
+
+        console.log("[IMPORT] Import requested for community note:", note.id);
+
+        // Deep Copy Document Blocks
+        const newBlocks = note.document?.blocks ? JSON.parse(JSON.stringify(note.document.blocks)) : [];
+        // Regenerate Block IDs to ensure uniqueness
+        newBlocks.forEach((block: any) => {
+            block.id = Math.random().toString(36).substr(2, 9);
+        });
+        console.log("[IMPORT] Document content copied");
+
+        // Deep Copy Canvas Elements
+        const elements = note.canvas?.elements || note.elements || [];
+        const newCanvasElements = JSON.parse(JSON.stringify(elements));
+        // Regenerate Element IDs if needed (optional but good practice)
+        newCanvasElements.forEach((el: any) => {
+            // Keep internal references if any? Canvas usually self-contained. 
+            // Generating new ID primarily for the note itself is most important.
+            // But let's just copy as-is for canvas elements unless they reference each other.
+        });
+        console.log("[IMPORT] Canvas data copied");
+
+        const newNoteId = Date.now().toString();
+
         // Clone note for user
         const newNote: Note = {
-            ...note,
-            id: Date.now().toString(),
+            id: newNoteId,
             userId: user.id,
             title: `${note.title} (Copy)`,
+            // Strip metadata
             isPublic: false,
             publishedAt: undefined,
             likes: undefined,
+
+            document: { blocks: newBlocks },
+            canvas: { elements: newCanvasElements },
+            elements: newCanvasElements, // Legacy compat
+
+            tags: [], // Optional: Strip tags or keep? keeping for context is often nice, but "Community" tag might be weird. Let's start clean.
+            folder: 'General',
+            createdAt: Date.now(),
             lastModified: Date.now()
         };
+
+        console.log("[IMPORT] New note created for user:", user.id);
+
         // Save to user storage
+        // This must be the user's private storage
         await StorageService.saveNote(newNote);
+
+        console.log("[IMPORT] Import completed successfully");
+
+        // Navigate to new note
         onImportNote(newNote);
-        setSelectedNote(null);
-        alert('Note imported to your collection!');
     };
 
     const filteredNotes = publicNotes.filter(n => n.title.toLowerCase().includes(search.toLowerCase()));
@@ -66,7 +104,6 @@ const NotesStore: React.FC<NotesStoreProps> = ({ user, onImportNote, onNavigate 
                                 className="flex items-center gap-2 px-3 py-2 -ml-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors group"
                             >
                                 <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-                                <span className="font-medium">Back to My Notes</span>
                             </button>
                         )}
                         <div>
@@ -111,10 +148,6 @@ const NotesStore: React.FC<NotesStoreProps> = ({ user, onImportNote, onNavigate 
                                     <h3 className="font-bold text-lg truncate">{note.title}</h3>
                                     <div className="flex justify-between items-center mt-3 text-xs text-gray-400">
                                         <span>{new Date(note.publishedAt || note.lastModified).toLocaleDateString()}</span>
-                                        <div className="flex items-center gap-1">
-                                            <Heart size={14} className="text-red-400" />
-                                            <span>{note.likes || 0}</span>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -158,15 +191,14 @@ const NotesStore: React.FC<NotesStoreProps> = ({ user, onImportNote, onNavigate 
                             {/* Preview Split View */}
                             <div className="w-1/2 border-r border-white/10 flex flex-col">
                                 <DocumentEditor
-                                    content={selectedNote.document?.blocks ? { type: 'doc', content: selectedNote.document.blocks } : { type: 'doc', content: [] }}
+                                    content={selectedNote.document?.blocks ? selectedNote.document.blocks : []}
                                     onUpdate={() => { }}
-                                    editable={false}
+                                    readOnly={true}
                                 />
                             </div>
                             <div className="w-1/2">
                                 <CanvasBoard
-                                    elements={selectedNote.canvas?.elements || selectedNote.elements || []}
-                                    onUpdateElements={() => { }}
+                                    elements={(selectedNote.canvas?.elements || selectedNote.elements || []) as any}
                                     readOnly={true}
                                 />
                             </div>
