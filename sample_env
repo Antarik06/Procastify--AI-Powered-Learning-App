@@ -1,0 +1,11 @@
+//Change the name of the file to .env.local
+//Set the values of the following variables according to your environment.
+# Gemini API Key
+VITE_GEMINI_API_KEY=
+# Firebase Configuration
+VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_PROJECT_ID=
+VITE_FIREBASE_STORAGE_BUCKET=
+VITE_FIREBASE_MESSAGING_SENDER_ID=
+VITE_FIREBASE_APP_ID=

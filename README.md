@@ -1,97 +1,172 @@
-⚡ Procastify
+# Procastify
 
-Turn Information into Understanding.
+**Turn Information into Understanding**
 
-Procastify is an AI-first study and productivity app built for students who are tired of passive learning, distraction, and messy notes.
+Procastify is an AI-first study and productivity platform built for students who struggle with distraction, passive learning, and fragmented study tools. It transforms raw information into structured understanding, actionable notes, and focused routines within a single calm workspace.
 
-It takes plain text and turns it into clear understanding, useful notes, and actionable focus all in one calm workspace.
+Rather than optimizing for time spent, Procastify optimizes for clarity of thinking.
 
-🧠 What Procastify Is
+---
 
-Procastify is designed around a simple idea:
+## Overview
 
-If you understand better, you procrastinate less.
+Most productivity tools focus on speed, streaks, and surface-level metrics. Procastify is built around a different principle:
 
-It helps you move through a natural learning loop:<br />
-Read → Understand → Remember → Test → Focus
+**If you understand better, you procrastinate less.**
 
-✨ Core Capabilities<br /><br />
-✍️ AI Summarization
+The platform supports a natural learning loop:
 
-Paste any text
+**Read → Understand → Remember → Test → Focus**
 
-Get clean, structured explanations
+Every feature is intentionally designed to support this loop while staying lightweight and human-friendly.
 
-Focus on meaning, not just shorter text
+---
 
-📝 Smart Notes & Flashcards
+## Core Features
 
-Save summaries directly into notes
 
-Auto-generate flashcards from your text
+### Summarization and Flashcards 
 
-Minimal, distraction-free note space
 
-🧪 AI Quizzes
+- Converts raw text into clear, structured explanations
+- Automatically generates flashcards from the same understanding layer
+- Focuses on meaning, relationships, and concepts rather than compression
+- Ensures summaries, notes, and flashcards remain contextually aligned
 
-Generate quizzes from your notes
+---
 
-Multiple difficulty levels
+### Notes System
 
-Answer analysis shown every time, right or wrong
+- Dual note-taking modes for different thinking styles  
+  - Structured, Notion-style text notes for clarity and organization  
+  - Freeform, Excalidraw-style canvas notes for diagrams, flowcharts, and visual thinking
+- Seamless switching between textual and visual representations
+- Designed to support both analytical and creative learning workflows
 
-One unified high score across all modes
+### Community Learning Space
 
-🎯 Intelligent Focus Mode
+- A shared space for students to explore curated notes, explanations, and learning strategies
+- Encourages collaborative learning without noise or competition
+- Enables discovery of alternate explanations and perspectives
+- Designed to feel supportive, not performative
 
-Pomodoro and custom timers
+---
+### Learning Feed
 
-Flow-based focus stages (not just start/stop)
+- A continuously scrolling learning feed designed for effortless discovery
+- Surfaces saved notes, summaries, flashcards, quizzes, and community-shared content
+- Reduces friction between learning sessions and revision
+- Designed to replace passive scrolling with meaningful academic engagement
 
-Visual feedback instead of stressful numbers
+---
 
-Built to encourage consistency, not burnout
+### AI-Generated Quizzes
 
-🔐 Backend & Data
+- Generate quizzes directly from notes and understanding layers
+- Multiple difficulty levels supported
+- Detailed answer analysis provided for every attempt
+- A unified high score across all quiz modes to encourage mastery over repetition
 
-Firebase for authentication and data storage
+---
 
-Guest mode supported
+### Intelligent Routine Builder
 
-All notes, summaries, quizzes, and progress are user-linked
+- Automatically creates personalized study routines based on goals, subjects, and availability
+- Adapts dynamically as progress, focus patterns, and workload change
+- Balances study, revision, and rest to reduce burnout
+- Focuses on sustainability rather than rigid scheduling
 
-Privacy-first by design
+---
 
-🎨 Design Philosophy
+### Intelligent Focus Mode
 
-Calm, dark UI inspired by Discord-style themes
+- Pomodoro and fully customizable timers
+- Flow-based focus stages instead of simple start and stop cycles
+- Visual feedback replaces pressure-inducing numerical counters
+- Designed to encourage consistency and deep work
 
-No clutter, no fake data, no gimmicks
+---
 
-Everything exists to support deep work
 
-💡 Why Procastify Exists
 
-Most tools optimize time.
-Procastify optimizes thinking.
+## Backend and Data Architecture
 
-It’s not about studying longer.
-It’s about studying better.
+- Firebase used for authentication and data storage
+- Guest mode supported for instant onboarding
+- All user data including notes, routines, quizzes, and progress is securely user-linked
 
-🧠 Built For
 
-Students
+---
 
-Self-learners
+## Design Philosophy
 
-Anyone who struggles to stay focused while studying
+Procastify follows a **human-centric design philosophy**.
 
-People who want understanding, not just productivity metrics
+- Calm, dark interface inspired by modern collaboration tools
+- No clutter, no artificial productivity metrics, no gimmicks
+- Designed around cognitive comfort and mental clarity
+- Interfaces prioritize understanding, focus, and emotional sustainability
 
-🌱 The Vision
+Every design decision exists to support how humans actually learn.
 
-Procastify aims to become a personal learning system , one that adapts to how you think, learn, and focus.
+---
 
-Not louder.
-Not faster.
-Just smarter.
+## Setup and Installation
+
+The following steps outline how to set up Procastify locally for development.
+
+---
+
+### Prerequisites
+
+Ensure you have the following accounts:
+
+- A Firebase account  (for the backend)
+- A Google AI Studio account  (for the Gemini API KEY)
+
+No additional system-level dependencies are required.
+
+---
+
+### Fork the Repository
+Make sure to also star the repository if you find it useful !
+
+```bash
+git clone https://github.com/your-username/Procastify--AI-Powered-Learning-App.git
+cd procastify
+Install Dependencies
+npm install
+
+```
+Locate the sample environment file provided in the repository and do as directed in the file to set up your environment variables.
+
+Run the Development Server
+---
+```bash
+npm run dev
+```
+---
+
+## Contributing
+
+Contributions are welcome and encouraged.
+
+If you face any issues while contributing, feel free to reach out:
+
+- Discord: **antarik_48971**  
+- Email: **antariktarafder06@gmail.com**
+
+---
+
+### Contribution Guidelines
+
+The contribution process is intentionally kept simple:
+
+1. Explore the existing issues in the repository, or create a new issue if needed  
+2. Get assigned to the issue before starting work  
+3. Implement the required changes following the project structure  
+4. Submit a pull request for review and merging  
+
+Please ensure your code is clean, well-structured, and aligned with the overall design philosophy of Procastify.
+
+---
