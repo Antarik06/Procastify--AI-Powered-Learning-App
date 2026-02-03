@@ -16,11 +16,9 @@ export interface ExtractionResult {
   error?: string;
 }
 
-const BACKEND_URL = 'http://localhost:8000';
-
-interface NormalizeRef {
-  text: string;
-  errors: string[];
+interface NormalizeResult {
+  combinedText: string;
+  failedExtractions: string[];
 }
 
 /**
@@ -84,8 +82,7 @@ export const extractPDFText = async (pdfBase64: string): Promise<ExtractionResul
 export const prepareTextForSummarization = async (
   userText: string,
   attachments: Attachment[]
-): Promise<{ combinedText: string; failedExtractions: string[] } | null> => {
-
+): Promise<NormalizeResult | null> => {
   // If no context at all
   if (!userText && attachments.length === 0) return null;
 
@@ -162,10 +159,22 @@ export const prepareTextForSummarization = async (
   };
 };
 
-// --- Legacy Single Extractors (Optional / Deprecated) ---
+// Legacy function - kept for backward compatibility but redirects to new implementation
 export const extractYouTubeTranscript = async (url: string): Promise<ExtractionResult> => {
-  return { text: "", success: false, error: "Use prepareTextForSummarization for multimodal inputs." };
+  const result = await fetchURLContent(url);
+  return {
+    text: result.text,
+    success: result.success,
+    error: result.error
+  };
 };
+
+// Legacy function - kept for backward compatibility but redirects to new implementation
 export const extractWebsiteContent = async (url: string): Promise<ExtractionResult> => {
-  return { text: "", success: false, error: "Use prepareTextForSummarization for multimodal inputs." };
+  const result = await fetchURLContent(url);
+  return {
+    text: result.text,
+    success: result.success,
+    error: result.error
+  };
 };

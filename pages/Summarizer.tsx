@@ -31,6 +31,7 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
 
     const [showLinkInput, setShowLinkInput] = useState(false);
     const [linkUrl, setLinkUrl] = useState('');
+    const [linkError, setLinkError] = useState('');
     const [showAudioRecorder, setShowAudioRecorder] = useState(false);
 
 
@@ -77,15 +78,46 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
         e.target.value = '';
     };
 
+    // Validate URL format
+    const validateUrl = (url: string): { isValid: boolean; error: string } => {
+        if (!url || !url.trim()) {
+            return { isValid: false, error: 'Please enter a URL' };
+        }
+
+        try {
+            const urlObj = new URL(url.trim());
+            if (urlObj.protocol !== 'http:' && urlObj.protocol !== 'https:') {
+                return { isValid: false, error: 'URL must start with http:// or https://' };
+            }
+            return { isValid: true, error: '' };
+        } catch (e) {
+            return { isValid: false, error: 'Please enter a valid URL (e.g., https://example.com)' };
+        }
+    };
+
+    const isYouTubeUrl = (url: string): boolean => {
+        return url.includes('youtube.com') || url.includes('youtu.be');
+    };
+
+    const handleLinkUrlChange = (url: string) => {
+        setLinkUrl(url);
+        if (linkError) setLinkError('');
+    };
+
     const addLink = () => {
-        if (!linkUrl) return;
+        const validation = validateUrl(linkUrl);
+        if (!validation.isValid) {
+            setLinkError(validation.error);
+            return;
+        }
         addAttachment({
             id: Date.now().toString(),
             type: 'url',
-            content: linkUrl,
-            name: linkUrl
+            content: linkUrl.trim(),
+            name: linkUrl.trim()
         });
         setLinkUrl('');
+        setLinkError('');
         setShowLinkInput(false);
     };
 
@@ -358,24 +390,38 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
                                             <input
                                                 type="text"
                                                 value={linkUrl}
-                                                onChange={(e) => setLinkUrl(e.target.value)}
+                                                onChange={(e) => handleLinkUrlChange(e.target.value)}
                                                 onKeyDown={(e) => {
                                                     if (e.key === 'Enter') {
                                                         addLink();
                                                     } else if (e.key === 'Escape') {
                                                         setShowLinkInput(false);
                                                         setLinkUrl('');
+                                                        setLinkError('');
                                                     }
                                                 }}
-                                                placeholder="Paste YouTube or website URL..."
-                                                className="w-full bg-discord-bg border border-white/10 rounded px-3 py-2 text-sm text-white placeholder-discord-textMuted/50 focus:outline-none focus:border-discord-accent transition-colors"
+                                                placeholder="Paste website URL (https://...)..."
+                                                className={`w-full bg-discord-bg border rounded px-3 py-2 text-sm text-white placeholder-discord-textMuted/50 focus:outline-none transition-colors ${linkError ? 'border-red-500 focus:border-red-500' : 'border-white/10 focus:border-discord-accent'}`}
                                                 autoFocus
                                             />
-                                            <div className="flex justify-end gap-2 mt-2">
+                                            {linkError && (
+                                                <div className="mt-2 text-xs text-red-400 flex items-start gap-1">
+                                                    <span className="mt-0.5">⚠️</span>
+                                                    <span>{linkError}</span>
+                                                </div>
+                                            )}
+                                            {!linkError && linkUrl && isYouTubeUrl(linkUrl) && (
+                                                <div className="mt-2 text-xs text-yellow-400/80 flex items-start gap-1">
+                                                    <span className="mt-0.5">ℹ️</span>
+                                                    <span>Note: YouTube URLs have limited support due to browser restrictions</span>
+                                                </div>
+                                            )}
+                                            <div className="flex justify-end gap-2 mt-3">
                                                 <button
                                                     onClick={() => {
                                                         setShowLinkInput(false);
                                                         setLinkUrl('');
+                                                        setLinkError('');
                                                     }}
                                                     className="px-3 py-1.5 text-xs font-medium text-discord-textMuted hover:text-white transition-colors"
                                                 >
@@ -383,7 +429,7 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
                                                 </button>
                                                 <button
                                                     onClick={addLink}
-                                                    disabled={!linkUrl.trim()}
+                                                    disabled={!linkUrl.trim() || !!linkError}
                                                     className="px-3 py-1.5 bg-discord-accent hover:bg-discord-accentHover text-white text-xs font-medium rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
                                                     Add
