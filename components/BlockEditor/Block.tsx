@@ -202,7 +202,21 @@ const BlockComponent: React.FC<BlockProps> = ({
             case 'quote': return 'border-l-4 border-gray-500 pl-4 italic text-gray-400 my-2';
             case 'bullet': return 'ml-0';
             case 'todo': return 'ml-0';
-            case 'code': return 'font-mono text-sm bg-[#1a1b1e] text-green-400 p-3 rounded-lg whitespace-pre-wrap my-2 border border-white/10';
+            case 'code':
+    return `
+        font-mono
+        text-sm
+        bg-[#0f1115]
+        text-gray-100
+        p-4
+        rounded-lg
+        whitespace-pre-wrap
+        overflow-x-auto
+        my-2
+        border border-white/10
+        leading-relaxed
+    `;
+
             case 'image': return 'my-2';
             case 'link': return 'text-blue-400 hover:text-blue-300 underline cursor-pointer';
             default: return 'text-base min-h-[1.5em] text-gray-300 py-1 leading-relaxed';
@@ -233,8 +247,9 @@ const BlockComponent: React.FC<BlockProps> = ({
             );
         }
         if (block.type === 'code') {
-            return <Code size={16} className="mr-2 text-green-400 mt-1 shrink-0" />;
-        }
+    return <Code size={16} className="mr-2 text-gray-400 mt-1 shrink-0" />;
+}
+
         if (block.type === 'link') {
             return <ExternalLink size={16} className="mr-2 text-blue-400 mt-1 shrink-0" />;
         }
