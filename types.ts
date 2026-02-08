@@ -1,4 +1,4 @@
-export type ViewState = 'landing' | 'onboarding' | 'dashboard' | 'summarizer' | 'notes' | 'routine' | 'focus' | 'quiz' | 'feed' | 'store';
+export type ViewState = 'landing' | 'onboarding' | 'dashboard' | 'summarizer' | 'notes' | 'routine' | 'focus' | 'quiz' | 'feed' | 'store' | 'auth';
 
 export interface UserPreferences {
   id: string;
