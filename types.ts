@@ -1,13 +1,23 @@
-export type ViewState = 'landing' | 'onboarding' | 'dashboard' | 'summarizer' | 'notes' | 'routine' | 'focus' | 'quiz' | 'feed' | 'store';
+export type ViewState =
+  | "landing"
+  | "onboarding"
+  | "dashboard"
+  | "summarizer"
+  | "notes"
+  | "routine"
+  | "focus"
+  | "quiz"
+  | "feed"
+  | "store";
 
 export interface UserPreferences {
   id: string;
   isGuest: boolean;
   name: string;
   freeTimeHours: number;
-  energyPeak: 'morning' | 'afternoon' | 'night';
+  energyPeak: "morning" | "afternoon" | "night";
   goal: string;
-  distractionLevel: 'low' | 'medium' | 'high';
+  distractionLevel: "low" | "medium" | "high";
 }
 
 export interface UserStats {
@@ -22,8 +32,25 @@ export interface UserStats {
   highScore: number;
 }
 
+// NEW: Folder interface for organizing notes
+export interface Folder {
+  id: string;
+  userId: string;
+  name: string;
+  color?: string; // Optional color for visual distinction
+  icon?: string; // Optional emoji or icon
+  createdAt: number;
+  updatedAt: number;
+  parentId?: string; // For nested folders (future enhancement)
+}
 
-export type NoteElementType = 'text' | 'sticky' | 'arrow' | 'image' | 'flashcard_deck' | 'summary_card';
+export type NoteElementType =
+  | "text"
+  | "sticky"
+  | "arrow"
+  | "image"
+  | "flashcard_deck"
+  | "summary_card";
 
 export interface NoteElement {
   id: string;
@@ -35,8 +62,7 @@ export interface NoteElement {
   content?: string;
   src?: string;
   color?: string;
-  fontSize?: 'small' | 'medium' | 'large';
-
+  fontSize?: "small" | "medium" | "large";
 
   startId?: string;
   endId?: string;
@@ -44,7 +70,17 @@ export interface NoteElement {
   zIndex: number;
 }
 
-export type BlockType = 'text' | 'h1' | 'h2' | 'h3' | 'bullet' | 'todo' | 'quote' | 'code' | 'image' | 'link';
+export type BlockType =
+  | "text"
+  | "h1"
+  | "h2"
+  | "h3"
+  | "bullet"
+  | "todo"
+  | "quote"
+  | "code"
+  | "image"
+  | "link";
 
 export interface Block {
   id: string;
@@ -52,9 +88,9 @@ export interface Block {
   content: string;
   isChecked?: boolean;
   // Rich content fields (optional for backward compatibility)
-  imageUrl?: string;    // Base64 data URL for image blocks
-  linkUrl?: string;     // URL for link blocks
-  language?: string;    // Programming language for code blocks
+  imageUrl?: string; // Base64 data URL for image blocks
+  linkUrl?: string; // URL for link blocks
+  language?: string; // Programming language for code blocks
 }
 
 export interface NoteDocument {
@@ -80,7 +116,8 @@ export interface Note {
   elements?: NoteElement[];
 
   tags: string[];
-  folder: string;
+  folder: string; // Now references Folder.id instead of just a string
+  folderId?: string; // NEW: Explicit folder reference (folder field kept for backward compatibility)
   lastModified: number;
 
   // Persistence
@@ -92,9 +129,9 @@ export interface Note {
   likes?: number;
 
   aiAnalysis?: {
-    difficulty: 'easy' | 'medium' | 'hard';
+    difficulty: "easy" | "medium" | "hard";
     estimatedMinutes: number;
-    cognitiveLoad: 'light' | 'medium' | 'heavy';
+    cognitiveLoad: "light" | "medium" | "heavy";
     summary: string;
   };
 }
@@ -103,23 +140,21 @@ export interface QueueItem {
   id: string;
   userId: string;
   noteId: string;
-  priority: 'high' | 'medium' | 'low';
+  priority: "high" | "medium" | "low";
   deadline?: number;
-  status: 'pending' | 'in_progress' | 'completed';
+  status: "pending" | "in_progress" | "completed";
 }
-
 
 export interface Flashcard {
   id: string;
   front: string;
   back: string;
-  status: 'new' | 'learning' | 'mastered';
+  status: "new" | "learning" | "mastered";
 }
-
 
 export interface Attachment {
   id: string;
-  type: 'image' | 'audio' | 'pdf' | 'url';
+  type: "image" | "audio" | "pdf" | "url";
   content: string;
   mimeType?: string;
   name?: string;
@@ -138,7 +173,7 @@ export interface Summary {
   userId: string;
   originalSource: string;
   summaryText: string;
-  type: 'text' | 'video' | 'article' | 'pdf' | 'audio' | 'mixed';
+  type: "text" | "video" | "article" | "pdf" | "audio" | "mixed";
   mode: string; // Now supports any string (preset modes or custom mode names)
   createdAt: number;
   flashcards?: Flashcard[];
@@ -149,11 +184,11 @@ export interface RoutineTask {
   userId: string;
   title: string;
   durationMinutes: number;
-  type: 'focus' | 'break' | 'buffer' | 'procastify';
+  type: "focus" | "break" | "buffer" | "procastify";
   completed: boolean;
   timeSlot?: string;
   noteId?: string;
-  confidence?: 'high' | 'medium' | 'low';
+  confidence?: "high" | "medium" | "low";
 }
 
 export interface Question {
@@ -162,12 +197,12 @@ export interface Question {
   options: string[];
   correctIndex: number;
   explanation: string;
-  difficulty?: 'easy' | 'medium' | 'hard';
+  difficulty?: "easy" | "medium" | "hard";
 }
 
 export interface QuizReport {
   overallAccuracy: number;
-  difficultyProgression: ('easy' | 'medium' | 'hard')[];
+  difficultyProgression: ("easy" | "medium" | "hard")[];
   strengths: string[];
   weaknesses: string[];
   suggestions: string[];
@@ -181,5 +216,3 @@ export interface Quiz {
   highScore: number;
   lastPlayed?: number;
 }
-
-

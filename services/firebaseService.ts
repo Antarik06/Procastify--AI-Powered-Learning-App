@@ -1,143 +1,251 @@
-import { db } from '../firebaseConfig';
-import { doc, deleteDoc, setDoc, getDoc, collection, getDocs, writeBatch, serverTimestamp, query, where, orderBy, Firestore } from 'firebase/firestore';
-import { Note } from '../types';
+import { db } from "../firebaseConfig";
+import {
+  doc,
+  deleteDoc,
+  setDoc,
+  getDoc,
+  collection,
+  getDocs,
+  writeBatch,
+  serverTimestamp,
+  query,
+  where,
+  orderBy,
+} from "firebase/firestore";
+import { Note, Folder } from "../types";
 
 export const FirebaseService = {
-    // --- Notes ---
-    saveNote: async (userId: string, note: Note) => {
-        const ref = doc(db, 'notes', note.id);
+  // --- Notes ---
+  saveNote: async (userId: string, note: Note) => {
+    const ref = doc(db, "notes", note.id);
 
-        // Ensure strictly managed fields
-        const payload = {
-            ...note,
-            ownerId: userId,
-            updatedAt: serverTimestamp(),
-            // Ensure these defaults if missing
-            isPublic: note.isPublic || false,
-            publishedAt: note.isPublic ? (note.publishedAt || serverTimestamp()) : null,
-            document: note.document || { blocks: [] },
-            canvas: note.canvas || { elements: [], strokes: [] }
-        };
+    const payload = {
+      ...note,
+      ownerId: userId,
+      updatedAt: serverTimestamp(),
+      isPublic: note.isPublic || false,
+      publishedAt: note.isPublic ? note.publishedAt || serverTimestamp() : null,
+      document: note.document || { blocks: [] },
+      canvas: note.canvas || { elements: [], strokes: [] },
+    };
 
-        // If it's a new note (basic check), add createdAt. 
-        // Ideally we pass this in, but 'merge: true' with setDoc handles it well if we don't overwrite.
-        // But to be safe for existing notes being saved:
-        if (!note.createdAt) {
-            // We can't easily know if it exists without reading, but 'merge' is safe.
-            // We simply won't set createdAt here if it's missing in the object, assume it allows serverTimestamp if new?
-            // Better: App creates `createdAt` in local state for new notes.
-        }
+    const sanitizedPayload = sanitizePayload(payload);
+    await setDoc(ref, sanitizedPayload, { merge: true });
+  },
 
-        // Sanitize payload to remove undefined values which Firestore rejects
-        const sanitizedPayload = sanitizePayload(payload);
+  deleteNote: async (userId: string, noteId: string) => {
+    const ref = doc(db, "notes", noteId);
+    await deleteDoc(ref);
+  },
 
-        await setDoc(ref, sanitizedPayload, { merge: true });
-    },
+  saveNotesBatch: async (userId: string, notes: Note[]) => {
+    const batch = writeBatch(db);
+    notes.forEach((note) => {
+      const ref = doc(db, "notes", note.id);
+      const payload = {
+        ...note,
+        ownerId: userId,
+        updatedAt: serverTimestamp(),
+        isPublic: note.isPublic || false,
+      };
+      batch.set(ref, sanitizePayload(payload), { merge: true });
+    });
+    await batch.commit();
+  },
 
-    deleteNote: async (userId: string, noteId: string) => {
-        const ref = doc(db, 'notes', noteId);
-        await deleteDoc(ref);
-    },
+  // --- Public Store ---
+  publishNote: async (userId: string, note: Note) => {
+    const ref = doc(db, "notes", note.id);
+    await setDoc(
+      ref,
+      {
+        isPublic: true,
+        publishedAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true },
+    );
+  },
 
-    saveNotesBatch: async (userId: string, notes: Note[]) => {
-        const batch = writeBatch(db);
-        notes.forEach(note => {
-            const ref = doc(db, 'notes', note.id);
-            const payload = {
-                ...note,
-                ownerId: userId,
-                updatedAt: serverTimestamp(),
-                isPublic: note.isPublic || false
-            };
-            // Sanitize batch payload as well
-            batch.set(ref, sanitizePayload(payload), { merge: true });
+  unpublishNote: async (userId: string, noteId: string) => {
+    const ref = doc(db, "notes", noteId);
+    await setDoc(
+      ref,
+      {
+        isPublic: false,
+        publishedAt: null,
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true },
+    );
+  },
+
+  getPublicNotes: async (): Promise<Note[]> => {
+    try {
+      const q = query(
+        collection(db, "notes"),
+        where("isPublic", "==", true),
+        orderBy("publishedAt", "desc"),
+      );
+      const snap = await getDocs(q);
+      return snap.docs.map((d) => mapFirestoreDataToNote(d.data()));
+    } catch (e) {
+      console.error("Error fetching public notes:", e);
+      return [];
+    }
+  },
+
+  // --- FOLDERS (NEW) ---
+
+  /**
+   * Create a new folder
+   */
+  createFolder: async (userId: string, folder: Folder) => {
+    const ref = doc(db, "folders", folder.id);
+    const payload = {
+      ...folder,
+      userId,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    await setDoc(ref, sanitizePayload(payload));
+  },
+
+  /**
+   * Update an existing folder
+   */
+  updateFolder: async (
+    userId: string,
+    folderId: string,
+    updates: Partial<Folder>,
+  ) => {
+    const ref = doc(db, "folders", folderId);
+    const payload = {
+      ...updates,
+      updatedAt: serverTimestamp(),
+    };
+    await setDoc(ref, sanitizePayload(payload), { merge: true });
+  },
+
+  /**
+   * Delete a folder
+   * Note: This does NOT delete notes in the folder - they should be moved to "General" first
+   */
+  deleteFolder: async (userId: string, folderId: string) => {
+    const ref = doc(db, "folders", folderId);
+    await deleteDoc(ref);
+  },
+
+  /**
+   * Get all folders for a user
+   */
+  getFolders: async (userId: string): Promise<Folder[]> => {
+    try {
+      const q = query(
+        collection(db, "folders"),
+        where("userId", "==", userId),
+        orderBy("createdAt", "asc"),
+      );
+      const snap = await getDocs(q);
+      return snap.docs.map((d) => {
+        const data = d.data();
+        return {
+          ...data,
+          createdAt: data.createdAt?.toMillis
+            ? data.createdAt.toMillis()
+            : data.createdAt,
+          updatedAt: data.updatedAt?.toMillis
+            ? data.updatedAt.toMillis()
+            : data.updatedAt,
+        } as Folder;
+      });
+    } catch (e) {
+      console.error("Error fetching folders:", e);
+      return [];
+    }
+  },
+
+  /**
+   * Move all notes from one folder to another (used when deleting folders)
+   */
+  moveNotesToFolder: async (
+    userId: string,
+    fromFolderId: string,
+    toFolderId: string | null,
+  ) => {
+    try {
+      // Get all notes in the source folder
+      const notesQuery = query(
+        collection(db, "notes"),
+        where("ownerId", "==", userId),
+        where("folderId", "==", fromFolderId),
+      );
+      const notesSnap = await getDocs(notesQuery);
+
+      // Update each note
+      const batch = writeBatch(db);
+      notesSnap.docs.forEach((noteDoc) => {
+        const ref = doc(db, "notes", noteDoc.id);
+        batch.update(ref, {
+          folderId: toFolderId || null,
+          folder: toFolderId ? "Folder" : "General", // Could be improved by looking up folder name
+          updatedAt: serverTimestamp(),
         });
-        await batch.commit();
-    },
+      });
 
-    // --- Public Store ---
-    publishNote: async (userId: string, note: Note) => {
-        // Single source of truth update
-        const ref = doc(db, 'notes', note.id);
-        await setDoc(ref, {
-            isPublic: true,
-            publishedAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
-        }, { merge: true });
-    },
+      await batch.commit();
+      console.log(
+        `Moved ${notesSnap.docs.length} notes from folder ${fromFolderId} to ${toFolderId || "General"}`,
+      );
+    } catch (e) {
+      console.error("Error moving notes to folder:", e);
+    }
+  },
 
-    unpublishNote: async (userId: string, noteId: string) => {
-        const ref = doc(db, 'notes', noteId);
-        await setDoc(ref, {
-            isPublic: false,
-            publishedAt: null,
-            updatedAt: serverTimestamp()
-        }, { merge: true });
-    },
+  // --- Generic document operations ---
+  deleteDocument: async (docRef: any) => {
+    await deleteDoc(docRef);
+  },
 
-    getPublicNotes: async (): Promise<Note[]> => {
-        try {
-            const q = query(
-                collection(db, 'notes'),
-                where('isPublic', '==', true),
-                orderBy('publishedAt', 'desc')
-            );
-            const snap = await getDocs(q);
-            return snap.docs.map(d => {
-                const data = d.data();
-                // Normalize timestamps
-                return mapFirestoreDataToNote(data);
-            });
-        } catch (e) {
-            console.error("Error fetching public notes:", e);
-            return [];
-        }
-    },
-
-    // --- Generic document operations ---
-    deleteDocument: async (docRef: any) => {
-        await deleteDoc(docRef);
-    },
-
-    // --- Stats (Unchanged logic, kept for interface consistency) ---
-    saveDailyActivity: async (userId: string, dateKey: string, minutes: number) => { }
+  // --- Stats (Unchanged) ---
+  saveDailyActivity: async (
+    userId: string,
+    dateKey: string,
+    minutes: number,
+  ) => {},
 };
 
-// Helper to handle Firestore timestamps vs Date/Numbers
-const createTimestampFromDate = (dateVal: any) => {
-    // If it's already a firestore timestamp-like (not a real one here without importing Timestamp class),
-    // best effort or just pass through for serverTimestamp if strictly new. 
-    // If it's number (Date.now()), return it date object for Firestore? 
-    // Firestore setDoc accepts Date objects.
-    if (typeof dateVal === 'number') return new Date(dateVal);
-    if (dateVal instanceof Date) return dateVal;
-    return serverTimestamp();
-};
-
+// Helper functions
 const mapFirestoreDataToNote = (data: any): Note => {
-    return {
-        ...data,
-        createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : data.createdAt,
-        updatedAt: data.updatedAt?.toMillis ? data.updatedAt.toMillis() : data.updatedAt,
-        publishedAt: data.publishedAt?.toMillis ? data.publishedAt.toMillis() : data.publishedAt
-    } as Note;
+  return {
+    ...data,
+    createdAt: data.createdAt?.toMillis
+      ? data.createdAt.toMillis()
+      : data.createdAt,
+    updatedAt: data.updatedAt?.toMillis
+      ? data.updatedAt.toMillis()
+      : data.updatedAt,
+    publishedAt: data.publishedAt?.toMillis
+      ? data.publishedAt.toMillis()
+      : data.publishedAt,
+  } as Note;
 };
 
 // Recursively remove undefined values from an object/array
 const sanitizePayload = (obj: any): any => {
-    if (obj === null || obj === undefined) return null;
-    if (Array.isArray(obj)) {
-        return obj.map(v => sanitizePayload(v)).filter(v => v !== undefined);
-    }
-    if (typeof obj === 'object') {
-        const newObj: any = {};
-        Object.keys(obj).forEach(key => {
-            const val = sanitizePayload(obj[key]);
-            if (val !== undefined) {
-                newObj[key] = val;
-            }
-        });
-        return newObj;
-    }
-    return obj;
+  if (obj === null || obj === undefined) return null;
+  if (Array.isArray(obj)) {
+    return obj.map((v) => sanitizePayload(v)).filter((v) => v !== undefined);
+  }
+  if (typeof obj === "object") {
+    const newObj: any = {};
+    Object.keys(obj).forEach((key) => {
+      const val = sanitizePayload(obj[key]);
+      if (val !== undefined) {
+        newObj[key] = val;
+      }
+    });
+    return newObj;
+  }
+  return obj;
 };
