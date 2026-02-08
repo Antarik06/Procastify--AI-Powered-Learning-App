@@ -162,6 +162,15 @@ export interface Question {
   options: string[];
   correctIndex: number;
   explanation: string;
+  difficulty?: 'easy' | 'medium' | 'hard';
+}
+
+export interface QuizReport {
+  overallAccuracy: number;
+  difficultyProgression: ('easy' | 'medium' | 'hard')[];
+  strengths: string[];
+  weaknesses: string[];
+  suggestions: string[];
 }
 
 export interface Quiz {

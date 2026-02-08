@@ -1,8 +1,9 @@
+import { ActionFunction, LoaderFunction, redirect } from "react-router-dom"; // Just minimal dummy if needed, but keeping original imports
 import React, { useState, useEffect } from 'react';
-import { Note, Quiz, UserPreferences, UserStats } from '../types';
-import { generateQuizFromNotes, generateTrueFalseQuiz } from '../services/geminiService';
+import { Note, Quiz, UserPreferences, UserStats, QuizReport } from '../types';
+import { generateQuizFromNotes, generateTrueFalseQuiz, generateQuizReport } from '../services/geminiService';
 import { StorageService } from '../services/storageService';
-import { Play, Trophy, CheckCircle, XCircle, Zap, Target, BookOpen, AlertCircle, RefreshCw, Layers, Clock } from 'lucide-react';
+import { Play, Trophy, CheckCircle, XCircle, Zap, Target, BookOpen, AlertCircle, RefreshCw, Layers, Clock, ArrowRight, BrainCircuit, TrendingUp } from 'lucide-react';
 import SwipeQuiz from '../components/SwipeQuiz';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -21,6 +22,9 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
     const [selectedNoteIds, setSelectedNoteIds] = useState<string[]>([]);
     const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
     const [loading, setLoading] = useState(false);
+    const [continuing, setContinuing] = useState(false);
+    const [quizReport, setQuizReport] = useState<QuizReport | null>(null);
+    const [generatingReport, setGeneratingReport] = useState(false);
 
 
     const [quiz, setQuiz] = useState<Quiz | null>(null);
@@ -37,6 +41,7 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
         correctAnswer: number;
         explanation: string;
         isCorrect: boolean;
+        difficulty?: 'easy' | 'medium' | 'hard';
     }>>([]);
 
     // Swipe mode attempted questions
@@ -146,7 +151,8 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
             userAnswer: idx,
             correctAnswer: currentQuestion.correctIndex,
             explanation: idx === -1 ? "Time run out! " + currentQuestion.explanation : currentQuestion.explanation,
-            isCorrect
+            isCorrect,
+            difficulty: currentQuestion.difficulty || difficulty // Fallback to current level
         };
 
         setAttemptedQuestions(prev => [...prev, attemptedQuestion]);
@@ -162,6 +168,53 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
         }
     };
 
+    const handleContinueQuiz = async () => {
+        setContinuing(true);
+        
+        // 1. Analyze Performance of last round (last 5 questions)
+        const lastRoundQuestions = attemptedQuestions.slice(-5);
+        const correctCount = lastRoundQuestions.filter(q => q.isCorrect).length;
+        
+        let newDifficulty = difficulty;
+        if (correctCount >= 4) {
+            if (difficulty === 'easy') newDifficulty = 'medium';
+            else if (difficulty === 'medium') newDifficulty = 'hard';
+        } else if (correctCount <= 2) {
+            if (difficulty === 'hard') newDifficulty = 'medium';
+            else if (difficulty === 'medium') newDifficulty = 'easy';
+        }
+        
+        setDifficulty(newDifficulty); // Update state for UI
+
+        // 2. Re-aggregate text (simplified for now)
+        let aggregatedText = "";
+        selectedNoteIds.forEach(id => {
+            const note = notes.find(n => n.id === id);
+            if (note) {
+                const elements = note.canvas?.elements || note.elements || [];
+                const blocks = note.document?.blocks || [];
+                note.elements?.forEach(el => { if (el.content) aggregatedText += el.content + "\n"; });
+                note.canvas?.elements?.forEach(el => { if (el.content) aggregatedText += el.content + "\n"; });
+                note.document?.blocks?.forEach(block => { if (block.content) aggregatedText += block.content + "\n"; });
+            }
+        });
+
+        // 3. Generate New Questions
+        const newQuestions = await generateQuizFromNotes(aggregatedText, newDifficulty);
+        
+        if (newQuestions.length > 0 && quiz) {
+            setQuiz(prev => prev ? ({
+                ...prev,
+                questions: [...prev.questions, ...newQuestions]
+            }) : null);
+            nextQuestion(); // Move to next index (which is now start of new set)
+        } else {
+            alert("Could not generate more questions for this content.");
+        }
+        
+        setContinuing(false);
+    };
+
     const nextQuestion = () => {
         if (!quiz) return;
         setCurrentQIndex(c => c + 1);
@@ -171,9 +224,16 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
     };
 
     const finishQuiz = async (finalScore?: number) => {
+        setGeneratingReport(true);
         const resultScore = finalScore !== undefined ? finalScore : score;
         const currentHighScore = stats?.highScore || 0;
         const newHighScore = resultScore > currentHighScore ? resultScore : currentHighScore;
+
+        // Generate AI Report
+        if (attemptedQuestions.length > 0) {
+            const report = await generateQuizReport(attemptedQuestions);
+            setQuizReport(report);
+        }
 
         const updatedStats = await StorageService.updateStats(prev => ({
             ...prev,
@@ -182,6 +242,8 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
         }));
         setStats(updatedStats);
         if (finalScore !== undefined) setScore(finalScore); // Update local score for display
+        
+        setGeneratingReport(false);
         setView('results');
     };
 
@@ -447,12 +509,24 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
                                         >
                                             Next Question <Play size={20} fill="currentColor" />
                                         </button>
-                                    ) : null}
+                                    ) : (
+                                        // End of current set
+                                        <button
+                                            onClick={handleContinueQuiz}
+                                            disabled={continuing}
+                                            className="flex-1 bg-discord-green hover:bg-green-600 text-white py-4 rounded-xl font-bold text-lg transition-all shadow-lg flex items-center justify-center gap-2"
+                                        >
+                                            {continuing ? <RefreshCw className="animate-spin" /> : <BrainCircuit size={20} />}
+                                            Continue Learning
+                                        </button>
+                                    )}
                                     <button
                                         onClick={() => finishQuiz()}
+                                        disabled={continuing || generatingReport}
                                         className="flex-1 bg-discord-panel hover:bg-discord-hover text-white py-4 rounded-xl font-bold text-lg transition-all border border-white/10 flex items-center justify-center gap-2"
                                     >
-                                        Finish Quiz <Trophy size={20} />
+                                        {generatingReport ? <RefreshCw className="animate-spin" /> : <Trophy size={20} />}
+                                        Finish & View Report
                                     </button>
                                 </div>
                             </motion.div>
@@ -503,6 +577,99 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
                         <p className="text-2xl font-bold text-discord-accent">{accuracy}%</p>
                     </div>
                 </div>
+
+                {/* AI Performance Report & Adaptive Insights */}
+                {quizReport && !isSwipeMode && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mb-8 space-y-6"
+                    >
+                        <div className="bg-[#1e1f22] border border-white/5 rounded-2xl p-6 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-4 opacity-10">
+                                <BrainCircuit size={100} className="text-white" />
+                            </div>
+                            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2 relative z-10">
+                                <Zap className="text-yellow-400" /> AI Performance Insights
+                            </h3>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
+                                {/* Strengths */}
+                                {quizReport.strengths.length > 0 && (
+                                    <div className="bg-green-500/5 border border-green-500/10 rounded-xl p-4">
+                                        <h4 className="font-bold text-green-400 mb-3 flex items-center gap-2">
+                                            <CheckCircle size={16} /> Strong Concepts
+                                        </h4>
+                                        <ul className="space-y-2">
+                                            {quizReport.strengths.map((s, i) => (
+                                                <li key={i} className="text-sm text-discord-textMuted flex items-start gap-2">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 mt-1.5 shrink-0" />
+                                                    {s}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+
+                                {/* Weaknesses */}
+                                {quizReport.weaknesses.length > 0 && (
+                                    <div className="bg-red-500/5 border border-red-500/10 rounded-xl p-4">
+                                        <h4 className="font-bold text-red-400 mb-3 flex items-center gap-2">
+                                            <AlertCircle size={16} /> Needs Review
+                                        </h4>
+                                        <ul className="space-y-2">
+                                            {quizReport.weaknesses.map((w, i) => (
+                                                <li key={i} className="text-sm text-discord-textMuted flex items-start gap-2">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 shrink-0" />
+                                                    {w}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+
+                                {/* Suggestions */}
+                                <div className="bg-blue-500/5 border border-blue-500/10 rounded-xl p-4">
+                                    <h4 className="font-bold text-blue-400 mb-3 flex items-center gap-2">
+                                        <Target size={16} /> Recommended Actions
+                                    </h4>
+                                    <ul className="space-y-2">
+                                        {quizReport.suggestions.map((s, i) => (
+                                            <li key={i} className="text-sm text-discord-textMuted flex items-start gap-2">
+                                                <ArrowRight size={14} className="text-blue-500 mt-0.5 shrink-0" />
+                                                {s}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Difficulty Flow */}
+                        <div className="bg-discord-panel p-6 rounded-2xl border border-white/5">
+                            <h4 className="text-sm font-bold text-discord-textMuted uppercase mb-4 flex items-center gap-2">
+                                <TrendingUp size={16} /> Difficulty Progression
+                            </h4>
+                            <div className="flex items-center gap-2 overflow-x-auto pb-2">
+                                {quizReport.difficultyProgression?.map((diff, i) => (
+                                    <React.Fragment key={i}>
+                                        <div className={`
+                                            px-3 py-1 rounded-lg text-xs font-bold uppercase shrink-0 border
+                                            ${diff === 'easy' ? 'bg-green-500/10 text-green-400 border-green-500/20' : ''}
+                                            ${diff === 'medium' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' : ''}
+                                            ${diff === 'hard' ? 'bg-red-500/10 text-red-400 border-red-500/20' : ''}
+                                        `}>
+                                            Q{i + 1}: {diff}
+                                        </div>
+                                        {i < quizReport.difficultyProgression.length - 1 && (
+                                            <div className="w-4 h-0.5 bg-white/10 shrink-0" />
+                                        )}
+                                    </React.Fragment>
+                                ))}
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
 
                 {/* Detailed Analysis */}
                 <div className="mb-8 flex-1">
