@@ -29,6 +29,7 @@ import QuizPage from "./pages/Quiz";
 import NoteFeed from "./pages/NoteFeed";
 import NotesStore from "./pages/NotesStore";
 import Folders from "./pages/Folders";
+import Auth from "./pages/Auth";
 import { AlertCircle, LogIn, X, Loader2 } from "lucide-react";
 
 const App: React.FC = () => {
@@ -167,7 +168,7 @@ const App: React.FC = () => {
     const timestamp = Date.now();
 
     // --- Generate Blocks for Document Section ---
-    const newBlocks: any[] = []; // Use any to match Block[] structure without importing strict type locally if not needed, but we essentially conform to Block interface
+    const newBlocks: any[] = [];
 
     // 1. Summary Header
     newBlocks.push({
@@ -177,7 +178,6 @@ const App: React.FC = () => {
     });
 
     // 2. Summary Text
-    // Convert newlines to breaks for HTML rendering in Block editor
     const formattedSummary = summary.summaryText.replace(/\n/g, "<br />");
     newBlocks.push({
       id: `${timestamp}-text`,
@@ -204,7 +204,6 @@ const App: React.FC = () => {
           type: "text",
           content: fc.back,
         });
-        // Add a small spacer/separator if needed, or just let them flow
         newBlocks.push({
           id: `${timestamp}-fc-${i}-d`,
           type: "text",
@@ -224,8 +223,8 @@ const App: React.FC = () => {
         userId: user.id,
         title: `Summary: ${new Date().toLocaleDateString()}`,
         document: { blocks: newBlocks },
-        canvas: { elements: [] }, // Empty canvas as requested (focus on Document)
-        elements: [], // Legacy
+        canvas: { elements: [] },
+        elements: [],
         tags: [],
         folder: "Summaries",
         folderId: null,
@@ -241,7 +240,6 @@ const App: React.FC = () => {
         if (n.id === noteId) {
           const existingBlocks = n.document?.blocks || [];
 
-          // Add visual separator block before appending new content
           const separatorBlock = {
             id: `${timestamp}-sep`,
             type: "text",
@@ -370,7 +368,6 @@ const App: React.FC = () => {
               StorageService.saveNotes(newNotes);
             }}
             onDeleteNote={async (noteId) => {
-              // strictly handle the flow: Service(Firestore/Storage) -> Local State
               await StorageService.deleteNote(noteId);
               setNotes((prev) => prev.filter((n) => n.id !== noteId));
               console.log("[DELETE] Removed from local React state:", noteId);
@@ -430,15 +427,13 @@ const App: React.FC = () => {
             user={user}
             onImportNote={(newNote) => {
               setNotes([newNote, ...notes]);
-              StorageService.saveNote(newNote); // Ensure persistence immediately
+              StorageService.saveNote(newNote);
               setView("notes");
             }}
             onNavigate={handleNavigate}
           />
         )}
       </main>
-
-      {/* Modal removed in favor of full Auth page */}
     </div>
   );
 };
