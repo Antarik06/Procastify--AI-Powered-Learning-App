@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Note, NoteElement, UserPreferences } from '../types';
-import { Plus, ChevronLeft, Trash2, Layout, FileText, Image as ImageIcon, Search, AlignLeft, SplitSquareHorizontal, Globe, GripVertical } from 'lucide-react';
+import { Note, NoteElement, UserPreferences, Block } from '../types';
+import { Plus, ChevronLeft, Trash2, Layout, FileText, Image as ImageIcon, Search, AlignLeft, SplitSquareHorizontal, Globe, GripVertical, Upload } from 'lucide-react';
 import DocumentEditor from '../components/DocumentEditor';
 import CanvasBoard from '../components/CanvasBoard';
+import MigrationHub from '../components/MigrationHub';
 import { StorageService } from '../services/storageService';
 
 interface NotesProps {
@@ -20,6 +21,7 @@ const Notes: React.FC<NotesProps> = ({ notes, setNotes, onDeleteNote, user, onNa
     const [viewMode, setViewMode] = useState<ViewMode>('split');
     const [search, setSearch] = useState('');
     const [isEditingTitle, setIsEditingTitle] = useState(false);
+    const [showMigration, setShowMigration] = useState(false);
 
     // Resizable split view state
     const [splitPosition, setSplitPosition] = useState(50); // Percentage (0-100)
@@ -88,6 +90,26 @@ const Notes: React.FC<NotesProps> = ({ notes, setNotes, onDeleteNote, user, onNa
         }
         // Fallback for empty or legacy: Return empty array to let Editor initialize default
         return [];
+    };
+
+    const handleImport = async (blocks: Block[], title: string) => {
+        const newNote: Note = {
+            id: Date.now().toString(),
+            userId: user.id,
+            title: title || 'Imported Note',
+            tags: ['Imported'],
+            folder: 'General',
+            lastModified: Date.now(),
+            document: { blocks },
+            canvas: { elements: [] },
+            elements: [], // Legacy compat
+            createdAt: Date.now()
+        };
+        console.log("[Notes.tsx] handleImport - Saving imported note:", newNote);
+        await StorageService.saveNote(newNote);
+        setNotes([newNote, ...notes]);
+        setSelectedNoteId(newNote.id);
+        setShowMigration(false);
     };
 
     const createNote = async () => {
@@ -193,6 +215,12 @@ const Notes: React.FC<NotesProps> = ({ notes, setNotes, onDeleteNote, user, onNa
                     <h1 className="text-3xl font-bold text-white">My Notes</h1>
                     <div className="flex gap-3">
                         <button
+                            onClick={() => setShowMigration(true)}
+                            className="bg-[#2b2d31] hover:bg-[#3f4147] border border-white/5 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all font-medium"
+                        >
+                            <Upload size={18} /> Import
+                        </button>
+                        <button
                             onClick={() => onNavigate('store')}
                             className="bg-[#2b2d31] hover:bg-[#3f4147] border border-white/5 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all font-medium"
                         >
@@ -253,6 +281,14 @@ const Notes: React.FC<NotesProps> = ({ notes, setNotes, onDeleteNote, user, onNa
                         );
                     })}
                 </div>
+
+                {/* Import Modal */}
+                {showMigration && (
+                    <MigrationHub 
+                        onImport={handleImport}
+                        onClose={() => setShowMigration(false)}
+                    />
+                )}
             </div>
         );
     }
