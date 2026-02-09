@@ -162,8 +162,70 @@ input:focus-visible {
   .animate-float {
     animation-duration: 4s;
   }
-  
+
   .animate-gradient-x {
     animation-duration: 2s;
   }
+}
+
+
+/* ===== MOBILE NAVBAR STYLES ===== */
+
+/* Safe area padding for notched phones (iPhone X+, etc.) */
+.mobile-safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.mobile-safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Mobile drawer scroll */
+.mobile-drawer-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.mobile-drawer-scroll::-webkit-scrollbar {
+  width: 0;
+  display: none;
+}
+
+/* Touch-friendly tap targets */
+@media (max-width: 768px) {
+  /* Ensure minimum 44px tap targets on mobile */
+  button, a {
+    min-height: 40px;
+  }
+
+  /* Reduce page padding on mobile for less visual clutter */
+  .p-8 {
+    padding: 1rem !important;
+    padding-top: 0.5rem !important;
+  }
+
+  /* Prevent horizontal overflow */
+  body {
+    overflow-x: hidden;
+  }
+
+  main {
+    overflow-x: hidden;
+  }
+}
+
+/* Prevent text selection on navigation elements (mobile feel) */
+.touch-manipulation {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+/* No-scrollbar utility */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }

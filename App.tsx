@@ -3,7 +3,7 @@ import { ViewState, UserPreferences, Summary, Note, RoutineTask, UserStats, Flas
 import { StorageService } from './services/storageService';
 import { auth } from './firebaseConfig';
 import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
-import Sidebar from './components/Sidebar';
+import Sidebar, { NAV_ITEMS } from './components/Sidebar';
 import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
 import Summarizer from './pages/Summarizer';
@@ -14,7 +14,7 @@ import QuizPage from './pages/Quiz';
 import NoteFeed from './pages/NoteFeed';
 import NotesStore from './pages/NotesStore';
 import Auth from './pages/Auth';
-import { AlertCircle, LogIn, X, Loader2 } from 'lucide-react';
+import { AlertCircle, LogIn, X, Loader2, Menu, BrainCircuit, MoreHorizontal } from 'lucide-react';
 
 const App: React.FC = () => {
     const [view, setView] = useState<ViewState>('landing');
@@ -25,6 +25,7 @@ const App: React.FC = () => {
     const [stats, setStats] = useState<UserStats | null>(null);
     const [focusTask, setFocusTask] = useState<RoutineTask | undefined>(undefined);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const deriveName = (email?: string | null) => {
         if (!email) return 'User';
@@ -252,8 +253,8 @@ const App: React.FC = () => {
 
     if (view === 'auth') {
         return (
-            <Auth 
-                onLoginSuccess={() => setView('dashboard')} 
+            <Auth
+                onLoginSuccess={() => setView('dashboard')}
                 onGuestAccess={handleGuestAccess}
                 onBack={user ? () => setView('dashboard') : () => setView('landing')}
             />
@@ -270,6 +271,10 @@ const App: React.FC = () => {
     if (view === 'focus') return <Focus initialTask={focusTask} onExit={handleFocusExit} />;
 
 
+    // Primary bottom-bar items (4 visible + More)
+    const bottomBarItems = NAV_ITEMS.filter(i => i.primary);
+    const isSecondaryView = !NAV_ITEMS.find(i => i.primary && i.view === view);
+
     return (
         <div className="flex min-h-screen bg-[#1e1f22]">
             <Sidebar
@@ -278,8 +283,33 @@ const App: React.FC = () => {
                 onLogout={handleLogout}
                 collapsed={sidebarCollapsed}
                 onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+                mobileOpen={mobileMenuOpen}
+                onMobileToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
+                userName={user.name}
             />
-            <main className={`flex-1 ${sidebarCollapsed ? 'ml-20' : 'ml-64'} overflow-y-auto max-h-screen relative transition-all duration-300 ease-in-out`}>
+
+            {/* ===== MOBILE TOP HEADER BAR ===== */}
+            <div className="md:hidden fixed top-0 left-0 right-0 z-[52] h-14 bg-[#111214]/95 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-4 mobile-safe-top">
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-discord-textMuted hover:text-white hover:bg-white/10 transition-colors active:scale-95"
+                aria-label="Open menu"
+              >
+                <Menu size={20} />
+              </button>
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 bg-gradient-to-br from-discord-accent to-purple-600 rounded-lg flex items-center justify-center shadow-md shadow-discord-accent/20">
+                  <BrainCircuit className="text-white" size={14} />
+                </div>
+                <span className="text-sm font-bold text-white tracking-tight">Procastify</span>
+              </div>
+              <div className="w-10"></div>
+            </div>
+
+            <main className={`flex-1 ml-0 ${sidebarCollapsed ? 'md:ml-20' : 'md:ml-64'} overflow-y-auto max-h-screen relative transition-all duration-300 ease-in-out`}>
+                {/* Mobile top spacer to clear the header bar */}
+                <div className="md:hidden h-14"></div>
+
                 {/* User Context Bar (Small) */}
                 {user.isGuest && (
                     <div className="bg-indigo-900/30 border-b border-indigo-500/20 px-4 py-1 text-xs text-indigo-200 flex justify-between items-center sticky top-0 z-50 backdrop-blur-md">
@@ -359,10 +389,57 @@ const App: React.FC = () => {
                         onNavigate={setView}
                     />
                 )}
+                {/* Mobile bottom spacer to prevent content hiding behind bottom bar */}
+                <div className="md:hidden h-20"></div>
             </main>
 
-
-            {/* Modal removed in favor of full Auth page */}
+            {/* ===== MOBILE BOTTOM TAB BAR ===== */}
+            <div className="md:hidden fixed bottom-0 left-0 right-0 z-[52] mobile-safe-bottom">
+              <div className="bg-[#111214]/95 backdrop-blur-md border-t border-white/10 flex items-stretch justify-around px-1 h-16">
+                {bottomBarItems.map((item) => {
+                  const Icon = item.icon;
+                  const active = view === item.view;
+                  return (
+                    <button
+                      key={item.view}
+                      onClick={() => setView(item.view)}
+                      className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-1 transition-all duration-200 relative touch-manipulation active:scale-95 ${
+                        active ? 'text-discord-accent' : 'text-discord-textMuted'
+                      }`}
+                    >
+                      {active && (
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-discord-accent rounded-b-full"></div>
+                      )}
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-200 ${
+                        active ? 'bg-discord-accent/15 shadow-sm shadow-discord-accent/10' : ''
+                      }`}>
+                        <Icon size={active ? 20 : 18} className="transition-all duration-200" />
+                      </div>
+                      <span className={`text-[10px] leading-none font-medium transition-all duration-200 ${active ? 'text-discord-accent' : ''}`}>
+                        {item.label.split(' ')[0]}
+                      </span>
+                    </button>
+                  );
+                })}
+                {/* "More" button opens drawer for secondary items */}
+                <button
+                  onClick={() => setMobileMenuOpen(true)}
+                  className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-1 transition-all duration-200 relative touch-manipulation active:scale-95 ${
+                    isSecondaryView ? 'text-discord-accent' : 'text-discord-textMuted'
+                  }`}
+                >
+                  {isSecondaryView && (
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-discord-accent rounded-b-full"></div>
+                  )}
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-200 ${
+                    isSecondaryView ? 'bg-discord-accent/15' : ''
+                  }`}>
+                    <MoreHorizontal size={isSecondaryView ? 20 : 18} className="transition-all duration-200" />
+                  </div>
+                  <span className={`text-[10px] leading-none font-medium ${isSecondaryView ? 'text-discord-accent' : ''}`}>More</span>
+                </button>
+              </div>
+            </div>
 
         </div>
     );
