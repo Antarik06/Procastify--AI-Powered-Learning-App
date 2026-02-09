@@ -8,9 +8,8 @@ export interface URLExtractionResult {
   title?: string;
 }
 
-// CORS proxy for client-side fetching
-// Using the JSON endpoint which has proper CORS headers
-const CORS_PROXY = 'https://api.allorigins.win/get?url=';
+// Use Jina.ai Reader API as it handles dynamic content (Notion/Docs) and returns Clean Markdown
+const JINA_READER_API = 'https://r.jina.ai/';
 
 /**
  * Validates if a string is a valid URL
@@ -32,8 +31,55 @@ function isYouTubeURL(url: string): boolean {
 }
 
 /**
- * Extracts video ID from YouTube URL
+ * Detects if URL is a Google Doc
  */
+function isGoogleDocURL(url: string): boolean {
+  return url.includes('docs.google.com/document/d/');
+}
+
+/**
+ * Fetches content using Jina Reader API
+ */
+async function extractWithJina(url: string): Promise<URLExtractionResult> {
+    try {
+        console.log('[URL Service] Fetching via Jina Reader:', url);
+        const response = await fetch(`${JINA_READER_API}${url}`);
+        
+        if (!response.ok) {
+           // Jina might fail for strict private pages, but usually returns readable error
+           const errText = await response.text();
+           throw new Error(`Reader API failed: ${errText.substring(0, 100)}`);
+        }
+
+        const markdown = await response.text();
+        
+        // Jina returns markdown with title at the top usually
+        // Let's verify we got something meaningful
+        if (!markdown || markdown.length < 50 || markdown.includes('Access denied') || markdown.includes('Sign in')) {
+             return {
+                 success: false,
+                 text: '',
+                 error: 'Content not accessible. The page requires sign-in or is private. Please ensure the link is "Public / Anyone with link".'
+             };
+        }
+
+        return {
+            success: true,
+            text: markdown, // It's already in Markdown, perfect for our block parser
+            title: 'Imported Web Content'
+        };
+
+    } catch (e: any) {
+        console.error('Jina Reader Error:', e);
+        return {
+            success: false,
+            text: '',
+            error: 'Failed to read link content. ' + e.message
+        };
+    }
+}
+
+
 function getYouTubeVideoId(url: string): string | null {
   const patterns = [
     /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
@@ -203,54 +249,7 @@ export async function fetchURLContent(url: string): Promise<URLExtractionResult>
     return extractYouTubeTranscript(url);
   }
 
-  // Fetch regular webpage content
-  try {
-    const proxiedUrl = CORS_PROXY + encodeURIComponent(url);
-
-    const response = await fetch(proxiedUrl, {
-      method: 'GET',
-      headers: {
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      }
-    });
-
-    if (!response.ok) {
-      return {
-        success: false,
-        text: '',
-        error: `Failed to fetch URL: ${response.status} ${response.statusText}`
-      };
-    }
-
-    // Parse JSON response from CORS proxy
-    const data = await response.json();
-    const html = data.contents;
-
-    if (!html || html.length < 100) {
-      return {
-        success: false,
-        text: '',
-        error: 'Received empty or invalid response from URL'
-      };
-    }
-
-    return extractMainContent(html, url);
-  } catch (error: any) {
-    console.error('URL fetch error:', error);
-
-    // Provide user-friendly error messages
-    if (error.message.includes('CORS') || error.message.includes('fetch')) {
-      return {
-        success: false,
-        text: '',
-        error: 'Unable to access this URL due to network restrictions. Some websites block automated access.'
-      };
-    }
-
-    return {
-      success: false,
-      text: '',
-      error: error.message || 'Failed to fetch URL content'
-    };
-  }
+  // Use Jina for General Webpages, Google Docs, Notion, etc.
+  // It handles dynamic content/SPA rendering (like Notion) much better than cheerio
+  return extractWithJina(url);
 }

@@ -42,22 +42,17 @@ const MigrationHub: React.FC<MigrationHubProps> = ({ onImport, onClose }) => {
     const handlePasteImport = async () => {
         if (!linkInput.trim()) return;
         
-        // Validation: Warn about raw links
-        const urlPattern = /^(https?:\/\/[^\s]+)$/;
-        if (urlPattern.test(linkInput.trim())) {
-            setError("Direct link import is strictly limited by browser security/privacy. Please copy the text CONTENT from your doc and paste it here instead.");
-            return;
-        }
-
         setLoading(true);
-        // MVP: Treat plain text/links as content to parse
+        setError(null);
+
         try {
-            const blocks = MigrationService.processContent(linkInput, 'markdown');
+            // Updated to be async
+            const blocks = await MigrationService.processContent(linkInput, 'markdown');
             onImport(blocks, "Imported Content");
             setSuccess(true);
             setTimeout(onClose, 1500);
         } catch (err) {
-            setError("Failed to parse content.");
+            setError(err instanceof Error ? err.message : "Failed to parse content.");
         } finally {
             setLoading(false);
         }
@@ -159,7 +154,7 @@ const MigrationHub: React.FC<MigrationHubProps> = ({ onImport, onClose }) => {
                                     <div className="w-full flex-1 flex flex-col gap-4">
                                         <div className="bg-[#2b2d31] p-4 rounded-xl border border-yellow-500/20 text-yellow-200/80 text-sm flex gap-3">
                                             <AlertCircle className="shrink-0" size={18} />
-                                            <p>For Google Docs & Notion: Please <b>Select All</b> (Ctrl+A) in your document, <b>Copy</b>, and <b>Paste the content</b> below. Direct links cannot be accessed for privacy reasons.</p>
+                                            <p>Paste a URL to fetch its content, or paste the text content directly from your document.</p>
                                         </div>
                                         <textarea 
                                             value={linkInput}
@@ -167,7 +162,7 @@ const MigrationHub: React.FC<MigrationHubProps> = ({ onImport, onClose }) => {
                                                 setLinkInput(e.target.value);
                                                 if(error) setError(null);
                                             }}
-                                            placeholder="Paste document content here..."
+                                            placeholder="Paste URL or document content here..."
                                             className="flex-1 w-full bg-[#1e1f22] border border-white/10 rounded-xl p-4 text-gray-300 focus:outline-none focus:border-[#5865F2] resize-none font-mono text-sm"
                                         />
                                         <button 
@@ -175,7 +170,7 @@ const MigrationHub: React.FC<MigrationHubProps> = ({ onImport, onClose }) => {
                                             disabled={!linkInput.trim()}
                                             className="w-full py-3 bg-[#5865F2] hover:bg-[#4752c4] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold transition-all"
                                         >
-                                            Process Content
+                                            Fetch & Import
                                         </button>
                                     </div>
                                 )}

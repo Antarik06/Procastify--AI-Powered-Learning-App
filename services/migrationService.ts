@@ -3,6 +3,7 @@ import JSZip from 'jszip';
 import * as pdfjsLib from 'pdfjs-dist';
 import { v4 as uuidv4 } from 'uuid';
 import { Block, BlockType } from '../types';
+import { fetchURLContent } from './urlContentService';
 
 // Configure PDF.js worker
 try {
@@ -52,7 +53,20 @@ export const MigrationService = {
   /**
    * Process raw text/html content (e.g. from clipboard or link fetch)
    */
-  processContent(content: string, format: 'text' | 'markdown' | 'html'): Block[] {
+  async processContent(content: string, format: 'text' | 'markdown' | 'html'): Promise<Block[]> {
+    // Check if content is a URL
+    const urlPattern = /^(https?:\/\/[^\s]+)$/;
+    if (urlPattern.test(content.trim())) {
+        const url = content.trim();
+        const result = await fetchURLContent(url);
+        if (result.success && result.text) {
+            // Process the fetched text
+            return this.processContent(result.text, 'text');
+        } else {
+            throw new Error(result.error || "Failed to fetch content from URL.");
+        }
+    }
+
     if (format === 'html') {
       return this.parseHtmlToBlocks(content); // Basic parser
     }
