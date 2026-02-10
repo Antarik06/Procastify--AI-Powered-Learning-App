@@ -365,7 +365,8 @@ const App: React.FC = () => {
             notes={notes}
             setNotes={(newNotes) => {
               setNotes(newNotes);
-              StorageService.saveNotes(newNotes);
+              const notesArray = typeof newNotes === 'function' ? newNotes(notes) : newNotes;
+              StorageService.saveNotes(notesArray);
             }}
             onDeleteNote={async (noteId) => {
               await StorageService.deleteNote(noteId);
