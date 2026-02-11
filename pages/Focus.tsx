@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { RoutineTask } from '../types';
-import { 
-  Play, Pause, Square, Coffee, BrainCircuit, ChevronLeft, Volume2, VolumeX, 
+import {
+  Play, Pause, Square, Coffee, BrainCircuit, ChevronLeft, Volume2, VolumeX,
   Settings2, Sparkles, Zap, Wind, Timer, StopCircle, RotateCcw, BarChart3, ShieldAlert
 } from 'lucide-react';
 
@@ -32,7 +32,7 @@ class AmbientSoundEngine {
   private ctx: AudioContext | null = null;
   private gainNode: GainNode | null = null;
   // Use AudioNode as the base type to support both buffers and media elements
-  private source: AudioNode | null = null; 
+  private source: AudioNode | null = null;
   private audioTag: HTMLAudioElement | null = null;
   private isPlaying = false;
 
@@ -115,7 +115,7 @@ const Focus: React.FC<FocusProps> = ({ initialTask, onExit }) => {
   const [secondsSpent, setSecondsSpent] = useState(0);
   const [pauseCount, setPauseCount] = useState(0);
   const [showSummary, setShowSummary] = useState(false);
-  
+
   // Customization & Features
   const [soundType, setSoundType] = useState<SoundType>('none');
   const [blockedUrls, setBlockedUrls] = useState<string[]>(['facebook.com', 'twitter.com', 'youtube.com']);
@@ -189,19 +189,19 @@ const Focus: React.FC<FocusProps> = ({ initialTask, onExit }) => {
 
   return (
     <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#0f1012] text-white overflow-hidden">
-      
+
       {/* --- Top Bar --- */}
-      <div className="absolute top-0 w-full p-6 flex justify-between items-center z-20">
-        <button onClick={() => onExit(Math.floor(secondsSpent/60))} className="flex items-center gap-2 opacity-50 hover:opacity-100 transition-opacity">
+      <div className="absolute top-0 w-full p-4 md:p-6 flex justify-between items-center z-20">
+        <button onClick={() => onExit(Math.floor(secondsSpent / 60))} className="flex items-center gap-2 opacity-50 hover:opacity-100 transition-opacity">
           <ChevronLeft size={18} /> Exit
         </button>
 
         <div className="flex items-center gap-4 bg-white/5 p-1 rounded-lg border border-white/10">
-          <button 
+          <button
             onClick={() => { setMode('countdown'); setIsActive(false); setTimeLeft(initialSeconds); }}
             className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${mode === 'countdown' ? 'bg-white/10 text-white' : 'text-white/40'}`}
           >Countdown</button>
-          <button 
+          <button
             onClick={() => { setMode('stopwatch'); setIsActive(false); setTimeLeft(0); }}
             className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${mode === 'stopwatch' ? 'bg-white/10 text-white' : 'text-white/40'}`}
           >Stopwatch</button>
@@ -210,36 +210,36 @@ const Focus: React.FC<FocusProps> = ({ initialTask, onExit }) => {
 
       {/* --- Main Timer Circle --- */}
       <div className="relative flex flex-col items-center">
-        <div 
+        <div
           className="absolute inset-0 rounded-full blur-[120px] opacity-20 transition-colors duration-1000"
           style={{ backgroundColor: style.color }}
         />
-        
+
         <div className="relative z-10 flex flex-col items-center">
           <div className="mb-4 px-4 py-1 rounded-full border border-white/10 bg-white/5 flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold">
             <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: style.color }} />
             {style.text}
           </div>
-          
-          <h1 className="text-9xl font-mono font-medium tracking-tighter mb-8 tabular-nums">
+
+          <h1 className="text-6xl md:text-9xl font-mono font-medium tracking-tighter mb-4 md:mb-8 tabular-nums">
             {formatTime(timeLeft)}
           </h1>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 md:gap-6">
             {mode === 'stopwatch' && (
-               <button onClick={() => { setTimeLeft(0); setIsActive(false); }} className="p-4 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-all">
+              <button onClick={() => { setTimeLeft(0); setIsActive(false); }} className="p-3 md:p-4 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-all">
                 <RotateCcw size={24} />
-               </button>
+              </button>
             )}
-            
-            <button 
-              onClick={() => { if (isActive) setPauseCount(p => p+1); setIsActive(!isActive); }}
-              className="w-24 h-24 rounded-full flex items-center justify-center bg-white text-black hover:scale-105 transition-transform"
+
+            <button
+              onClick={() => { if (isActive) setPauseCount(p => p + 1); setIsActive(!isActive); }}
+              className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center bg-white text-black hover:scale-105 transition-transform"
             >
-              {isActive ? <Pause size={40} fill="currentColor" /> : <Play size={40} fill="currentColor" className="ml-2" />}
+              {isActive ? <Pause size={32} className="md:w-10 md:h-10" fill="currentColor" /> : <Play size={32} className="ml-1 md:ml-2 md:w-10 md:h-10" fill="currentColor" />}
             </button>
 
-            <button onClick={() => setShowSummary(true)} className="p-4 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-all">
+            <button onClick={() => setShowSummary(true)} className="p-3 md:p-4 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-all">
               <Square size={24} />
             </button>
           </div>
@@ -248,13 +248,13 @@ const Focus: React.FC<FocusProps> = ({ initialTask, onExit }) => {
 
       {/* --- Part 1: Custom Duration & Part 2: Sound Controls --- */}
       {!isActive && !showSummary && (
-        <div className="mt-12 flex gap-8 animate-in fade-in slide-in-from-bottom-4">
-          <div className="flex flex-col gap-2">
+        <div className="mt-8 md:mt-12 flex flex-col md:flex-row items-center gap-6 md:gap-8 animate-in fade-in slide-in-from-bottom-4 w-full px-4 md:px-0 md:w-auto">
+          <div className="flex flex-col gap-2 items-center">
             <span className="text-[10px] uppercase font-bold text-white/30 tracking-widest">Adjust Duration</span>
-            <div className="flex gap-2">
-              <input 
-                type="number" 
-                value={Math.floor(initialSeconds/60)} 
+            <div className="flex flex-wrap justify-center gap-2">
+              <input
+                type="number"
+                value={Math.floor(initialSeconds / 60)}
                 onChange={(e) => {
                   const val = parseInt(e.target.value) || 0;
                   setInitialSeconds(val * 60);
@@ -263,19 +263,19 @@ const Focus: React.FC<FocusProps> = ({ initialTask, onExit }) => {
                 className="w-20 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-white/30"
               />
               {PRESETS.map(p => (
-                <button key={p.label} onClick={() => { setInitialSeconds(p.focus*60); setTimeLeft(p.focus*60); }} className="px-3 py-2 bg-white/5 rounded-lg text-xs hover:bg-white/10">
+                <button key={p.label} onClick={() => { setInitialSeconds(p.focus * 60); setTimeLeft(p.focus * 60); }} className="px-3 py-2 bg-white/5 rounded-lg text-xs hover:bg-white/10">
                   {p.focus}m
                 </button>
               ))}
             </div>
           </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 items-center">
             <span className="text-[10px] uppercase font-bold text-white/30 tracking-widest">Focus Sounds</span>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap justify-center gap-2">
               {(['none', 'brown-noise', 'heavy-rain', 'forest'] as SoundType[]).map(s => (
-                <button 
-                  key={s} 
+                <button
+                  key={s}
                   onClick={() => setSoundType(s)}
                   className={`px-3 py-2 rounded-lg text-xs capitalize transition-all ${soundType === s ? 'bg-white/20 text-white' : 'bg-white/5 text-white/40'}`}
                 >
@@ -289,13 +289,13 @@ const Focus: React.FC<FocusProps> = ({ initialTask, onExit }) => {
 
       {/* --- Part 1: Session Summary Report --- */}
       {showSummary && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-6">
-          <div className="bg-[#1a1b1e] border border-white/10 p-8 rounded-3xl max-w-md w-full shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 md:p-6">
+          <div className="bg-[#1a1b1e] border border-white/10 p-6 md:p-8 rounded-3xl max-w-md w-full shadow-2xl">
             <div className="flex items-center gap-3 mb-6">
               <BarChart3 className="text-indigo-400" />
               <h2 className="text-2xl font-bold">Session Report</h2>
             </div>
-            
+
             <div className="space-y-4 mb-8">
               <div className="flex justify-between p-4 bg-white/5 rounded-2xl">
                 <span className="text-white/50">Focused Time</span>
@@ -313,8 +313,8 @@ const Focus: React.FC<FocusProps> = ({ initialTask, onExit }) => {
               </div>
             </div>
 
-            <button 
-              onClick={() => onExit(Math.floor(secondsSpent/60))}
+            <button
+              onClick={() => onExit(Math.floor(secondsSpent / 60))}
               className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 rounded-2xl font-bold transition-all shadow-lg shadow-indigo-500/20"
             >
               Complete Session
@@ -324,7 +324,7 @@ const Focus: React.FC<FocusProps> = ({ initialTask, onExit }) => {
       )}
 
       {/* --- Part 3: Distraction Block Indicator --- */}
-      <div className="absolute bottom-6 left-6 flex items-center gap-3 text-white/20 text-[10px] font-bold tracking-widest uppercase">
+      <div className="absolute bottom-4 left-4 md:bottom-6 md:left-6 flex items-center gap-3 text-white/20 text-[10px] font-bold tracking-widest uppercase">
         <ShieldAlert size={14} className={distractionCount > 0 ? 'text-orange-500' : ''} />
         Guard Active: {blockedUrls.length} Sites Restricted
       </div>
