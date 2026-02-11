@@ -351,16 +351,8 @@ const App: React.FC = () => {
         userRole={user.role}
       />
       <main
-        className={`flex-1 ml-0 pb-16 md:pb-0 ${sidebarCollapsed ? "md:ml-20" : "md:ml-64"} overflow-y-auto max-h-screen relative transition-all duration-300 ease-in-out`}
+        className={`flex-1 ${sidebarCollapsed ? "ml-20" : "ml-64"} overflow-y-auto max-h-screen relative transition-all duration-300 ease-in-out`}
       >
-        {/* Mobile Hamburger Toggle — top left */}
-        <button
-          onClick={() => setMobileSidebarOpen(true)}
-          className="md:hidden fixed top-4 left-4 z-30 w-10 h-10 rounded-xl bg-[#111214]/90 border border-white/10 backdrop-blur-md flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all shadow-lg active:scale-90 touch-manipulation"
-          aria-label="Open menu"
-        >
-          <Menu size={20} />
-        </button>
         {/* User Context Bar (Small) */}
         {user.isGuest && (
           <div className="bg-indigo-900/30 border-b border-indigo-500/20 px-4 py-1 text-xs text-indigo-200 flex justify-between items-center sticky top-0 z-50 backdrop-blur-md">
