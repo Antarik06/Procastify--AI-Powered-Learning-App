@@ -447,20 +447,22 @@ export const StorageService = {
     saveCustomMode: async (customMode: CustomMode): Promise<void> => {
         if (!currentUserId) throw new Error("No user logged in");
 
+        const modeToSave: CustomMode = { ...customMode, userId: currentUserId };
+
         if (isGuestMode) {
             const modes = getLocalUserItems<CustomMode>(LOCAL_KEYS.CUSTOM_MODES, currentUserId);
-            const existingIndex = modes.findIndex(m => m.id === customMode.id);
+            const existingIndex = modes.findIndex(m => m.id === modeToSave.id);
             
             if (existingIndex >= 0) {
-                modes[existingIndex] = customMode;
+                modes[existingIndex] = modeToSave;
             } else {
-                modes.push(customMode);
+                modes.push(modeToSave);
             }
             
             saveLocalUserItems(LOCAL_KEYS.CUSTOM_MODES, currentUserId, modes);
         } else {
-            const docRef = doc(db, 'users', currentUserId, 'custom_modes', customMode.id);
-            await setDoc(docRef, customMode);
+            const docRef = doc(db, 'users', currentUserId, 'custom_modes', modeToSave.id);
+            await setDoc(docRef, modeToSave);
         }
     },
 

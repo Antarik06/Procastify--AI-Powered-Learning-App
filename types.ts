@@ -44,13 +44,17 @@ export interface NoteElement {
   zIndex: number;
 }
 
-export type BlockType = 'text' | 'h1' | 'h2' | 'h3' | 'bullet' | 'todo' | 'quote';
+export type BlockType = 'text' | 'h1' | 'h2' | 'h3' | 'bullet' | 'todo' | 'quote' | 'code' | 'image' | 'link';
 
 export interface Block {
   id: string;
   type: BlockType;
   content: string;
   isChecked?: boolean;
+  // Rich content fields (optional for backward compatibility)
+  imageUrl?: string;    // Base64 data URL for image blocks
+  linkUrl?: string;     // URL for link blocks
+  language?: string;    // Programming language for code blocks
 }
 
 export interface NoteDocument {

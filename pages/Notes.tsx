@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Note, NoteElement, UserPreferences } from '../types';
-import { Plus, ChevronLeft, Trash2, Layout, FileText, Image as ImageIcon, Search, AlignLeft, SplitSquareHorizontal, Globe } from 'lucide-react';
+import { Plus, ChevronLeft, Trash2, Layout, FileText, Image as ImageIcon, Search, AlignLeft, SplitSquareHorizontal, Globe, GripVertical } from 'lucide-react';
 import DocumentEditor from '../components/DocumentEditor';
 import CanvasBoard from '../components/CanvasBoard';
 import { StorageService } from '../services/storageService';
@@ -20,6 +20,51 @@ const Notes: React.FC<NotesProps> = ({ notes, setNotes, onDeleteNote, user, onNa
     const [viewMode, setViewMode] = useState<ViewMode>('split');
     const [search, setSearch] = useState('');
     const [isEditingTitle, setIsEditingTitle] = useState(false);
+
+    // Resizable split view state
+    const [splitPosition, setSplitPosition] = useState(50); // Percentage (0-100)
+    const [isDragging, setIsDragging] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    // Handle mouse move during drag
+    const handleMouseMove = useCallback((e: MouseEvent) => {
+        if (!isDragging || !containerRef.current) return;
+
+        const container = containerRef.current;
+        const rect = container.getBoundingClientRect();
+        const newPosition = ((e.clientX - rect.left) / rect.width) * 100;
+
+        // Clamp between 20% and 80%
+        const clampedPosition = Math.min(80, Math.max(20, newPosition));
+        setSplitPosition(clampedPosition);
+    }, [isDragging]);
+
+    // Handle mouse up to stop dragging
+    const handleMouseUp = useCallback(() => {
+        setIsDragging(false);
+    }, []);
+
+    // Add/remove global event listeners for drag
+    useEffect(() => {
+        if (isDragging) {
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+        } else {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+        }
+
+        return () => {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+        };
+    }, [isDragging, handleMouseMove, handleMouseUp]);
 
     const activeNote = notes.find(n => n.id === selectedNoteId);
 
@@ -278,11 +323,14 @@ const Notes: React.FC<NotesProps> = ({ notes, setNotes, onDeleteNote, user, onNa
             </div>
 
             {/* Content Area */}
-            <div className="flex-1 flex overflow-hidden">
+            <div ref={containerRef} className="flex-1 flex overflow-hidden relative">
 
                 {/* Document Section */}
                 {(viewMode === 'document' || viewMode === 'split') && (
-                    <div className={`${viewMode === 'split' ? 'w-1/2 border-r border-white/10' : 'w-full'} bg-[#1e1f22] flex flex-col`}>
+                    <div
+                        className={`bg-[#1e1f22] flex flex-col overflow-hidden`}
+                        style={{ width: viewMode === 'split' ? `${splitPosition}%` : '100%' }}
+                    >
                         <DocumentEditor
                             content={getDocumentContent(activeNote)}
                             onUpdate={updateDocumentContent}
@@ -290,9 +338,25 @@ const Notes: React.FC<NotesProps> = ({ notes, setNotes, onDeleteNote, user, onNa
                     </div>
                 )}
 
+                {/* Resizable Divider - Only in split mode */}
+                {viewMode === 'split' && (
+                    <div
+                        className={`w-2 bg-[#2b2d31] hover:bg-discord-accent/50 cursor-col-resize flex items-center justify-center transition-colors group ${isDragging ? 'bg-discord-accent' : ''}`}
+                        onMouseDown={(e) => {
+                            e.preventDefault();
+                            setIsDragging(true);
+                        }}
+                    >
+                        <div className={`w-1 h-12 rounded-full transition-colors ${isDragging ? 'bg-discord-accent' : 'bg-white/20 group-hover:bg-discord-accent/70'}`} />
+                    </div>
+                )}
+
                 {/* Canvas Section */}
                 {(viewMode === 'canvas' || viewMode === 'split') && (
-                    <div className={`${viewMode === 'split' ? 'w-1/2' : 'w-full'} bg-[#1e1f22]`}>
+                    <div
+                        className={`bg-[#1e1f22] overflow-hidden`}
+                        style={{ width: viewMode === 'split' ? `${100 - splitPosition}%` : '100%' }}
+                    >
                         <CanvasBoard
                             canvasId={activeNote.id}
                             readOnly={false}

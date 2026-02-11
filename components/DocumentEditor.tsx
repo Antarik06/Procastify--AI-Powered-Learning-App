@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Block, BlockType } from '../types';
 import BlockComponent from './BlockEditor/Block';
 import {
@@ -10,7 +10,10 @@ import {
     List,
     Quote,
     Type,
-    CheckSquare
+    CheckSquare,
+    Code,
+    Link,
+    Image as ImageIcon
 } from 'lucide-react';
 
 // Simple ID generator
@@ -109,6 +112,82 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ content, onUpdate, read
             setActiveBlockId(prevBlock.id);
         }
     };
+
+    // Add image block from base64 data
+    const addImageBlock = useCallback((imageData: string, caption?: string) => {
+        const newBlock: Block = {
+            id: generateId(),
+            type: 'image',
+            content: caption || '',
+            imageUrl: imageData
+        };
+
+        // Insert after active block or at end
+        const index = activeBlockId
+            ? blocks.findIndex((b) => b.id === activeBlockId)
+            : blocks.length - 1;
+
+        const newBlocks = [...blocks];
+        newBlocks.splice(index + 1, 0, newBlock);
+        setBlocks(newBlocks);
+        setActiveBlockId(newBlock.id);
+    }, [blocks, activeBlockId]);
+
+    // Add link block from URL
+    const addLinkBlock = useCallback((url: string, title?: string) => {
+        const newBlock: Block = {
+            id: generateId(),
+            type: 'link',
+            content: title || url,
+            linkUrl: url
+        };
+
+        // Insert after active block or at end
+        const index = activeBlockId
+            ? blocks.findIndex((b) => b.id === activeBlockId)
+            : blocks.length - 1;
+
+        const newBlocks = [...blocks];
+        newBlocks.splice(index + 1, 0, newBlock);
+        setBlocks(newBlocks);
+        setActiveBlockId(newBlock.id);
+    }, [blocks, activeBlockId]);
+
+    // Handle paste for images and URLs
+    const handlePaste = useCallback((e: React.ClipboardEvent) => {
+        const items = e.clipboardData?.items;
+        if (!items) return;
+
+        // Check for images first
+        for (const item of Array.from(items)) {
+            if (item.type.startsWith('image/')) {
+                e.preventDefault();
+                const file = item.getAsFile();
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const base64 = event.target?.result as string;
+                        if (base64) {
+                            addImageBlock(base64);
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+                return;
+            }
+        }
+
+        // Check for URL in text
+        const text = e.clipboardData?.getData('text/plain');
+        if (text) {
+            const urlPattern = /^(https?:\/\/[^\s]+)$/i;
+            if (urlPattern.test(text.trim())) {
+                e.preventDefault();
+                addLinkBlock(text.trim());
+                return;
+            }
+        }
+    }, [addImageBlock, addLinkBlock]);
 
     // Navigation
     const handleArrowUp = (index: number) => {
@@ -212,12 +291,26 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ content, onUpdate, read
                                 isActive={activeBlock?.type === 'quote'}
                                 onClick={() => toggleBlockType('quote')}
                             />
+                            <ToolbarButton
+                                icon={Code}
+                                isActive={activeBlock?.type === 'code'}
+                                onClick={() => toggleBlockType('code')}
+                            />
+                        </div>
+
+                        {/* Shortcuts hint */}
+                        <div className="hidden lg:flex items-center gap-2 ml-auto text-xs text-gray-500">
+                            <span>Shortcuts:</span>
+                            <kbd className="px-1.5 py-0.5 bg-black/20 rounded text-[10px]">Ctrl+H</kbd>
+                            <span>Heading</span>
+                            <kbd className="px-1.5 py-0.5 bg-black/20 rounded text-[10px]">Ctrl+Shift+C</kbd>
+                            <span>Code</span>
                         </div>
                     </div>
                 </div>
             )}
 
-            <div className="w-full flex-1 overflow-y-auto px-12 py-8">
+            <div className="w-full flex-1 overflow-y-auto px-12 py-8" onPaste={!readOnly ? handlePaste : undefined}>
                 {/* Editor Area */}
                 <div className="flex flex-col gap-1 max-w-3xl mx-auto">
                     {blocks.map((block, index) => (

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ViewState, UserPreferences, Summary, Note, RoutineTask, UserStats, Flashcard, NoteElement, CustomMode } from './types';
+import { ViewState, UserPreferences, Summary, Note, RoutineTask, UserStats, Flashcard, NoteElement } from './types';
 import { StorageService } from './services/storageService';
 import { auth } from './firebaseConfig';
 import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';

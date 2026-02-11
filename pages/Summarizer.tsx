@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { summarizeContent, generateFlashcards, generateSpeech, playAudioBlob } from '../services/geminiService';
 import { Summary, Flashcard, Note, Attachment, CustomMode } from '../types';
-import { Sparkles, FileText, Link as LinkIcon, Image as ImageIcon, Mic, FileUp, Volume2, Plus, Square, X, Paperclip, ChevronRight, StopCircle, CheckCircle, FilePlus, BookOpen, Edit3, Trash2, Save } from 'lucide-react';
+import { Sparkles, Link as LinkIcon, Mic, FileUp, Volume2, Plus, X, Paperclip, CheckCircle, FilePlus, BookOpen, Edit3, Trash2, Save } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { StorageService } from '../services/storageService';
 
@@ -66,10 +66,10 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
         try {
             const newMode: CustomMode = {
                 id: editingCustomMode?.id || Date.now().toString(),
-                userId: '', // Will be set by storage service
+                userId: StorageService.currentUserId || '',
                 name: customModeText.trim(),
                 systemPrompt: customModePrompt.trim(),
-                createdAt: Date.now()
+                createdAt: editingCustomMode?.createdAt || Date.now()
             };
 
             await StorageService.saveCustomMode(newMode);
@@ -725,6 +725,7 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
                                     onChange={(e) => setCustomModeText(e.target.value)}
                                     placeholder="e.g., Technical, Creative, Research Notes"
                                     className="w-full bg-discord-bg border border-white/10 rounded-lg px-4 py-3 text-white placeholder-discord-textMuted/50 focus:outline-none focus:border-discord-accent transition-colors"
+                                    autoFocus
                                 />
                             </div>
 
