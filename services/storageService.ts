@@ -759,6 +759,17 @@ export const StorageService = {
           }, { merge: true });
           
           console.log('Student added to classroom successfully');
+          
+          // Log activity for invitation acceptance
+          const studentProfile = await StorageService.getUserProfile(studentId);
+          await FirebaseService.logActivity({
+            classroomId: invitation.classroomId,
+            classroomName: invitation.classroomName,
+            type: 'student_accepted_invitation',
+            actorId: studentId,
+            actorName: studentProfile?.name || 'Student',
+            timestamp: Date.now(),
+          });
         } else {
           console.log('Student already in classroom');
         }

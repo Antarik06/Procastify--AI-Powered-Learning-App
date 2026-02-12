@@ -107,18 +107,10 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
         try {
           const studentProfile = await StorageService.getUserProfile(studentId);
           if (studentProfile) {
-            // Get email from invitations
-            const studentInvitations = await StorageService.getInvitations(user.id, 'teacher');
-            const studentInvite = studentInvitations.find(inv => 
-              inv.classroomId === classroomId && 
-              inv.studentId === studentId &&
-              inv.status === 'accepted'
-            );
-            
             students.push({
               id: studentId,
               name: studentProfile.name,
-              email: studentInvite?.studentEmail || 'No email'
+              email: studentProfile.email || 'No email available'
             });
           }
         } catch (error) {
@@ -148,6 +140,18 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
       };
 
       await StorageService.saveAnnouncement(newAnnouncement);
+      
+      // Log activity
+      const { FirebaseService } = await import('../services/firebaseService');
+      await FirebaseService.logActivity({
+        classroomId: classroom.id,
+        classroomName: classroom.name,
+        type: 'announcement_posted',
+        actorId: user.id,
+        actorName: user.name,
+        timestamp: Date.now(),
+      });
+      
       await loadTabData();
       setShowAnnouncementModal(false);
       setAnnouncementText('');
@@ -219,6 +223,20 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
       };
 
       await StorageService.shareResource(newResource);
+      
+      // Log activity
+      const { FirebaseService } = await import('../services/firebaseService');
+      await FirebaseService.logActivity({
+        classroomId: classroom.id,
+        classroomName: classroom.name,
+        type: 'resource_shared',
+        actorId: user.id,
+        actorName: user.name,
+        targetId: note.id,
+        targetName: note.title,
+        timestamp: Date.now(),
+      });
+      
       await loadTabData();
       setShowResourceModal(false);
       setSelectedNoteId('');
@@ -477,7 +495,7 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
 
         {/* Invitations Tab */}
         {activeTab === 'invitations' && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-bold text-white">Invitations</h2>
               <button
@@ -489,35 +507,71 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
               </button>
             </div>
 
-            {invitations.length === 0 ? (
-              <div className="bg-[#2b2d31] border border-white/5 rounded-xl p-12 text-center">
-                <Mail size={48} className="mx-auto mb-4 text-gray-600" />
-                <p className="text-gray-400">No invitations sent yet</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {invitations.map(invitation => (
-                  <div
-                    key={invitation.id}
-                    className="bg-[#2b2d31] border border-white/5 rounded-xl p-4 flex justify-between items-center"
-                  >
-                    <div>
-                      <p className="text-white font-medium">{invitation.studentEmail}</p>
-                      <p className="text-gray-500 text-sm">
-                        Sent {new Date(invitation.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      invitation.status === 'accepted' ? 'bg-green-500/10 text-green-400' :
-                      invitation.status === 'declined' ? 'bg-red-500/10 text-red-400' :
-                      'bg-yellow-500/10 text-yellow-400'
-                    }`}>
-                      {invitation.status}
-                    </span>
+            {/* Classroom Code Section */}
+            {classroom?.code && (
+              <div className="bg-[#2b2d31] border border-white/5 rounded-xl p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-white mb-1">Classroom Code</h3>
+                    <p className="text-gray-400 text-sm">Share this code with students for instant joining</p>
                   </div>
-                ))}
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 bg-[#1e1f22] border border-white/10 rounded-lg p-4">
+                    <p className="text-2xl font-mono font-bold text-[#5865F2] tracking-wider text-center">
+                      {classroom.code}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(classroom.code || '');
+                      // You could add a toast notification here
+                      alert('Classroom code copied to clipboard!');
+                    }}
+                    className="bg-[#5865F2] hover:bg-[#4752c4] text-white px-6 py-4 rounded-lg transition-colors flex items-center gap-2 font-medium"
+                  >
+                    <Share2 size={18} />
+                    Copy Code
+                  </button>
+                </div>
+                <p className="text-gray-500 text-xs mt-3">
+                  Students can enter this code on their dashboard to join your classroom without an email invitation
+                </p>
               </div>
             )}
+
+            <div className="border-t border-white/5 pt-6">
+              <h3 className="text-lg font-bold text-white mb-4">Email Invitations</h3>
+              {invitations.length === 0 ? (
+                <div className="bg-[#2b2d31] border border-white/5 rounded-xl p-12 text-center">
+                  <Mail size={48} className="mx-auto mb-4 text-gray-600" />
+                  <p className="text-gray-400">No email invitations sent yet</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {invitations.map(invitation => (
+                    <div
+                      key={invitation.id}
+                      className="bg-[#2b2d31] border border-white/5 rounded-xl p-4 flex justify-between items-center"
+                    >
+                      <div>
+                        <p className="text-white font-medium">{invitation.studentEmail}</p>
+                        <p className="text-gray-500 text-sm">
+                          Sent {new Date(invitation.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        invitation.status === 'accepted' ? 'bg-green-500/10 text-green-400' :
+                        invitation.status === 'declined' ? 'bg-red-500/10 text-red-400' :
+                        'bg-yellow-500/10 text-yellow-400'
+                      }`}>
+                        {invitation.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

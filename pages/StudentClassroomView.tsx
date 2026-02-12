@@ -28,7 +28,7 @@ const StudentClassroomView: React.FC<StudentClassroomViewProps> = ({ user, class
     try {
       setLoading(true);
       
-      // Get all classrooms the student is enrolled in
+      // Method 1: Try to find classroom from accepted invitations
       const allInvitations = await StorageService.getInvitations(user.id, 'student');
       const acceptedInvitations = allInvitations.filter(inv => inv.status === 'accepted');
       
@@ -39,6 +39,13 @@ const StudentClassroomView: React.FC<StudentClassroomViewProps> = ({ user, class
           foundClassroom = teacherClassrooms.find(c => c.id === classroomId) || null;
           break;
         }
+      }
+      
+      // Method 2: If not found via invitation, try direct Firestore query (for code joins)
+      if (!foundClassroom) {
+        const { FirebaseService } = await import('../services/firebaseService');
+        const allStudentClassrooms = await FirebaseService.getClassroomsByStudent(user.id);
+        foundClassroom = allStudentClassrooms.find(c => c.id === classroomId) || null;
       }
       
       setClassroom(foundClassroom);
@@ -110,7 +117,7 @@ const StudentClassroomView: React.FC<StudentClassroomViewProps> = ({ user, class
   };
 
   const handleCopyToMyNotes = async () => {
-    if (!resourceNote) return;
+    if (!resourceNote || !classroom) return;
     
     try {
       setCopying(true);
@@ -131,6 +138,20 @@ const StudentClassroomView: React.FC<StudentClassroomViewProps> = ({ user, class
       };
       
       await StorageService.saveNote(copiedNote);
+      
+      // Log activity
+      const { FirebaseService } = await import('../services/firebaseService');
+      await FirebaseService.logActivity({
+        classroomId: classroom.id,
+        classroomName: classroom.name,
+        type: 'resource_copied',
+        actorId: user.id,
+        actorName: user.name,
+        targetId: resourceNote.id,
+        targetName: resourceNote.title,
+        timestamp: Date.now(),
+      });
+      
       alert('Note copied to your notes!');
       setSelectedResource(null);
       setResourceNote(null);

@@ -110,6 +110,28 @@ service cloud.firestore {
         allow write: if isAuthenticated() && 
           get(/databases/$(database)/documents/classrooms/$(classroomId)).data.teacherId == request.auth.uid;
       }
+      
+      // Activities subcollection
+      match /activities/{activityId} {
+        // Teachers can read activities from their classrooms
+        // Students can read activities from classrooms they're enrolled in
+        allow read: if isAuthenticated() && (
+          get(/databases/$(database)/documents/classrooms/$(classroomId)).data.teacherId == request.auth.uid ||
+          request.auth.uid in get(/databases/$(database)/documents/classrooms/$(classroomId)).data.studentIds
+        );
+        
+        // Teachers and students can create activities (for logging their actions)
+        // Teachers: announcements, resource sharing
+        // Students: joining, accepting invitations, copying resources
+        allow create: if isAuthenticated() && (
+          get(/databases/$(database)/documents/classrooms/$(classroomId)).data.teacherId == request.auth.uid ||
+          request.auth.uid in get(/databases/$(database)/documents/classrooms/$(classroomId)).data.studentIds
+        );
+        
+        // Only teachers can update/delete activities
+        allow update, delete: if isAuthenticated() && 
+          get(/databases/$(database)/documents/classrooms/$(classroomId)).data.teacherId == request.auth.uid;
+      }
     }
     
     // Invitations collection

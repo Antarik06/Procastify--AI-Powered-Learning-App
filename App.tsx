@@ -72,12 +72,23 @@ const App: React.FC = () => {
             id: firebaseUser.uid,
             isGuest: false,
             name: firebaseUser.displayName || deriveName(firebaseUser.email),
+            email: firebaseUser.email || undefined,
             freeTimeHours: 2,
             energyPeak: "morning",
             goal: "Productivity",
             distractionLevel: "medium",
           };
           await StorageService.saveUserProfile(profile);
+        } else {
+          // Always update email if it's missing or different (ensures existing profiles get email)
+          let needsUpdate = false;
+          if (!profile.email && firebaseUser.email) {
+            profile.email = firebaseUser.email;
+            needsUpdate = true;
+          }
+          if (needsUpdate) {
+            await StorageService.saveUserProfile(profile);
+          }
         }
 
         StorageService.setSession(profile);
