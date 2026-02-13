@@ -393,19 +393,19 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
             >
                 <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-discord-accent rounded-xl flex items-center justify-center shadow-lg shadow-discord-accent/20">
-                            <Target className="text-white" size={24} />
+                        <div className="w-12 h-12 bg-app-accent rounded-xl flex items-center justify-center shadow-lg shadow-discord-accent/20">
+                            <Target className="text-app-text" size={24} />
                         </div>
                         <div>
-                            <h2 className="text-2xl md:text-3xl font-bold text-white">Quiz Arena</h2>
-                            <p className="text-discord-textMuted text-sm">Challenge yourself and beat your high score.</p>
+                            <h2 className="text-2xl md:text-3xl font-bold text-app-text">Quiz Arena</h2>
+                            <p className="text-app-textMuted text-sm">Challenge yourself and beat your high score.</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3 bg-discord-panel px-4 py-2 rounded-xl border border-white/5">
+                    <div className="flex items-center gap-3 bg-app-panel px-4 py-2 rounded-xl border border-app-border">
                         <Trophy className="text-yellow-400" size={20} />
                         <div>
-                            <p className="text-xs text-discord-textMuted font-bold uppercase">High Score</p>
-                            <p className="text-xl font-bold text-white leading-none">{stats?.highScore || 0}</p>
+                            <p className="text-xs text-app-textMuted font-bold uppercase">High Score</p>
+                            <p className="text-xl font-bold text-app-text leading-none">{stats?.highScore || 0}</p>
                         </div>
                     </div>
                 </div>
@@ -413,7 +413,7 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
                 <div className="grid grid-cols-1 lg:grid-cols-[1fr,400px] gap-6 flex-1">
 
                     <div className="flex flex-col min-h-0">
-                        <h3 className="text-sm font-bold text-discord-textMuted uppercase mb-4 flex items-center gap-2">
+                        <h3 className="text-sm font-bold text-app-textMuted uppercase mb-4 flex items-center gap-2">
                             <BookOpen size={16} /> Select Sources ({selectedNoteIds.length})
                         </h3>
                         <div className="flex-1 overflow-y-auto pr-2 space-y-3 pb-4 max-h-[500px]">
@@ -423,24 +423,24 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
                                     onClick={() => setSelectedNoteIds(prev => prev.includes(note.id) ? prev.filter(id => id !== note.id) : [...prev, note.id])}
                                     className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between group
                                     ${selectedNoteIds.includes(note.id)
-                                            ? 'bg-discord-accent/10 border-discord-accent text-white shadow-md'
-                                            : 'bg-discord-panel border-white/5 text-discord-textMuted hover:bg-discord-hover hover:text-white'}`}
+                                            ? 'bg-app-accent/10 border-app-accent text-app-text shadow-md'
+                                            : 'bg-app-panel border-app-border text-app-textMuted hover:bg-app-hover hover:text-app-text'}`}
                                 >
                                     <div className="flex items-center gap-4">
                                         <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors
-                                          ${selectedNoteIds.includes(note.id) ? 'bg-discord-accent border-discord-accent' : 'border-white/20 group-hover:border-white/40'}`}>
-                                            {selectedNoteIds.includes(note.id) && <CheckCircle size={14} className="text-white" />}
+                                          ${selectedNoteIds.includes(note.id) ? 'bg-app-accent border-app-accent' : 'border-app-border group-hover:border-app-accent/50'}`}>
+                                            {selectedNoteIds.includes(note.id) && <CheckCircle size={14} className="text-app-text" />}
                                         </div>
                                         <div>
                                             <span className="font-bold block">{note.title}</span>
-                                            <span className="text-xs text-discord-textMuted opacity-70">{new Date(note.lastModified).toLocaleDateString()} • {note.folder}</span>
+                                            <span className="text-xs text-app-textMuted opacity-70">{new Date(note.lastModified).toLocaleDateString()} • {note.folder}</span>
                                         </div>
                                     </div>
                                 </div>
                             ))}
                             {notes.length === 0 && (
-                                <div className="text-center py-10 border-2 border-dashed border-white/5 rounded-xl">
-                                    <p className="text-discord-textMuted">No notes found. Create some notes first!</p>
+                                <div className="text-center py-10 border-2 border-dashed border-app-border rounded-xl">
+                                    <p className="text-app-textMuted">No notes found. Create some notes first!</p>
                                 </div>
                             )}
                         </div>
@@ -450,19 +450,19 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
                     <div className="flex flex-col gap-4">
                         {/* Quiz Mode Selection */}
                         <div>
-                            <h3 className="text-sm font-bold text-discord-textMuted uppercase mb-3 flex items-center gap-2">
+                            <h3 className="text-sm font-bold text-app-textMuted uppercase mb-3 flex items-center gap-2">
                                 <Users size={16} /> Quiz Mode
                             </h3>
-                            <div className="grid grid-cols-2 gap-2 bg-discord-panel p-1 rounded-xl border border-white/5">
+                            <div className="grid grid-cols-2 gap-2 bg-app-panel p-1 rounded-xl border border-app-border">
                                 <button
                                     onClick={() => setQuizMode('singleplayer')}
-                                    className={`py-2 rounded-lg text-sm font-bold transition-all ${quizMode === 'singleplayer' ? 'bg-[#5865F2] text-white shadow-sm' : 'text-discord-textMuted hover:text-white'}`}
+                                    className={`py-2 rounded-lg text-sm font-bold transition-all ${quizMode === 'singleplayer' ? 'bg-[#5865F2] text-app-text shadow-sm' : 'text-app-textMuted hover:text-app-text'}`}
                                 >
                                     Solo
                                 </button>
                                 <button
                                     onClick={() => setQuizMode('multiplayer')}
-                                    className={`py-2 rounded-lg text-sm font-bold transition-all ${quizMode === 'multiplayer' ? 'bg-[#5865F2] text-white shadow-sm' : 'text-discord-textMuted hover:text-white'}`}
+                                    className={`py-2 rounded-lg text-sm font-bold transition-all ${quizMode === 'multiplayer' ? 'bg-[#5865F2] text-app-text shadow-sm' : 'text-app-textMuted hover:text-app-text'}`}
                                 >
                                     Multiplayer
                                 </button>
@@ -471,8 +471,8 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
 
                         {/* Join Quiz Section (Multiplayer Only) */}
                         {quizMode === 'multiplayer' && (
-                            <div className="bg-[#2b2d31] border border-white/5 rounded-xl p-4">
-                                <h4 className="text-sm font-bold text-white mb-3">Join Existing Quiz</h4>
+                            <div className="bg-app-panel border border-app-border rounded-xl p-4">
+                                <h4 className="text-sm font-bold text-app-text mb-3">Join Existing Quiz</h4>
                                 <div className="flex gap-2">
                                     <input
                                         type="text"
@@ -480,12 +480,12 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
                                         onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
                                         placeholder="Enter code"
                                         maxLength={6}
-                                        className="flex-1 bg-[#1e1f22] border border-white/10 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-[#5865F2] font-mono text-center text-sm"
+                                        className="flex-1 bg-app-bg border border-app-border rounded-lg px-3 py-2 text-app-text placeholder-gray-500 focus:outline-none focus:border-[#5865F2] font-mono text-center text-sm"
                                     />
                                     <button
                                         onClick={handleJoinQuiz}
                                         disabled={joiningSession || !joinCode.trim()}
-                                        className="bg-[#5865F2] hover:bg-[#4752c4] text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                        className="bg-[#5865F2] hover:bg-[#4752c4] text-app-text px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                     >
                                         {joiningSession ? <Loader2 className="animate-spin" size={16} /> : 'Join'}
                                     </button>
@@ -496,19 +496,19 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
 
                         {/* Mode Selection */}
                         <div>
-                            <h3 className="text-sm font-bold text-discord-textMuted uppercase mb-3 flex items-center gap-2">
+                            <h3 className="text-sm font-bold text-app-textMuted uppercase mb-3 flex items-center gap-2">
                                 <Layers size={16} /> Mode
                             </h3>
-                            <div className="grid grid-cols-2 gap-2 bg-discord-panel p-1 rounded-xl border border-white/5">
+                            <div className="grid grid-cols-2 gap-2 bg-app-panel p-1 rounded-xl border border-app-border">
                                 <button
                                     onClick={() => setMode('standard')}
-                                    className={`py-2 rounded-lg text-sm font-bold transition-all ${mode === 'standard' ? 'bg-[#5865F2] text-white shadow-sm' : 'text-discord-textMuted hover:text-white'}`}
+                                    className={`py-2 rounded-lg text-sm font-bold transition-all ${mode === 'standard' ? 'bg-[#5865F2] text-app-text shadow-sm' : 'text-app-textMuted hover:text-app-text'}`}
                                 >
                                     Standard
                                 </button>
                                 <button
                                     onClick={() => setMode('swipe')}
-                                    className={`py-2 rounded-lg text-sm font-bold transition-all ${mode === 'swipe' ? 'bg-[#5865F2] text-white shadow-sm' : 'text-discord-textMuted hover:text-white'}`}
+                                    className={`py-2 rounded-lg text-sm font-bold transition-all ${mode === 'swipe' ? 'bg-[#5865F2] text-app-text shadow-sm' : 'text-app-textMuted hover:text-app-text'}`}
                                 >
                                     Swipe (T/F)
                                 </button>
@@ -517,7 +517,7 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
 
                         {mode === 'standard' && (
                             <div>
-                                <h3 className="text-sm font-bold text-discord-textMuted uppercase mb-3 flex items-center gap-2">
+                                <h3 className="text-sm font-bold text-app-textMuted uppercase mb-3 flex items-center gap-2">
                                     <Target size={16} /> Difficulty
                                 </h3>
                                 <div className="flex flex-col gap-2">
@@ -527,8 +527,8 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
                                             onClick={() => setDifficulty(d)}
                                             className={`p-3 rounded-xl border text-left capitalize transition-all font-medium
                                             ${difficulty === d
-                                                    ? 'bg-discord-accent text-white border-discord-accent shadow-md'
-                                                    : 'bg-discord-panel border-white/5 text-discord-textMuted hover:bg-discord-hover'}`}
+                                                    ? 'bg-app-accent text-app-text border-app-accent shadow-md'
+                                                    : 'bg-app-panel border-app-border text-app-textMuted hover:bg-app-hover'}`}
                                         >
                                             {d}
                                         </button>
@@ -541,7 +541,7 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
                             <button
                                 onClick={handleGenerate}
                                 disabled={loading || selectedNoteIds.length === 0}
-                                className="w-full bg-discord-green hover:bg-green-600 text-white py-4 rounded-xl font-bold text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-green-500/20"
+                                className="w-full bg-discord-green hover:bg-green-600 text-app-text py-4 rounded-xl font-bold text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-green-500/20"
                             >
                                 {loading ? (
                                     <><RefreshCw className="animate-spin" /> Generating...</>
@@ -642,18 +642,18 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
                 <div className="flex justify-between items-center mb-6">
                     <div className="flex items-center gap-4">
                         <div className="flex flex-col">
-                            <span className="text-xs font-bold text-discord-textMuted uppercase tracking-wider">Question</span>
-                            <span className="text-2xl font-bold text-white font-mono">{currentQIndex + 1}<span className="text-discord-textMuted text-lg">/{quiz.questions.length}</span></span>
+                            <span className="text-xs font-bold text-app-textMuted uppercase tracking-wider">Question</span>
+                            <span className="text-2xl font-bold text-app-text font-mono">{currentQIndex + 1}<span className="text-app-textMuted text-lg">/{quiz.questions.length}</span></span>
                         </div>
                     </div>
 
 
                     <div className="flex items-center gap-6">
-                        <div className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 ${streak > 1 ? 'bg-orange-500/10 border-orange-500 text-orange-400' : 'bg-transparent border-transparent text-discord-textMuted'}`}>
+                        <div className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 ${streak > 1 ? 'bg-orange-500/10 border-orange-500 text-orange-400' : 'bg-transparent border-transparent text-app-textMuted'}`}>
                             <Zap size={18} className={streak > 1 ? 'fill-current' : ''} />
                             <span className="font-bold">{streak} Streak</span>
                         </div>
-                        <div className="px-5 py-2 bg-discord-panel rounded-xl border border-white/10 text-white font-mono font-bold text-xl min-w-[100px] text-center">
+                        <div className="px-5 py-2 bg-app-panel rounded-xl border border-app-border text-app-text font-mono font-bold text-xl min-w-[100px] text-center">
                             {score}
                         </div>
                     </div>
@@ -682,16 +682,16 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
                         transition={{ duration: 0.3 }}
                         className="flex-1 flex flex-col justify-center"
                     >
-                        <h2 className="text-2xl md:text-3xl font-bold text-white mb-10 leading-snug">{question.text}</h2>
+                        <h2 className="text-2xl md:text-3xl font-bold text-app-text mb-10 leading-snug">{question.text}</h2>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                             {question.options.map((opt, idx) => {
 
-                                let styleClass = "bg-discord-panel border-white/10 text-discord-text hover:bg-discord-hover hover:border-white/20";
+                                let styleClass = "bg-app-panel border-app-border text-app-text hover:bg-app-hover hover:border-app-border";
                                 if (isAnswered) {
-                                    if (idx === question.correctIndex) styleClass = "bg-green-500/20 border-green-500 text-white shadow-[0_0_15px_rgba(34,197,94,0.3)]";
-                                    else if (selectedOption === idx) styleClass = "bg-red-500/20 border-red-500 text-white opacity-80";
-                                    else styleClass = "bg-discord-panel border-white/5 text-discord-textMuted opacity-50";
+                                    if (idx === question.correctIndex) styleClass = "bg-green-500/20 border-green-500 text-app-text shadow-[0_0_15px_rgba(34,197,94,0.3)]";
+                                    else if (selectedOption === idx) styleClass = "bg-red-500/20 border-red-500 text-app-text opacity-80";
+                                    else styleClass = "bg-app-panel border-app-border text-app-textMuted opacity-50";
                                 }
 
                                 return (
@@ -723,14 +723,14 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
                                 className="overflow-hidden"
                             >
                                 <div className={`p-6 rounded-xl border mb-6 flex items-start gap-4 ${isCorrect ? 'bg-green-500/10 border-green-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
-                                    <div className={`p-2 rounded-full shrink-0 ${isCorrect ? 'bg-green-500 text-black' : 'bg-red-500 text-white'}`}>
+                                    <div className={`p-2 rounded-full shrink-0 ${isCorrect ? 'bg-green-500 text-black' : 'bg-red-500 text-app-text'}`}>
                                         {isCorrect ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
                                     </div>
                                     <div>
                                         <h4 className={`font-bold mb-1 ${isCorrect ? 'text-green-400' : 'text-red-400'}`}>
                                             {isCorrect ? 'Correct!' : selectedOption === -1 ? "Time's Up!" : 'Incorrect'}
                                         </h4>
-                                        <p className="text-discord-textMuted text-sm leading-relaxed">{question.explanation}</p>
+                                        <p className="text-app-textMuted text-sm leading-relaxed">{question.explanation}</p>
                                     </div>
                                 </div>
 
@@ -739,7 +739,7 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
                                     {currentQIndex < quiz.questions.length - 1 ? (
                                         <button
                                             onClick={nextQuestion}
-                                            className="flex-1 bg-discord-accent hover:bg-discord-accentHover text-white py-4 rounded-xl font-bold text-lg transition-all shadow-lg flex items-center justify-center gap-2"
+                                            className="flex-1 bg-app-accent hover:bg-app-accentHover text-app-text py-4 rounded-xl font-bold text-lg transition-all shadow-lg flex items-center justify-center gap-2"
                                         >
                                             Next Question <Play size={20} fill="currentColor" />
                                         </button>
@@ -748,7 +748,7 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
                                         <button
                                             onClick={handleContinueQuiz}
                                             disabled={continuing}
-                                            className="flex-1 bg-discord-green hover:bg-green-600 text-white py-4 rounded-xl font-bold text-lg transition-all shadow-lg flex items-center justify-center gap-2"
+                                            className="flex-1 bg-discord-green hover:bg-green-600 text-app-text py-4 rounded-xl font-bold text-lg transition-all shadow-lg flex items-center justify-center gap-2"
                                         >
                                             {continuing ? <RefreshCw className="animate-spin" /> : <BrainCircuit size={20} />}
                                             Continue Learning
@@ -757,7 +757,7 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
                                     <button
                                         onClick={() => finishQuiz()}
                                         disabled={continuing || generatingReport}
-                                        className="flex-1 bg-discord-panel hover:bg-discord-hover text-white py-4 rounded-xl font-bold text-lg transition-all border border-white/10 flex items-center justify-center gap-2"
+                                        className="flex-1 bg-app-panel hover:bg-app-hover text-app-text py-4 rounded-xl font-bold text-lg transition-all border border-app-border flex items-center justify-center gap-2"
                                     >
                                         {generatingReport ? <RefreshCw className="animate-spin" /> : <Trophy size={20} />}
                                         Finish & View Report
@@ -789,8 +789,8 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
                 {/* Header */}
                 <div className="text-center mb-8">
                     <Trophy size={80} className="text-yellow-400 mb-4 mx-auto drop-shadow-[0_0_30px_rgba(250,204,21,0.4)]" />
-                    <h1 className="text-4xl font-bold text-white mb-2">Quiz Completed!</h1>
-                    <p className="text-xl text-discord-textMuted">You scored <span className="text-discord-accent font-bold">{isSwipeMode ? correctCount : score}</span> {isSwipeMode ? `out of ${totalQuestions}` : 'points'}</p>
+                    <h1 className="text-4xl font-bold text-app-text mb-2">Quiz Completed!</h1>
+                    <p className="text-xl text-app-textMuted">You scored <span className="text-app-accent font-bold">{isSwipeMode ? correctCount : score}</span> {isSwipeMode ? `out of ${totalQuestions}` : 'points'}</p>
                     {score > (stats?.highScore || 0) && score > 0 && (
                         <p className="text-green-400 font-bold mt-2 animate-bounce">🎉 New High Score!</p>
                     )}
@@ -798,17 +798,17 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
 
                 {/* Summary Stats */}
                 <div className="grid grid-cols-3 gap-4 mb-8">
-                    <div className="bg-discord-panel p-4 rounded-xl border border-white/5 text-center">
-                        <p className="text-discord-textMuted text-xs font-bold uppercase mb-1">Questions</p>
-                        <p className="text-2xl font-bold text-white">{totalQuestions}</p>
+                    <div className="bg-app-panel p-4 rounded-xl border border-app-border text-center">
+                        <p className="text-app-textMuted text-xs font-bold uppercase mb-1">Questions</p>
+                        <p className="text-2xl font-bold text-app-text">{totalQuestions}</p>
                     </div>
-                    <div className="bg-discord-panel p-4 rounded-xl border border-white/5 text-center">
-                        <p className="text-discord-textMuted text-xs font-bold uppercase mb-1">Correct</p>
+                    <div className="bg-app-panel p-4 rounded-xl border border-app-border text-center">
+                        <p className="text-app-textMuted text-xs font-bold uppercase mb-1">Correct</p>
                         <p className="text-2xl font-bold text-green-400">{correctCount}</p>
                     </div>
-                    <div className="bg-discord-panel p-4 rounded-xl border border-white/5 text-center">
-                        <p className="text-discord-textMuted text-xs font-bold uppercase mb-1">Accuracy</p>
-                        <p className="text-2xl font-bold text-discord-accent">{accuracy}%</p>
+                    <div className="bg-app-panel p-4 rounded-xl border border-app-border text-center">
+                        <p className="text-app-textMuted text-xs font-bold uppercase mb-1">Accuracy</p>
+                        <p className="text-2xl font-bold text-app-accent">{accuracy}%</p>
                     </div>
                 </div>
 
@@ -819,11 +819,11 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
                         animate={{ opacity: 1, y: 0 }}
                         className="mb-8 space-y-6"
                     >
-                        <div className="bg-[#1e1f22] border border-white/5 rounded-2xl p-6 relative overflow-hidden">
+                        <div className="bg-app-bg border border-app-border rounded-2xl p-6 relative overflow-hidden">
                             <div className="absolute top-0 right-0 p-4 opacity-10">
-                                <BrainCircuit size={100} className="text-white" />
+                                <BrainCircuit size={100} className="text-app-text" />
                             </div>
-                            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2 relative z-10">
+                            <h3 className="text-xl font-bold text-app-text mb-6 flex items-center gap-2 relative z-10">
                                 <Zap className="text-yellow-400" /> AI Performance Insights
                             </h3>
 
@@ -836,7 +836,7 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
                                         </h4>
                                         <ul className="space-y-2">
                                             {quizReport.strengths.map((s, i) => (
-                                                <li key={i} className="text-sm text-discord-textMuted flex items-start gap-2">
+                                                <li key={i} className="text-sm text-app-textMuted flex items-start gap-2">
                                                     <span className="w-1.5 h-1.5 rounded-full bg-green-500 mt-1.5 shrink-0" />
                                                     {s}
                                                 </li>
@@ -853,7 +853,7 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
                                         </h4>
                                         <ul className="space-y-2">
                                             {quizReport.weaknesses.map((w, i) => (
-                                                <li key={i} className="text-sm text-discord-textMuted flex items-start gap-2">
+                                                <li key={i} className="text-sm text-app-textMuted flex items-start gap-2">
                                                     <span className="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 shrink-0" />
                                                     {w}
                                                 </li>
@@ -869,7 +869,7 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
                                     </h4>
                                     <ul className="space-y-2">
                                         {quizReport.suggestions.map((s, i) => (
-                                            <li key={i} className="text-sm text-discord-textMuted flex items-start gap-2">
+                                            <li key={i} className="text-sm text-app-textMuted flex items-start gap-2">
                                                 <ArrowRight size={14} className="text-blue-500 mt-0.5 shrink-0" />
                                                 {s}
                                             </li>
@@ -880,8 +880,8 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
                         </div>
 
                         {/* Difficulty Flow */}
-                        <div className="bg-discord-panel p-6 rounded-2xl border border-white/5">
-                            <h4 className="text-sm font-bold text-discord-textMuted uppercase mb-4 flex items-center gap-2">
+                        <div className="bg-app-panel p-6 rounded-2xl border border-app-border">
+                            <h4 className="text-sm font-bold text-app-textMuted uppercase mb-4 flex items-center gap-2">
                                 <TrendingUp size={16} /> Difficulty Progression
                             </h4>
                             <div className="flex items-center gap-2 overflow-x-auto pb-2">
@@ -907,7 +907,7 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
 
                 {/* Detailed Analysis */}
                 <div className="mb-8 flex-1">
-                    <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <h3 className="text-xl font-bold text-app-text mb-4 flex items-center gap-2">
                         <BookOpen size={20} /> Detailed Analysis
                     </h3>
                     <div className="space-y-4">
@@ -923,23 +923,23 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
                                 >
                                     <div className="flex items-start gap-3 mb-3">
                                         <div className={`p-2 rounded-full shrink-0 ${q.isCorrect ? 'bg-green-500' : 'bg-red-500'}`}>
-                                            {q.isCorrect ? <CheckCircle size={18} className="text-white" /> : <XCircle size={18} className="text-white" />}
+                                            {q.isCorrect ? <CheckCircle size={18} className="text-app-text" /> : <XCircle size={18} className="text-app-text" />}
                                         </div>
                                         <div className="flex-1">
-                                            <p className="text-white font-bold text-lg mb-2">Q{idx + 1}. {q.question}</p>
+                                            <p className="text-app-text font-bold text-lg mb-2">Q{idx + 1}. {q.question}</p>
                                             <div className="flex gap-4 text-sm mb-2">
                                                 <div>
-                                                    <span className="text-discord-textMuted">Correct Answer: </span>
+                                                    <span className="text-app-textMuted">Correct Answer: </span>
                                                     <span className="font-bold text-green-400">{q.correctAnswerIsTrue ? 'TRUE' : 'FALSE'}</span>
                                                 </div>
                                                 <div>
-                                                    <span className="text-discord-textMuted">You answered: </span>
+                                                    <span className="text-app-textMuted">You answered: </span>
                                                     <span className={`font-bold ${q.isCorrect ? 'text-green-400' : 'text-red-400'}`}>
                                                         {q.userAnsweredTrue ? 'TRUE' : 'FALSE'}
                                                     </span>
                                                 </div>
                                             </div>
-                                            <p className="text-discord-textMuted text-sm leading-relaxed bg-discord-bg/50 p-3 rounded-lg">
+                                            <p className="text-app-textMuted text-sm leading-relaxed bg-app-bg/50 p-3 rounded-lg">
                                                 {q.explanation}
                                             </p>
                                         </div>
@@ -958,17 +958,17 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
                                 >
                                     <div className="flex items-start gap-3 mb-3">
                                         <div className={`p-2 rounded-full shrink-0 ${q.isCorrect ? 'bg-green-500' : 'bg-red-500'}`}>
-                                            {q.isCorrect ? <CheckCircle size={18} className="text-white" /> : <XCircle size={18} className="text-white" />}
+                                            {q.isCorrect ? <CheckCircle size={18} className="text-app-text" /> : <XCircle size={18} className="text-app-text" />}
                                         </div>
                                         <div className="flex-1">
-                                            <p className="text-white font-bold text-lg mb-3">Q{idx + 1}. {q.question}</p>
+                                            <p className="text-app-text font-bold text-lg mb-3">Q{idx + 1}. {q.question}</p>
                                             <div className="mb-2">
-                                                <span className="text-discord-textMuted text-sm">Correct Answer: </span>
+                                                <span className="text-app-textMuted text-sm">Correct Answer: </span>
                                                 <span className="font-bold text-green-400">{q.options[q.correctAnswer]}</span>
                                             </div>
                                             {!q.isCorrect && q.userAnswer !== -1 && (
                                                 <div className="mb-2">
-                                                    <span className="text-discord-textMuted text-sm">Your Answer: </span>
+                                                    <span className="text-app-textMuted text-sm">Your Answer: </span>
                                                     <span className="font-bold text-red-400">{q.options[q.userAnswer]}</span>
                                                 </div>
                                             )}
@@ -977,7 +977,7 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
                                                     <span className="font-bold text-red-400">⏱️ Time's Up!</span>
                                                 </div>
                                             )}
-                                            <p className="text-discord-textMuted text-sm leading-relaxed bg-discord-bg/50 p-3 rounded-lg mt-2">
+                                            <p className="text-app-textMuted text-sm leading-relaxed bg-app-bg/50 p-3 rounded-lg mt-2">
                                                 {q.explanation}
                                             </p>
                                         </div>
@@ -989,11 +989,11 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex gap-4 justify-center pt-4 border-t border-white/5">
-                    <button onClick={resetToSetup} className="px-8 py-3 bg-discord-panel hover:bg-discord-hover text-white rounded-xl font-bold transition-colors border border-white/10">
+                <div className="flex gap-4 justify-center pt-4 border-t border-app-border">
+                    <button onClick={resetToSetup} className="px-8 py-3 bg-app-panel hover:bg-app-hover text-app-text rounded-xl font-bold transition-colors border border-app-border">
                         Back to Setup
                     </button>
-                    <button onClick={() => setView('setup')} className="px-8 py-3 bg-discord-accent hover:bg-discord-accentHover text-white rounded-xl font-bold transition-colors shadow-lg">
+                    <button onClick={() => setView('setup')} className="px-8 py-3 bg-app-accent hover:bg-app-accentHover text-app-text rounded-xl font-bold transition-colors shadow-lg">
                         Play Again
                     </button>
                 </div>

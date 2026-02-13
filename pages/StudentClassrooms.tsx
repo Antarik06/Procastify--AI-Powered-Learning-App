@@ -97,7 +97,7 @@ const StudentClassrooms: React.FC<StudentClassroomsProps> = ({ user, onNavigate 
   return (
     <div className="p-8 space-y-8 max-w-7xl mx-auto">
       <div>
-        <h1 className="text-3xl font-bold text-white flex items-center gap-2">
+        <h1 className="text-3xl font-bold text-app-text flex items-center gap-2">
           <GraduationCap size={32} />
           My Classrooms
         </h1>
@@ -109,7 +109,7 @@ const StudentClassrooms: React.FC<StudentClassroomsProps> = ({ user, onNavigate 
       {/* Pending Invitations */}
       {invitations.length > 0 && (
         <div>
-          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-app-text mb-4 flex items-center gap-2">
             <Mail size={24} />
             Pending Invitations ({invitations.length})
           </h2>
@@ -119,14 +119,14 @@ const StudentClassrooms: React.FC<StudentClassroomsProps> = ({ user, onNavigate 
                 key={invitation.id}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="bg-[#2b2d31] border border-white/5 rounded-xl p-4 flex items-center justify-between hover:border-[#5865F2]/30 transition-all"
+                className="bg-app-panel border border-app-border rounded-xl p-4 flex items-center justify-between hover:border-[#5865F2]/30 transition-all"
               >
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-[#5865F2]/10 rounded-lg flex items-center justify-center">
                     <Mail size={24} className="text-[#5865F2]" />
                   </div>
                   <div>
-                    <p className="text-white font-medium">{invitation.classroomName}</p>
+                    <p className="text-app-text font-medium">{invitation.classroomName}</p>
                     <p className="text-gray-400 text-sm">From: {invitation.teacherName}</p>
                   </div>
                 </div>
@@ -134,7 +134,7 @@ const StudentClassrooms: React.FC<StudentClassroomsProps> = ({ user, onNavigate 
                   <button
                     onClick={() => handleInvitationResponse(invitation.id, true)}
                     disabled={processingInvite === invitation.id}
-                    className="bg-[#5865F2] hover:bg-[#4752c4] text-white px-4 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 disabled:opacity-50"
+                    className="bg-[#5865F2] hover:bg-[#4752c4] text-app-text px-4 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 disabled:opacity-50"
                   >
                     {processingInvite === invitation.id ? (
                       <Loader2 className="animate-spin" size={16} />
@@ -146,7 +146,7 @@ const StudentClassrooms: React.FC<StudentClassroomsProps> = ({ user, onNavigate 
                   <button
                     onClick={() => handleInvitationResponse(invitation.id, false)}
                     disabled={processingInvite === invitation.id}
-                    className="bg-[#1e1f22] hover:bg-[#1e1f22]/80 text-white px-4 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 disabled:opacity-50"
+                    className="bg-app-bg hover:bg-app-bg/80 text-app-text px-4 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 disabled:opacity-50"
                   >
                     <X size={16} />
                     Decline
@@ -160,12 +160,12 @@ const StudentClassrooms: React.FC<StudentClassroomsProps> = ({ user, onNavigate 
 
       {/* Enrolled Classrooms */}
       <div>
-        <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+        <h2 className="text-xl font-bold text-app-text mb-4 flex items-center gap-2">
           <Users size={24} />
           Enrolled Classrooms
         </h2>
         {classrooms.length === 0 ? (
-          <div className="bg-[#2b2d31] border border-white/5 rounded-xl p-12 text-center">
+          <div className="bg-app-panel border border-app-border rounded-xl p-12 text-center">
             <GraduationCap size={48} className="mx-auto mb-4 text-gray-600" />
             <p className="text-gray-400 mb-2">No classrooms yet</p>
             <p className="text-gray-500 text-sm">Accept an invitation to get started!</p>
@@ -179,7 +179,7 @@ const StudentClassrooms: React.FC<StudentClassroomsProps> = ({ user, onNavigate 
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
                 onClick={() => onNavigate('studentClassroomView', classroom.id)}
-                className="bg-[#2b2d31] border border-white/5 rounded-xl p-6 hover:border-[#5865F2]/50 hover:bg-[#2b2d31]/80 transition-all text-left group"
+                className="bg-app-panel border border-app-border rounded-xl p-6 hover:border-[#5865F2]/50 hover:bg-app-panel/80 transition-all text-left group"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="w-12 h-12 bg-[#5865F2]/10 rounded-lg flex items-center justify-center">
@@ -187,7 +187,7 @@ const StudentClassrooms: React.FC<StudentClassroomsProps> = ({ user, onNavigate 
                   </div>
                   <ArrowRight size={20} className="text-gray-500 group-hover:text-[#5865F2] transition-colors" />
                 </div>
-                <h3 className="text-lg font-bold text-white mb-2 line-clamp-1">{classroom.name}</h3>
+                <h3 className="text-lg font-bold text-app-text mb-2 line-clamp-1">{classroom.name}</h3>
                 <p className="text-gray-400 text-sm mb-4 line-clamp-2 min-h-[40px]">
                   {classroom.description || 'No description'}
                 </p>

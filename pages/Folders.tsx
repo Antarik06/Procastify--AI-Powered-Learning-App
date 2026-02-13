@@ -211,7 +211,7 @@ const Folders: React.FC<FoldersProps> = ({
                   setIsCreating(false);
                   setNewFolderName("");
                 }}
-                className="bg-[#313338] hover:bg-[#3f4147] text-white px-4 py-2 rounded-lg transition-colors"
+                className="bg-[#313338] hover:bg-app-hover text-white px-4 py-2 rounded-lg transition-colors"
               >
                 <X size={20} />
               </button>
@@ -337,7 +337,7 @@ const Folders: React.FC<FoldersProps> = ({
                       e.stopPropagation();
                       setEditingFolderId(null);
                     }}
-                    className="flex-1 bg-[#313338] hover:bg-[#3f4147] text-white px-3 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+                    className="flex-1 bg-[#313338] hover:bg-app-hover text-white px-3 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
                   >
                     <X size={16} />
                     Cancel

@@ -206,12 +206,11 @@ const Landing: React.FC<LandingProps> = ({ onLogin, onGuestAccess }) => {
                         </div>
                     </div>
                   </div>
-                </div>
                 <div className="text-center">
                   <h3 className="text-xl font-bold text-app-text mb-2">1. Input Chaos</h3>
                   <p className="text-gray-400 text-sm">Dump the overload. Lecture notes, raw text, and messy thoughts go here.</p>
                 </div>
-              </div>
+              </motion.div>
 
               {/* Step 2 */}
               <motion.div 
@@ -233,12 +232,11 @@ const Landing: React.FC<LandingProps> = ({ onLogin, onGuestAccess }) => {
                       <MoveRight className="text-gray-600" />
                     </div>
                   </div>
-                </div>
                 <div className="text-center">
                   <h3 className="text-xl font-bold text-app-text mb-2">2. Intelligent Core</h3>
                   <p className="text-gray-400 text-sm">Our AI engine connects the dots, structuring concepts and filtering noise.</p>
                 </div>
-              </div>
+              </motion.div>
 
               {/* Step 3 */}
               <motion.div 
@@ -262,12 +260,11 @@ const Landing: React.FC<LandingProps> = ({ onLogin, onGuestAccess }) => {
                       <div className="w-10 h-1 bg-gray-500 rounded"></div>
                     </div>
                   </div>
-                </div>
                 <div className="text-center">
                   <h3 className="text-xl font-bold text-app-text mb-2">3. Crystal Clarity</h3>
                   <p className="text-gray-400 text-sm">Get clean summaries, structured visual notes, and clear takeaways.</p>
                 </div>
-              </div>
+              </motion.div>
 
               {/* Step 4 */}
               <motion.div 
