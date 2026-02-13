@@ -55,8 +55,35 @@ const Landing: React.FC<LandingProps> = ({ onLogin, onGuestAccess }) => {
   const fadeIn = hasMounted.current ? false : { opacity: 0 };
 
   return (
-    <div className="min-h-screen bg-[#0f1114] text-gray-100 font-sans selection:bg-indigo-500/30 overflow-x-hidden">
-      {/* Background Gradients */}
+    <div className="min-h-screen bg-app-bg text-app-text font-sans selection:bg-indigo-500/30 overflow-x-hidden">
+      
+      <style>{`
+        @keyframes blob {
+          0% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(30px, -50px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+          100% { transform: translate(0px, 0px) scale(1); }
+        }
+        @keyframes float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+        @keyframes pulse-glow {
+          0%, 100% { opacity: 0.5; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.05); }
+        }
+        @keyframes stream {
+          0% { stroke-dashoffset: 1000; }
+          100% { stroke-dashoffset: 0; }
+        }
+        .animate-blob { animation: blob 7s infinite; }
+        .animation-delay-2000 { animation-delay: 2s; }
+        .animation-delay-4000 { animation-delay: 4s; }
+        .animate-float { animation: float 6s ease-in-out infinite; }
+        .animate-float-delayed { animation: float 6s ease-in-out infinite; animation-delay: 3s; }
+      `}</style>
+
+     
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-purple-500/10 rounded-full mix-blend-screen filter blur-[100px] opacity-30"></div>
         <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-blue-500/10 rounded-full mix-blend-screen filter blur-[100px] opacity-30"></div>
@@ -68,15 +95,15 @@ const Landing: React.FC<LandingProps> = ({ onLogin, onGuestAccess }) => {
       <nav className="relative z-50 max-w-7xl mx-auto px-6 py-6 flex justify-between items-center bg-transparent">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-            <BrainCircuit className="text-white" size={24} />
+            <BrainCircuit className="text-app-text" size={24} />
           </div>
           <span className="text-xl font-bold tracking-tight">Procastify</span>
         </div>
         <div className="flex gap-4">
-          <button onClick={onLogin} className="text-gray-400 hover:text-white transition-colors font-medium text-sm">
+          <button onClick={onLogin} className="text-app-textMuted hover:text-app-text transition-colors font-medium">
             Sign In
           </button>
-          <button onClick={onGuestAccess} className="bg-white/5 hover:bg-white/10 border border-white/10 text-white px-5 py-2 rounded-full font-medium text-sm backdrop-blur-sm transition-all hover:border-white/20">
+          <button onClick={onGuestAccess} className="bg-app-panel hover:bg-app-hover border border-app-border text-app-text px-5 py-2 rounded-full font-medium backdrop-blur-sm transition-all">
             Try Guest Mode
           </button>
         </div>
@@ -179,11 +206,12 @@ const Landing: React.FC<LandingProps> = ({ onLogin, onGuestAccess }) => {
                         </div>
                     </div>
                   </div>
-                <h3 className="text-lg font-bold text-white mb-2">1. Input Chaos</h3>
-                <p className="text-gray-500 text-sm leading-relaxed px-4">
-                  Dump the overload. Lecture notes, raw text, and messy thoughts go here.
-                </p>
-              </motion.div>
+                </div>
+                <div className="text-center">
+                  <h3 className="text-xl font-bold text-app-text mb-2">1. Input Chaos</h3>
+                  <p className="text-gray-400 text-sm">Dump the overload. Lecture notes, raw text, and messy thoughts go here.</p>
+                </div>
+              </div>
 
               {/* Step 2 */}
               <motion.div 
@@ -195,7 +223,7 @@ const Landing: React.FC<LandingProps> = ({ onLogin, onGuestAccess }) => {
               >
                   <div className="relative mb-6">
                     <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/30 z-10 relative">
-                      <BrainCircuit className="text-white animate-pulse" size={40} />
+                      <BrainCircuit className="text-app-text animate-pulse" size={40} />
                     </div>
                    
                     <div className="absolute inset-0 border border-indigo-500/30 rounded-full scale-150 animate-spin opacity-50"></div>
@@ -205,11 +233,12 @@ const Landing: React.FC<LandingProps> = ({ onLogin, onGuestAccess }) => {
                       <MoveRight className="text-gray-600" />
                     </div>
                   </div>
-                <h3 className="text-lg font-bold text-white mb-2">2. Intelligent Core</h3>
-                <p className="text-gray-500 text-sm leading-relaxed px-4">
-                  Our AI engine connects the dots, structuring concepts and filtering noise.
-                </p>
-              </motion.div>
+                </div>
+                <div className="text-center">
+                  <h3 className="text-xl font-bold text-app-text mb-2">2. Intelligent Core</h3>
+                  <p className="text-gray-400 text-sm">Our AI engine connects the dots, structuring concepts and filtering noise.</p>
+                </div>
+              </div>
 
               {/* Step 3 */}
               <motion.div 
@@ -233,11 +262,12 @@ const Landing: React.FC<LandingProps> = ({ onLogin, onGuestAccess }) => {
                       <div className="w-10 h-1 bg-gray-500 rounded"></div>
                     </div>
                   </div>
-                <h3 className="text-lg font-bold text-white mb-2">3. Crystal Clarity</h3>
-                <p className="text-gray-500 text-sm leading-relaxed px-4">
-                  Get clean summaries, structured visual notes, and clear takeaways.
-                </p>
-              </motion.div>
+                </div>
+                <div className="text-center">
+                  <h3 className="text-xl font-bold text-app-text mb-2">3. Crystal Clarity</h3>
+                  <p className="text-gray-400 text-sm">Get clean summaries, structured visual notes, and clear takeaways.</p>
+                </div>
+              </div>
 
               {/* Step 4 */}
               <motion.div 
