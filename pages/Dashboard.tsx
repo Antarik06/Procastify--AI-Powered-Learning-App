@@ -83,7 +83,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, summaries, notes, stats, on
       {/* Focus Widget: What Should I Learn Now */}
       {suggestedNote && (
         <div className="bg-gradient-to-r from-app-accent to-purple-600 p-1 rounded-2xl shadow-lg animate-in fade-in slide-in-from-top-4">
-          <div className="bg-app-panel/90 backdrop-blur-sm p-6 rounded-xl flex items-center justify-between">
+          <div className="bg-app-panel backdrop-blur-sm p-6 rounded-xl flex items-center justify-between border border-app-border">
             <div className="flex items-center gap-6">
               <div className="w-16 h-16 bg-app-accent/20 rounded-full flex items-center justify-center animate-pulse">
                 <BrainCircuit size={32} className="text-app-accent" />
@@ -98,7 +98,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, summaries, notes, stats, on
             </div>
             <button
               onClick={() => onNoteClick?.(suggestedNote.id)}
-              className="bg-app-text text-app-bg px-6 py-3 rounded-xl font-bold hover:bg-app-textMuted transition-colors flex items-center gap-2 shadow-lg"
+              className="bg-app-accent text-white px-6 py-3 rounded-xl font-bold hover:bg-app-accent/80 transition-colors flex items-center gap-2 shadow-lg"
             >
               Start Review <ArrowRight size={20} />
             </button>
