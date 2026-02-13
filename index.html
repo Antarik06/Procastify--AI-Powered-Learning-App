@@ -12,7 +12,6 @@
         theme: {
           extend: {
             colors: {
-              // Dark theme colors (original)
               discord: {
                 bg: '#1e1f22',
                 panel: '#2b2d31',
@@ -80,26 +79,24 @@
       }
 
       body {
-        background-color: var(--app-bg);
-        color: var(--app-text);
+        background-color: #1e1f22;
+        color: #dbdee1;
         font-family: 'Inter', sans-serif;
-        transition: background-color 0.3s ease, color 0.3s ease;
       }
-      
-      /* Custom Scrollbar */
+      /* Custom Scrollbar for "Discord" feel */
       ::-webkit-scrollbar {
         width: 8px;
         height: 8px;
       }
       ::-webkit-scrollbar-track {
-        background: var(--app-panel); 
+        background: #2b2d31; 
       }
       ::-webkit-scrollbar-thumb {
-        background: var(--app-accent);
+        background: #1a1b1e; 
         border-radius: 4px;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: var(--app-accent-hover);
+        background: #111214; 
       }
     </style>
   <script type="importmap">

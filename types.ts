@@ -190,6 +190,18 @@ export interface Summary {
   mode: string; // Now supports any string (preset modes or custom mode names)
   createdAt: number;
   flashcards?: Flashcard[];
+  // Extended fields for history feature
+  originalText?: string;        // Full original text input
+  attachments?: Attachment[];   // All attachments from session
+}
+
+// Type alias for summaries with complete session data
+export type SummarySession = Required<Pick<Summary, 'originalText' | 'attachments'>> & Summary;
+
+// Type guard to check if a summary has complete session data
+export function isSummarySession(summary: Summary): summary is SummarySession {
+  return 'originalText' in summary && 'attachments' in summary && 
+         summary.originalText !== undefined && summary.attachments !== undefined;
 }
 
 export interface RoutineTask {

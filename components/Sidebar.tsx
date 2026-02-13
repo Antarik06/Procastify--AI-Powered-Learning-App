@@ -41,7 +41,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         title={collapsed ? label : undefined}
       >
         {active && (
-          <div className="absolute inset-0 bg-gradient-to-r from-app-accent/10 to-purple-500/10 rounded-xl"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-discord-accent/10 to-purple-500/10 rounded-xl"></div>
         )}
         <Icon size={20} className={`transition-all duration-300 relative z-10 ${collapsed ? 'flex-shrink-0' : ''} ${active
           ? 'text-app-accent drop-shadow-sm'
@@ -53,7 +53,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               {label}
             </span>
             {active && (
-              <div className="absolute right-2 w-2 h-2 bg-app-accent rounded-full animate-pulse"></div>
+              <div className="absolute right-2 w-2 h-2 bg-discord-accent rounded-full animate-pulse"></div>
             )}
           </>
         )}
@@ -63,21 +63,28 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <div
-      className={`${collapsed ? 'w-20' : 'w-64'} bg-gradient-to-b from-app-panel to-app-bg flex flex-col h-screen fixed left-0 top-0 border-r border-app-border z-50 backdrop-blur-sm transition-all duration-300 ease-in-out`}
+      className={`${collapsed ? "w-20" : "w-64"} bg-gradient-to-b from-[#111214] to-[#0a0b0c] flex flex-col h-screen fixed left-0 top-0 border-r border-white/10 z-50 backdrop-blur-sm transition-all duration-300 ease-in-out`}
     >
       {/* Header */}
-      <div className={`flex items-center border-b border-app-border/50 bg-app-panel/50 transition-all duration-300 ${collapsed ? 'p-4 justify-center' : 'px-5 py-5 justify-between'}`}>
+      <div
+        className={`flex items-center border-b border-white/5 bg-[#111214]/50 transition-all duration-300 ${collapsed ? "p-4 justify-center" : "px-5 py-5 justify-between"}`}
+      >
         {!collapsed ? (
           <>
             <div className="flex items-center">
-              <div className="w-8 h-8 bg-gradient-to-br from-app-accent to-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-app-accent/30 hover:shadow-app-accent/50 transition-all duration-300 hover:scale-110 group">
-                <BrainCircuit className="text-white group-hover:rotate-12 transition-transform duration-300" size={18} />
+              <div className="w-8 h-8 bg-gradient-to-br from-discord-accent to-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-discord-accent/30 hover:shadow-discord-accent/50 transition-all duration-300 hover:scale-110 group">
+                <BrainCircuit
+                  className="text-white group-hover:rotate-12 transition-transform duration-300"
+                  size={18}
+                />
               </div>
-              <h1 className="text-xl font-bold text-app-text tracking-tight hover:text-app-accent transition-colors duration-300 cursor-default ml-3 font-display">Procastify</h1>
+              <h1 className="text-xl font-bold text-white tracking-tight hover:text-discord-accent transition-colors duration-300 cursor-default ml-3 font-display">
+                Procastify
+              </h1>
             </div>
             <button
               onClick={onToggleCollapse}
-              className="flex items-center justify-center w-8 h-8 text-app-textMuted hover:text-app-text hover:bg-app-hover rounded-lg transition-all duration-300 group"
+              className="flex items-center justify-center w-8 h-8 text-discord-textMuted hover:text-white hover:bg-discord-hover rounded-lg transition-all duration-300 group"
               title="Collapse sidebar"
             >
               <PanelLeftClose
@@ -87,8 +94,11 @@ const Sidebar: React.FC<SidebarProps> = ({
             </button>
           </>
         ) : (
-          <div className="w-10 h-10 bg-gradient-to-br from-app-accent to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-app-accent/30 hover:shadow-app-accent/50 transition-all duration-300 hover:scale-110 group">
-            <BrainCircuit className="text-white group-hover:rotate-12 transition-transform duration-300" size={24} />
+          <div className="w-10 h-10 bg-gradient-to-br from-discord-accent to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-discord-accent/30 hover:shadow-discord-accent/50 transition-all duration-300 hover:scale-110 group">
+            <BrainCircuit
+              className="text-white group-hover:rotate-12 transition-transform duration-300"
+              size={24}
+            />
           </div>
         )}
       </div>
@@ -98,7 +108,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         <div className="px-4 pt-4 flex justify-center">
           <button
             onClick={onToggleCollapse}
-            className="flex items-center justify-center w-10 h-10 text-app-textMuted hover:text-app-text hover:bg-app-hover rounded-lg transition-all duration-300 group"
+            className="flex items-center justify-center w-10 h-10 text-discord-textMuted hover:text-white hover:bg-discord-hover rounded-lg transition-all duration-300 group"
             title="Expand sidebar"
           >
             <PanelLeftOpen
@@ -131,13 +141,10 @@ const Sidebar: React.FC<SidebarProps> = ({
         )}
       </nav>
 
-      {/* Theme Toggle */}
-      <div className={`${collapsed ? 'px-3 py-2' : 'px-4 py-2'}`}>
-        <ThemeToggle collapsed={collapsed} />
-      </div>
-
       {/* Logout Button */}
-      <div className={`${collapsed ? 'p-3 mb-4' : 'p-4 mx-4 mb-4'} border-t border-app-border`}>
+      <div
+        className={`${collapsed ? "p-3 mb-4" : "p-4 mx-4 mb-4"} border-t border-white/10 mt-auto`}
+      >
         <button
           onClick={onLogout}
           className={`w-full flex items-center ${collapsed ? "justify-center px-2" : "gap-3 px-4"} py-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-all duration-300 font-medium group hover:scale-105 border border-transparent hover:border-red-500/20`}

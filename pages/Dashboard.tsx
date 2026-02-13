@@ -41,8 +41,33 @@ const Dashboard: React.FC<DashboardProps> = ({ user, summaries, notes, stats, on
 
   const highScore = safeStats.highScore || 0;
 
+
   const actualNotesCreated = notes.length;
   const actualSummariesCount = summaries.length;
+
+
+  const getLast7Days = () => {
+    const getLocalDateKey = (date: Date): string => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = getLocalDateKey(d);
+      days.push({
+        name: d.toLocaleDateString('en-US', { weekday: 'short' }),
+        hours: (safeStats.dailyActivity[key] || 0) / 60 // Convert minutes to hours
+      });
+    }
+    return days;
+  };
+
+  const activityData = getLast7Days();
 
   const statCards: StatCard[] = [
     {
@@ -85,14 +110,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, summaries, notes, stats, on
       {/* ... existing header ... */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-app-text flex items-center gap-2">
+          <h1 className="text-3xl font-bold text-white flex items-center gap-2">
             Welcome back, {user?.name || 'User'} <span className="animate-wave origin-bottom-right inline-block">👋</span>
           </h1>
-          <p className="text-app-textMuted mt-1">
+          <p className="text-discord-textMuted mt-1">
             You're on track with your <strong>{user?.goal || 'study'}</strong> goal.
           </p>
         </div>
-        <div className="bg-app-panel px-4 py-2 rounded-xl border border-app-border flex items-center gap-2 text-app-textMuted text-sm shadow-sm backdrop-blur-sm">
+        <div className="bg-discord-panel px-4 py-2 rounded-xl border border-white/5 flex items-center gap-2 text-discord-textMuted text-sm shadow-sm backdrop-blur-sm">
           <Calendar size={16} />
           <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span>
         </div>
@@ -135,16 +160,16 @@ const Dashboard: React.FC<DashboardProps> = ({ user, summaries, notes, stats, on
       {/* ... existing stat cards ... */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((stat, idx) => (
-          <div key={idx} className="bg-app-panel p-6 rounded-2xl border border-app-border hover:border-app-accent/30 transition-all shadow-sm group">
+          <div key={idx} className="bg-discord-panel p-6 rounded-2xl border border-white/5 hover:border-white/10 transition-all shadow-sm group">
             <div className="flex justify-between items-start mb-4">
               <div className={`p-3 rounded-xl ${stat.bg} ${stat.color} group-hover:scale-110 transition-transform`}>
                 <stat.icon size={24} />
               </div>
             </div>
-            <h3 className="text-3xl font-bold text-app-text tracking-tight">{stat.value}</h3>
-            <p className="text-sm text-app-textMuted font-medium">{stat.label}</p>
+            <h3 className="text-3xl font-bold text-white tracking-tight">{stat.value}</h3>
+            <p className="text-sm text-discord-textMuted font-medium">{stat.label}</p>
             {stat.subtext && (
-              <p className="text-xs text-app-textMuted/70 mt-1">{stat.subtext}</p>
+              <p className="text-xs text-discord-textMuted/70 mt-1">{stat.subtext}</p>
             )}
           </div>
         ))}
