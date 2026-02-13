@@ -308,7 +308,7 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
                     </div>
                     <div>
                         <h4 className={`font-bold mb-1 ${panicMode ? 'text-red-400' : 'text-app-text'}`}>{panicMode ? "PANIC MODE ACTIVE" : "AI Projection"}</h4>
-                        <p className="text-discord-text leading-relaxed">{routineMeta.projection}</p>
+                        <p className="text-app-text leading-relaxed">{routineMeta.projection}</p>
                         <div className="flex items-center gap-2 mt-2">
                             <span className="text-xs text-app-textMuted uppercase tracking-wider font-bold">Confidence:</span>
                             <span className={`text-xs font-bold uppercase ${routineMeta.confidence === 'high' ? 'text-green-400' : 'text-yellow-400'}`}>
@@ -432,7 +432,7 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
                 </div>
                 <button
                     onClick={() => setShowSettings(!showSettings)}
-                    className="p-3 bg-app-panel hover:bg-app-hover text-discord-text rounded-xl transition-colors border border-app-border"
+                    className="p-3 bg-app-panel hover:bg-app-hover text-app-text rounded-xl transition-colors border border-app-border"
                 >
                     <Settings size={20} />
                 </button>

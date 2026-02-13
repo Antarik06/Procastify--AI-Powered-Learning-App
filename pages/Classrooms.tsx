@@ -203,7 +203,7 @@ const Classrooms: React.FC<ClassroomsProps> = ({ user, onNavigate }) => {
 
               <form onSubmit={handleCreateClassroom} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">
+                  <label className="block text-sm font-medium text-app-textMuted mb-2">
                     Classroom Name *
                   </label>
                   <input
@@ -212,17 +212,17 @@ const Classrooms: React.FC<ClassroomsProps> = ({ user, onNavigate }) => {
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="e.g., Introduction to React"
                     maxLength={100}
-                    className="w-full bg-[#1e1f22] border border-app-border rounded-lg px-4 py-3 text-app-text focus:outline-none focus:border-[#5865F2] transition-colors placeholder:text-gray-600"
+                    className="w-full bg-app-bg border border-app-border rounded-lg px-4 py-3 text-app-text focus:outline-none focus:border-app-accent transition-colors placeholder:text-app-textMuted"
                     disabled={saving}
                     required
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-app-textMuted mt-1">
                     {formData.name.length}/100 characters
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">
+                  <label className="block text-sm font-medium text-app-textMuted mb-2">
                     Description (Optional)
                   </label>
                   <textarea
@@ -230,7 +230,7 @@ const Classrooms: React.FC<ClassroomsProps> = ({ user, onNavigate }) => {
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Brief description of the classroom..."
                     rows={4}
-                    className="w-full bg-[#1e1f22] border border-app-border rounded-lg px-4 py-3 text-app-text focus:outline-none focus:border-[#5865F2] transition-colors placeholder:text-gray-600 resize-none"
+                    className="w-full bg-app-bg border border-app-border rounded-lg px-4 py-3 text-app-text focus:outline-none focus:border-app-accent transition-colors placeholder:text-app-textMuted resize-none"
                     disabled={saving}
                   />
                 </div>
@@ -240,14 +240,14 @@ const Classrooms: React.FC<ClassroomsProps> = ({ user, onNavigate }) => {
                     type="button"
                     onClick={() => setShowCreateModal(false)}
                     disabled={saving}
-                    className="flex-1 bg-[#1e1f22] hover:bg-[#1e1f22]/80 text-app-text py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
+                    className="flex-1 bg-app-hover hover:bg-app-border text-app-text py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={saving || !formData.name.trim()}
-                    className="flex-1 bg-[#5865F2] hover:bg-[#4752c4] text-app-text py-3 rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="flex-1 bg-app-accent hover:bg-app-accent/80 text-white py-3 rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {saving ? (
                       <>

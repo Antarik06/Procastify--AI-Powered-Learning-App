@@ -481,7 +481,7 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
                         {renderAttachments()}
 
                         <textarea
-                            className="flex-1 bg-transparent resize-none focus:outline-none text-discord-text placeholder-discord-textMuted/40 font-mono text-sm leading-relaxed min-h-[200px]"
+                            className="flex-1 bg-transparent resize-none focus:outline-none text-app-text placeholder-app-textMuted/40 font-mono text-sm leading-relaxed min-h-[200px]"
                             placeholder="Paste your content or type your notes here to summarize..."
                             value={textContext}
                             onChange={(e) => setTextContext(e.target.value)}
@@ -684,7 +684,7 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
                                             className="w-full bg-app-bg hover:bg-app-hover p-3 rounded-xl border border-app-border flex items-center gap-3 transition-colors text-left group"
                                         >
                                             <BookOpen size={16} className="text-app-textMuted group-hover:text-app-accent" />
-                                            <span className="text-discord-text group-hover:text-app-text truncate">{note.title}</span>
+                                            <span className="text-app-text group-hover:text-app-accent truncate">{note.title}</span>
                                         </button>
                                     ))}
                                     {notes.length === 0 && <p className="text-app-textMuted text-sm text-center py-4">No existing notes found.</p>}

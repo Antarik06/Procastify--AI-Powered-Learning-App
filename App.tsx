@@ -348,7 +348,7 @@ const App: React.FC = () => {
 
   if (loadingAuth) {
     return (
-      <div className="min-h-screen bg-[#1e1f22] flex items-center justify-center text-white">
+      <div className="min-h-screen bg-app-bg flex items-center justify-center text-app-text">
         <Loader2 className="animate-spin mr-2" /> Loading Procastify...
       </div>
     );
@@ -511,7 +511,7 @@ const App: React.FC = () => {
     return <Focus initialTask={focusTask} onExit={handleFocusExit} />;
 
   return (
-    <div className="flex min-h-screen bg-[#1e1f22]">
+    <div className="flex min-h-screen bg-app-bg">
       <Sidebar
         currentView={view === "folders" ? "notes" : view}
         onNavigate={handleNavigate}

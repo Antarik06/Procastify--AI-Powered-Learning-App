@@ -100,27 +100,35 @@ const Dashboard: React.FC<DashboardProps> = ({ user, summaries, notes, stats, on
 
       {/* Focus Widget: What Should I Learn Now */}
       {suggestedNote && (
-        <div className="bg-gradient-to-r from-app-accent to-purple-600 p-1 rounded-2xl shadow-lg animate-in fade-in slide-in-from-top-4">
-          <div className="bg-app-panel backdrop-blur-sm p-6 rounded-xl flex items-center justify-between border border-app-border">
+        <div className={`rounded-2xl shadow-lg animate-in fade-in slide-in-from-top-4 p-6 flex items-center justify-between border ${
+          isDark 
+            ? 'bg-gradient-to-r from-app-accent to-purple-600' 
+            : 'bg-app-panel border-app-border'
+        }`}>
             <div className="flex items-center gap-6">
-              <div className="w-16 h-16 bg-app-accent/20 rounded-full flex items-center justify-center animate-pulse">
-                <BrainCircuit size={32} className="text-app-accent" />
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center animate-pulse ${
+                isDark ? 'bg-white/20' : 'bg-app-accent/20'
+              }`}>
+                <BrainCircuit size={32} className={isDark ? 'text-white' : 'text-app-accent'} />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-app-text mb-1">What Should I Learn Now?</h2>
-                <p className="text-app-textMuted">Based on your activity, we recommend reviewing:</p>
-                <p className="text-app-text font-bold text-lg mt-1 flex items-center gap-2">
+                <h2 className={`text-xl font-bold mb-1 ${isDark ? 'text-white' : 'text-app-text'}`}>What Should I Learn Now?</h2>
+                <p className={isDark ? 'text-white/70' : 'text-app-textMuted'}>Based on your activity, we recommend reviewing:</p>
+                <p className={`font-bold text-lg mt-1 flex items-center gap-2 ${isDark ? 'text-white' : 'text-app-text'}`}>
                   <BookOpen size={18} /> {suggestedNote.title}
                 </p>
               </div>
             </div>
             <button
               onClick={() => onNoteClick?.(suggestedNote.id)}
-              className="bg-app-accent text-white px-6 py-3 rounded-xl font-bold hover:bg-app-accent/80 transition-colors flex items-center gap-2 shadow-lg"
+              className={`px-6 py-3 rounded-xl font-bold transition-colors flex items-center gap-2 shadow-lg ${
+                isDark 
+                  ? 'bg-gray-900 text-white hover:bg-gray-800' 
+                  : 'bg-app-accent text-white hover:bg-app-accent/80'
+              }`}
             >
               Start Review <ArrowRight size={20} />
             </button>
-          </div>
         </div>
       )}
 
