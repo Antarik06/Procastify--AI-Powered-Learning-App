@@ -31,6 +31,7 @@
                 accent: 'var(--app-accent)',
                 accentHover: 'var(--app-accent-hover)',
                 text: 'var(--app-text)',
+                heading: 'var(--app-text-heading)',
                 textMuted: 'var(--app-text-muted)',
                 hover: 'var(--app-hover)',
                 border: 'var(--app-border)',
@@ -51,13 +52,14 @@
       :root {
         /* Light theme colors */
         --app-bg: #ffffff;
-        --app-panel: #f8f9fa;
+        --app-panel: #f3f4f6;
         --app-accent: #5865F2;
         --app-accent-hover: #4752c4;
-        --app-text: #2d3748;
-        --app-text-muted: #718096;
-        --app-hover: #f1f3f4;
-        --app-border: rgba(45, 55, 72, 0.12);
+        --app-text: #ffffff;
+        --app-text-heading: #ffffff;
+        --app-text-muted: #4b5563;
+        --app-hover: #e5e7eb;
+        --app-border: rgba(0, 0, 0, 0.1);
         --app-green: #38a169;
         --app-red: #e53e3e;
       }
@@ -68,8 +70,9 @@
         --app-panel: #2b2d31;
         --app-accent: #5865F2;
         --app-accent-hover: #4752c4;
-        --app-text: #dbdee1;
-        --app-text-muted: #949ba4;
+        --app-text: #ffffff;
+        --app-text-heading: #ffffff;
+        --app-text-muted: #9ca3af;
         --app-hover: #35373c;
         --app-border: rgba(255, 255, 255, 0.1);
         --app-green: #23a559;
@@ -93,12 +96,6 @@
       }
       ::-webkit-scrollbar-thumb {
         background: var(--app-accent);
-        border-radius: 4px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: var(--app-accent-hover);
-      }
-    </style> 
         border-radius: 4px;
       }
       ::-webkit-scrollbar-thumb:hover {

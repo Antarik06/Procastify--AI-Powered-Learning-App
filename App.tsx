@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ViewState, UserPreferences, Summary, Note, RoutineTask, UserStats, Flashcard, NoteElement } from './types';
+import { ViewState, UserPreferences, Summary, Note, RoutineTask, UserStats, Flashcard, NoteElement, Folder } from './types';
 import { StorageService } from './services/storageService';
 import { auth } from './firebaseConfig';
 import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
@@ -14,6 +14,14 @@ import Focus from './pages/Focus';
 import QuizPage from './pages/Quiz';
 import NoteFeed from './pages/NoteFeed';
 import NotesStore from './pages/NotesStore';
+import StudentClassrooms from './pages/StudentClassrooms';
+import StudentClassroomView from './pages/StudentClassroomView';
+import Classrooms from './pages/Classrooms';
+import ClassroomDetail from './pages/ClassroomDetail';
+import TeacherDashboard from './pages/TeacherDashboard';
+import Folders from './pages/Folders';
+import RoleSelection from './pages/RoleSelection';
+import Auth from './pages/Auth';
 import { AlertCircle, LogIn, X, Loader2 } from 'lucide-react';
 
 const App: React.FC = () => {

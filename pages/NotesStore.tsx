@@ -99,14 +99,14 @@ const NotesStore: React.FC<NotesStoreProps> = ({ user, onImportNote, onNavigate 
     const filteredNotes = publicNotes.filter(n => n.title.toLowerCase().includes(search.toLowerCase()));
 
     return (
-        <div className="p-8 h-full overflow-y-auto bg-[#1e1f22] text-white">
+        <div className="p-8 h-full overflow-y-auto bg-app-bg text-app-text">
             <div className="max-w-6xl mx-auto">
                 <div className="flex justify-between items-center mb-8">
                     <div className="flex items-center gap-4">
                         {onNavigate && (
                             <button
                                 onClick={() => onNavigate('notes')}
-                                className="flex items-center gap-2 px-3 py-2 -ml-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors group"
+                                className="flex items-center gap-2 px-3 py-2 -ml-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-app-text transition-colors group"
                             >
                                 <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
                             </button>
@@ -119,7 +119,7 @@ const NotesStore: React.FC<NotesStoreProps> = ({ user, onImportNote, onNavigate 
                     <div className="relative w-64">
                         <Search className="absolute left-3 top-3 text-gray-400" size={18} />
                         <input
-                            className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-white focus:outline-none focus:border-[#5865F2]"
+                            className="w-full bg-app-panel border border-app-border rounded-lg pl-10 pr-4 py-2.5 text-app-text focus:outline-none focus:border-[#5865F2]"
                             placeholder="Search..."
                             value={search}
                             onChange={e => setSearch(e.target.value)}
@@ -135,7 +135,7 @@ const NotesStore: React.FC<NotesStoreProps> = ({ user, onImportNote, onNavigate 
                             <div
                                 key={note.id}
                                 onClick={() => setSelectedNote(note)}
-                                className="bg-[#2b2d31] rounded-xl overflow-hidden border border-white/5 hover:border-[#5865F2] cursor-pointer transition-all hover:transform hover:-translate-y-1 hover:shadow-xl group"
+                                className="bg-app-panel rounded-xl overflow-hidden border border-app-border hover:border-[#5865F2] cursor-pointer transition-all hover:transform hover:-translate-y-1 hover:shadow-xl group"
                             >
                                 <div className="aspect-video bg-[#232428] relative overflow-hidden">
                                     {/* Simple Preview */}
@@ -163,7 +163,7 @@ const NotesStore: React.FC<NotesStoreProps> = ({ user, onImportNote, onNavigate 
                         <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
                             <Search size={32} className="text-gray-500" />
                         </div>
-                        <h3 className="text-xl font-bold text-white mb-2">No notes at the moment</h3>
+                        <h3 className="text-xl font-bold text-app-text mb-2">No notes at the moment</h3>
                         <p className="text-gray-400 max-w-sm">
                             {search ? "Try adjusting your search terms." : "The community hasn't published any notes yet. Be the first!"}
                         </p>
@@ -174,19 +174,19 @@ const NotesStore: React.FC<NotesStoreProps> = ({ user, onImportNote, onNavigate 
             {/* Note Preview Modal */}
             {selectedNote && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-8">
-                    <div className="bg-[#1e1f22] w-full max-w-6xl h-[90vh] rounded-2xl border border-white/10 shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95">
-                        <div className="p-4 border-b border-white/10 flex justify-between items-center bg-[#2b2d31]">
+                    <div className="bg-app-bg w-full max-w-6xl h-[90vh] rounded-2xl border border-app-border shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95">
+                        <div className="p-4 border-b border-app-border flex justify-between items-center bg-app-panel">
                             <h2 className="text-xl font-bold">{selectedNote.title}</h2>
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => handleImport(selectedNote)}
-                                    className="px-4 py-2 bg-[#5865F2] hover:bg-[#4752c4] text-white rounded-lg font-medium flex items-center gap-2 transition-colors"
+                                    className="px-4 py-2 bg-[#5865F2] hover:bg-[#4752c4] text-app-text rounded-lg font-medium flex items-center gap-2 transition-colors"
                                 >
                                     <Download size={18} /> Import Copy
                                 </button>
                                 <button
                                     onClick={() => setSelectedNote(null)}
-                                    className="px-4 py-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white"
+                                    className="px-4 py-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-app-text"
                                 >
                                     Close
                                 </button>
@@ -194,7 +194,7 @@ const NotesStore: React.FC<NotesStoreProps> = ({ user, onImportNote, onNavigate 
                         </div>
                         <div className="flex-1 flex overflow-hidden">
                             {/* Preview Split View */}
-                            <div className="w-1/2 border-r border-white/10 flex flex-col">
+                            <div className="w-1/2 border-r border-app-border flex flex-col">
                                 <DocumentEditor
                                     content={selectedNote.document?.blocks ? selectedNote.document.blocks : []}
                                     onUpdate={() => { }}

@@ -25,8 +25,8 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
     onComplete(prefs);
   };
 
-  const containerClass = "max-w-md w-full bg-discord-panel p-8 rounded-2xl shadow-xl border border-white/5";
-  const labelClass = "block text-sm font-medium text-discord-textMuted mb-2";
+  const containerClass = "max-w-md w-full bg-app-panel p-8 rounded-2xl shadow-xl border border-app-border";
+  const labelClass = "block text-sm font-medium text-app-textMuted mb-2";
   const inputClass = "w-full bg-discord-bg border border-black/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-discord-accent transition-colors";
 
   return (
@@ -40,7 +40,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
           <div className="mb-6">
             <label className={labelClass}>Name</label>
             <div className="relative">
-                <User className="absolute left-3 top-3.5 text-discord-textMuted" size={18} />
+                <User className="absolute left-3 top-3.5 text-app-textMuted" size={18} />
                 <input 
                     type="text" 
                     value={prefs.name}
@@ -66,7 +66,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
           <div className="mb-6">
             <label className={labelClass}>Daily Free Time (Hours)</label>
             <div className="relative">
-                <Clock className="absolute left-3 top-3.5 text-discord-textMuted" size={18} />
+                <Clock className="absolute left-3 top-3.5 text-app-textMuted" size={18} />
                 <input 
                     type="number" 
                     value={prefs.freeTimeHours}
@@ -87,7 +87,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                         className={`py-3 px-2 rounded-lg text-sm font-medium border transition-all capitalize
                             ${prefs.energyPeak === t 
                                 ? 'bg-discord-accent/20 border-discord-accent text-discord-accent' 
-                                : 'bg-discord-bg border-transparent text-discord-textMuted hover:bg-discord-hover'
+                                : 'bg-discord-bg border-transparent text-app-textMuted hover:bg-discord-hover'
                             }`}
                     >
                         {t}
@@ -112,7 +112,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
             <div className="mb-6">
                 <label className={labelClass}>What are you working towards?</label>
                 <div className="relative">
-                    <Target className="absolute left-3 top-3.5 text-discord-textMuted" size={18} />
+                    <Target className="absolute left-3 top-3.5 text-app-textMuted" size={18} />
                     <input 
                         type="text" 
                         value={prefs.goal}
@@ -145,7 +145,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                             className={`w-full flex items-center justify-between p-4 rounded-lg border transition-all
                                 ${prefs.distractionLevel === level
                                     ? 'bg-discord-accent/20 border-discord-accent text-white' 
-                                    : 'bg-discord-bg border-transparent text-discord-textMuted hover:bg-discord-hover'
+                                    : 'bg-discord-bg border-transparent text-app-textMuted hover:bg-discord-hover'
                                 }`}
                         >
                             <span className="capitalize font-medium">{level}</span>

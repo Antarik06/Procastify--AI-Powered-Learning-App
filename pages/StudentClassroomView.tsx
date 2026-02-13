@@ -178,7 +178,7 @@ const StudentClassroomView: React.FC<StudentClassroomViewProps> = ({ user, class
           <p>Classroom not found</p>
           <button
             onClick={() => onNavigate('studentClassrooms')}
-            className="mt-4 text-[#5865F2] hover:text-white"
+            className="mt-4 text-[#5865F2] hover:text-app-text"
           >
             Back to My Classrooms
           </button>
@@ -193,12 +193,12 @@ const StudentClassroomView: React.FC<StudentClassroomViewProps> = ({ user, class
       <div>
         <button
           onClick={() => onNavigate('studentClassrooms')}
-          className="text-gray-400 hover:text-white flex items-center gap-2 mb-4 transition-colors"
+          className="text-gray-400 hover:text-app-text flex items-center gap-2 mb-4 transition-colors"
         >
           <ArrowLeft size={20} />
           Back to My Classrooms
         </button>
-        <h1 className="text-3xl font-bold text-white">{classroom.name}</h1>
+        <h1 className="text-3xl font-bold text-app-text">{classroom.name}</h1>
         <div className="flex items-center gap-2 mt-2">
           <User size={16} className="text-gray-500" />
           <p className="text-gray-400">Teacher: {classroom.teacherName}</p>
@@ -213,11 +213,11 @@ const StudentClassroomView: React.FC<StudentClassroomViewProps> = ({ user, class
         <div className="space-y-4">
           <div className="flex items-center gap-3 mb-4">
             <MessageSquare size={24} className="text-[#5865F2]" />
-            <h2 className="text-xl font-bold text-white">Announcements</h2>
+            <h2 className="text-xl font-bold text-app-text">Announcements</h2>
           </div>
 
           {announcements.length === 0 ? (
-            <div className="bg-[#2b2d31] border border-white/5 rounded-xl p-8 text-center">
+            <div className="bg-app-panel border border-app-border rounded-xl p-8 text-center">
               <MessageSquare size={40} className="mx-auto mb-3 text-gray-600" />
               <p className="text-gray-400">No announcements yet</p>
             </div>
@@ -229,14 +229,14 @@ const StudentClassroomView: React.FC<StudentClassroomViewProps> = ({ user, class
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="bg-[#2b2d31] border border-white/5 rounded-xl p-5"
+                  className="bg-app-panel border border-app-border rounded-xl p-5"
                 >
                   <div className="flex items-start gap-3 mb-3">
                     <div className="w-10 h-10 bg-[#5865F2]/10 rounded-full flex items-center justify-center flex-shrink-0">
                       <MessageSquare size={18} className="text-[#5865F2]" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-white font-medium">{announcement.teacherName}</p>
+                      <p className="text-app-text font-medium">{announcement.teacherName}</p>
                       <p className="text-gray-500 text-xs flex items-center gap-1 mt-1">
                         <Calendar size={12} />
                         {new Date(announcement.createdAt).toLocaleDateString('en-US', {
@@ -258,11 +258,11 @@ const StudentClassroomView: React.FC<StudentClassroomViewProps> = ({ user, class
         <div className="space-y-4">
           <div className="flex items-center gap-3 mb-4">
             <Share2 size={24} className="text-[#5865F2]" />
-            <h2 className="text-xl font-bold text-white">Shared Resources</h2>
+            <h2 className="text-xl font-bold text-app-text">Shared Resources</h2>
           </div>
 
           {resources.length === 0 ? (
-            <div className="bg-[#2b2d31] border border-white/5 rounded-xl p-8 text-center">
+            <div className="bg-app-panel border border-app-border rounded-xl p-8 text-center">
               <Share2 size={40} className="mx-auto mb-3 text-gray-600" />
               <p className="text-gray-400">No resources shared yet</p>
             </div>
@@ -275,14 +275,14 @@ const StudentClassroomView: React.FC<StudentClassroomViewProps> = ({ user, class
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
                   onClick={() => handleViewResource(resource)}
-                  className="w-full bg-[#2b2d31] border border-white/5 rounded-xl p-5 hover:border-[#5865F2]/50 transition-all text-left group"
+                  className="w-full bg-app-panel border border-app-border rounded-xl p-5 hover:border-[#5865F2]/50 transition-all text-left group"
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 bg-[#5865F2]/10 rounded-lg flex items-center justify-center flex-shrink-0">
                       <Share2 size={18} className="text-[#5865F2]" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-white font-medium mb-1">{resource.resourceTitle}</h3>
+                      <h3 className="text-app-text font-medium mb-1">{resource.resourceTitle}</h3>
                       <p className="text-gray-500 text-xs">
                         Shared by {resource.sharedByName} • {new Date(resource.sharedAt).toLocaleDateString()}
                       </p>
@@ -304,12 +304,12 @@ const StudentClassroomView: React.FC<StudentClassroomViewProps> = ({ user, class
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-[#2b2d31] rounded-xl p-6 max-w-4xl w-full border border-white/10 max-h-[90vh] flex flex-col"
+              className="bg-app-panel rounded-xl p-6 max-w-4xl w-full border border-app-border max-h-[90vh] flex flex-col"
             >
               {/* Header */}
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="text-2xl font-bold text-white mb-1">{selectedResource.resourceTitle}</h3>
+                  <h3 className="text-2xl font-bold text-app-text mb-1">{selectedResource.resourceTitle}</h3>
                   <p className="text-gray-400 text-sm">
                     Shared by {selectedResource.sharedByName} • {new Date(selectedResource.sharedAt).toLocaleDateString()}
                   </p>
@@ -319,14 +319,14 @@ const StudentClassroomView: React.FC<StudentClassroomViewProps> = ({ user, class
                     setSelectedResource(null);
                     setResourceNote(null);
                   }}
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className="text-gray-400 hover:text-app-text transition-colors"
                 >
                   <ArrowLeft size={24} />
                 </button>
               </div>
 
               {/* Content */}
-              <div className="flex-1 overflow-y-auto mb-4 bg-[#1e1f22] rounded-lg p-6">
+              <div className="flex-1 overflow-y-auto mb-4 bg-app-bg rounded-lg p-6">
                 {loadingNote ? (
                   <div className="flex items-center justify-center py-12">
                     <Loader2 className="animate-spin text-[#5865F2]" size={32} />
@@ -338,9 +338,9 @@ const StudentClassroomView: React.FC<StudentClassroomViewProps> = ({ user, class
                       <div className="space-y-3">
                         {resourceNote.document.blocks.map((block, idx) => (
                           <div key={idx} className="text-gray-300">
-                            {block.type === 'h1' && <h1 className="text-3xl font-bold text-white mb-2">{block.content}</h1>}
-                            {block.type === 'h2' && <h2 className="text-2xl font-bold text-white mb-2">{block.content}</h2>}
-                            {block.type === 'h3' && <h3 className="text-xl font-bold text-white mb-2">{block.content}</h3>}
+                            {block.type === 'h1' && <h1 className="text-3xl font-bold text-app-text mb-2">{block.content}</h1>}
+                            {block.type === 'h2' && <h2 className="text-2xl font-bold text-app-text mb-2">{block.content}</h2>}
+                            {block.type === 'h3' && <h3 className="text-xl font-bold text-app-text mb-2">{block.content}</h3>}
                             {block.type === 'text' && <p className="text-gray-300">{block.content}</p>}
                             {block.type === 'bullet' && <li className="text-gray-300 ml-4">{block.content}</li>}
                             {block.type === 'quote' && <blockquote className="border-l-4 border-[#5865F2] pl-4 italic text-gray-400">{block.content}</blockquote>}
@@ -358,20 +358,20 @@ const StudentClassroomView: React.FC<StudentClassroomViewProps> = ({ user, class
               </div>
 
               {/* Footer Buttons */}
-              <div className="flex gap-3 pt-2 border-t border-white/10">
+              <div className="flex gap-3 pt-2 border-t border-app-border">
                 <button
                   onClick={() => {
                     setSelectedResource(null);
                     setResourceNote(null);
                   }}
-                  className="flex-1 bg-[#1e1f22] hover:bg-[#1e1f22]/80 text-white py-2.5 rounded-lg transition-colors"
+                  className="flex-1 bg-app-bg hover:bg-app-bg/80 text-app-text py-2.5 rounded-lg transition-colors"
                 >
                   Close
                 </button>
                 <button
                   onClick={handleCopyToMyNotes}
                   disabled={copying || !resourceNote}
-                  className="flex-1 bg-[#5865F2] hover:bg-[#4752c4] text-white py-2.5 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="flex-1 bg-[#5865F2] hover:bg-[#4752c4] text-app-text py-2.5 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {copying ? (
                     <>

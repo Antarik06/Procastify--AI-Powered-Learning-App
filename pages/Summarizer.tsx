@@ -328,18 +328,18 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
     const renderAttachments = () => (
         <div className="flex flex-wrap gap-2 mb-4">
             {attachments.map(att => (
-                <div key={att.id} className="flex items-center gap-2 bg-discord-bg border border-white/10 rounded-lg pl-3 pr-2 py-2 animate-in fade-in zoom-in-95">
-                    <span className="text-discord-accent">
+                <div key={att.id} className="flex items-center gap-2 bg-app-bg border border-app-border rounded-lg pl-3 pr-2 py-2 animate-in fade-in zoom-in-95">
+                    <span className="text-app-accent">
                         {att.type === 'pdf' && <FileUp size={16} />}
                         {/* {att.type === 'image' && <ImageIcon size={16} /> } */}
                         {att.type === 'audio' && <Mic size={16} />}
                         {att.type === 'url' && <LinkIcon size={16} />}
                     </span>
                     <div className="flex flex-col max-w-[150px]">
-                        <span className="text-xs font-bold uppercase text-discord-textMuted leading-none mb-0.5">{att.type} added</span>
-                        <span className="text-sm text-white truncate font-medium">{att.name || 'Untitled'}</span>
+                        <span className="text-xs font-bold uppercase text-app-textMuted leading-none mb-0.5">{att.type} added</span>
+                        <span className="text-sm text-app-text truncate font-medium">{att.name || 'Untitled'}</span>
                     </div>
-                    <button onClick={() => removeAttachment(att.id)} className="p-1 hover:bg-white/10 rounded-full text-discord-textMuted hover:text-white transition-colors">
+                    <button onClick={() => removeAttachment(att.id)} className="p-1 hover:bg-white/10 rounded-full text-app-textMuted hover:text-app-text transition-colors">
                         <X size={14} />
                     </button>
                 </div>
@@ -351,10 +351,10 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
         <div className="p-8 h-full flex flex-col relative">
             <div className="flex justify-between items-start mb-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                        <Sparkles className="text-discord-accent" /> Summarizer
+                    <h1 className="text-3xl font-bold text-app-text flex items-center gap-3">
+                        <Sparkles className="text-app-accent" /> Summarizer
                     </h1>
-                    <p className="text-discord-textMuted mt-1">
+                    <p className="text-app-textMuted mt-1">
                         Enter text to summarize. Choose your summary style below.
                     </p>
                 </div>
@@ -366,15 +366,15 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
 
 
                     <div>
-                        <div className="bg-discord-panel p-1 rounded-xl border border-white/5 flex gap-1 mb-2 flex-wrap">
+                        <div className="bg-app-panel p-1 rounded-xl border border-app-border flex gap-1 mb-2 flex-wrap">
                             {(['short', 'detailed', 'eli5', 'exam'] as const).map((m) => (
                                 <button
                                     key={m}
                                     onClick={() => setMode(m)}
                                     className={`flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition-all flex items-center justify-center min-w-16
                                 ${mode === m
-                                            ? 'bg-discord-accent text-white shadow-md'
-                                            : 'text-discord-textMuted hover:bg-discord-hover'}`}
+                                            ? 'bg-app-accent text-app-text shadow-md'
+                                            : 'text-app-textMuted hover:bg-app-hover'}`}
                                 >
                                     {m === 'eli5' ? 'ELI5' : m}
                                 </button>
@@ -387,8 +387,8 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
                                         onClick={() => setMode(customMode.name)}
                                         className={`px-3 py-2 rounded-lg text-xs font-bold tracking-wide transition-all flex items-center justify-center
                                     ${mode === customMode.name
-                                                ? 'bg-purple-600 text-white shadow-md'
-                                                : 'text-discord-textMuted hover:bg-discord-hover'}`}
+                                                ? 'bg-purple-600 text-app-text shadow-md'
+                                                : 'text-app-textMuted hover:bg-app-hover'}`}
                                         title={customMode.systemPrompt}
                                     >
                                         {customMode.name}
@@ -396,14 +396,14 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
                                     <div className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
                                         <button
                                             onClick={() => editCustomMode(customMode)}
-                                            className="w-4 h-4 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center text-xs"
+                                            className="w-4 h-4 bg-blue-500 hover:bg-blue-600 text-app-text rounded-full flex items-center justify-center text-xs"
                                             title="Edit"
                                         >
                                             <Edit3 size={10} />
                                         </button>
                                         <button
                                             onClick={() => deleteCustomMode(customMode.id)}
-                                            className="w-4 h-4 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs"
+                                            className="w-4 h-4 bg-red-500 hover:bg-red-600 text-app-text rounded-full flex items-center justify-center text-xs"
                                             title="Delete"
                                         >
                                             <Trash2 size={10} />
@@ -420,16 +420,16 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
                                         setCustomModePrompt('');
                                         setEditingCustomMode(null);
                                     }}
-                                    className="w-10 rounded-lg text-xs font-bold transition-all flex items-center justify-center flex-none text-discord-textMuted hover:bg-discord-hover"
+                                    className="w-10 rounded-lg text-xs font-bold transition-all flex items-center justify-center flex-none text-app-textMuted hover:bg-app-hover"
                                     title="Create new custom mode"
                                 >
                                     +
                                 </button>
 
                                 {showCustomModeInput && (
-                                    <div className="absolute right-0 top-full mt-2 bg-discord-panel border border-white/10 rounded-lg shadow-2xl p-3 w-80 z-50 origin-top-right animate-in fade-in zoom-in-95">
+                                    <div className="absolute right-0 top-full mt-2 bg-app-panel border border-app-border rounded-lg shadow-2xl p-3 w-80 z-50 origin-top-right animate-in fade-in zoom-in-95">
                                         <div className="mb-3">
-                                            <label className="text-xs font-bold text-discord-textMuted uppercase mb-1 block">Quick Create Mode</label>
+                                            <label className="text-xs font-bold text-app-textMuted uppercase mb-1 block">Quick Create Mode</label>
                                             <input
                                                 type="text"
                                                 value={customModeText}
@@ -444,7 +444,7 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
                                                     }
                                                 }}
                                                 placeholder="e.g., creative, technical, casual..."
-                                                className="w-full bg-discord-bg border border-white/10 rounded px-3 py-2 text-sm text-white placeholder-discord-textMuted/50 focus:outline-none focus:border-discord-accent transition-colors"
+                                                className="w-full bg-app-bg border border-app-border rounded px-3 py-2 text-sm text-app-text placeholder-discord-textMuted/50 focus:outline-none focus:border-app-accent transition-colors"
                                                 autoFocus
                                             />
                                         </div>
@@ -453,7 +453,7 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
                                                 setShowCustomModeModal(true);
                                                 setShowCustomModeInput(false);
                                             }}
-                                            className="w-full px-3 py-2 bg-discord-accent hover:bg-discord-accentHover text-white text-xs font-medium rounded transition-colors"
+                                            className="w-full px-3 py-2 bg-app-accent hover:bg-app-accentHover text-app-text text-xs font-medium rounded transition-colors"
                                         >
                                             Define Prompt
                                         </button>
@@ -463,10 +463,10 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
                         </div>
 
                         <div className="flex items-center gap-2 px-2 py-1">
-                            <span className="text-xs font-bold text-discord-textMuted uppercase">Current Mode:</span>
+                            <span className="text-xs font-bold text-app-textMuted uppercase">Current Mode:</span>
                             <span className={`px-2 py-1 border rounded text-xs font-bold capitalize ${customModes.find(m => m.name === mode) 
                                     ? 'bg-purple-600/20 border-purple-600/50 text-purple-400'
-                                    : 'bg-discord-accent/20 border-discord-accent/50 text-discord-accent'
+                                    : 'bg-app-accent/20 border-app-accent/50 text-app-accent'
                                 }`}>
                                 {mode === 'eli5' ? 'ELI5' : mode}
                             </span>
@@ -474,7 +474,7 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
                     </div>
 
 
-                    <div className="bg-discord-panel p-6 rounded-xl border border-white/5 flex-1 flex flex-col min-h-[400px]">
+                    <div className="bg-app-panel p-6 rounded-xl border border-app-border flex-1 flex flex-col min-h-[400px]">
 
 
 
@@ -488,30 +488,30 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
                         />
 
 
-                        <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between gap-4">
+                        <div className="mt-4 pt-4 border-t border-app-border flex items-center justify-between gap-4">
                             {/* Multimodal Inputs - Bottom Left */}
                             <div className="flex items-center gap-2">
-                                <button onClick={() => document.getElementById('pdf-upload')?.click()} className="p-2 bg-discord-bg hover:bg-discord-hover border border-white/10 rounded-lg text-discord-textMuted hover:text-white transition-colors" title="Upload PDF">
+                                <button onClick={() => document.getElementById('pdf-upload')?.click()} className="p-2 bg-app-bg hover:bg-app-hover border border-app-border rounded-lg text-app-textMuted hover:text-app-text transition-colors" title="Upload PDF">
                                     <FileUp size={20} />
                                 </button>
                                 <input type="file" id="pdf-upload" className="hidden" accept=".pdf" onChange={(e) => handleFileUpload(e, 'pdf')} />
 
-                                {/* <button onClick={() => document.getElementById('img-upload')?.click()} className="p-2 bg-discord-bg hover:bg-discord-hover border border-white/10 rounded-lg text-discord-textMuted hover:text-white transition-colors" title="Upload Image">
+                                {/* <button onClick={() => document.getElementById('img-upload')?.click()} className="p-2 bg-app-bg hover:bg-app-hover border border-app-border rounded-lg text-app-textMuted hover:text-app-text transition-colors" title="Upload Image">
                                     <ImageIcon size={20} />
                                 </button>
                                 <input type="file" id="img-upload" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'image')} /> */}
 
                                 <div className="relative">
-                                    <button onClick={() => setShowLinkInput(!showLinkInput)} className={`p-2 border border-white/10 rounded-lg text-discord-textMuted hover:text-white transition-colors ${showLinkInput ? 'bg-discord-accent text-white' : 'bg-discord-bg hover:bg-discord-hover'}`} title="Add Link">
+                                    <button onClick={() => setShowLinkInput(!showLinkInput)} className={`p-2 border border-app-border rounded-lg text-app-textMuted hover:text-app-text transition-colors ${showLinkInput ? 'bg-app-accent text-app-text' : 'bg-app-bg hover:bg-app-hover'}`} title="Add Link">
                                         <LinkIcon size={20} />
                                     </button>
 
                                     {/* Link Input Popover */}
                                     {showLinkInput && (
-                                        <div className="absolute bottom-full left-0 mb-2 bg-discord-panel border border-white/10 rounded-lg shadow-2xl p-3 w-80 animate-in fade-in zoom-in-95 z-10">
+                                        <div className="absolute bottom-full left-0 mb-2 bg-app-panel border border-app-border rounded-lg shadow-2xl p-3 w-80 animate-in fade-in zoom-in-95 z-10">
                                             <div className="flex items-center gap-2 mb-2">
-                                                <LinkIcon size={16} className="text-discord-accent" />
-                                                <span className="text-xs font-bold uppercase text-discord-textMuted">Add Link</span>
+                                                <LinkIcon size={16} className="text-app-accent" />
+                                                <span className="text-xs font-bold uppercase text-app-textMuted">Add Link</span>
                                             </div>
                                             <input
                                                 type="text"
@@ -527,7 +527,7 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
                                                     }
                                                 }}
                                                 placeholder="Paste website URL (https://...)..."
-                                                className={`w-full bg-discord-bg border rounded px-3 py-2 text-sm text-white placeholder-discord-textMuted/50 focus:outline-none transition-colors ${linkError ? 'border-red-500 focus:border-red-500' : 'border-white/10 focus:border-discord-accent'}`}
+                                                className={`w-full bg-app-bg border rounded px-3 py-2 text-sm text-app-text placeholder-discord-textMuted/50 focus:outline-none transition-colors ${linkError ? 'border-red-500 focus:border-red-500' : 'border-app-border focus:border-app-accent'}`}
                                                 autoFocus
                                             />
                                             {linkError && (
@@ -549,14 +549,14 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
                                                         setLinkUrl('');
                                                         setLinkError('');
                                                     }}
-                                                    className="px-3 py-1.5 text-xs font-medium text-discord-textMuted hover:text-white transition-colors"
+                                                    className="px-3 py-1.5 text-xs font-medium text-app-textMuted hover:text-app-text transition-colors"
                                                 >
                                                     Cancel
                                                 </button>
                                                 <button
                                                     onClick={addLink}
                                                     disabled={!linkUrl.trim() || !!linkError}
-                                                    className="px-3 py-1.5 bg-discord-accent hover:bg-discord-accentHover text-white text-xs font-medium rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    className="px-3 py-1.5 bg-app-accent hover:bg-app-accentHover text-app-text text-xs font-medium rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
                                                     Add
                                                 </button>
@@ -565,7 +565,7 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
                                     )}
                                 </div>
 
-                                {/*<button onClick={isRecording ? stopRecording : startRecording} className={`p-2 border border-white/10 rounded-lg transition-colors ${isRecording ? 'bg-red-500/20 text-red-400 border-red-500/50 animate-pulse' : 'bg-discord-bg hover:bg-discord-hover text-discord-textMuted hover:text-white'}`} title="Record Audio">
+                                {/*<button onClick={isRecording ? stopRecording : startRecording} className={`p-2 border border-app-border rounded-lg transition-colors ${isRecording ? 'bg-red-500/20 text-red-400 border-red-500/50 animate-pulse' : 'bg-app-bg hover:bg-app-hover text-app-textMuted hover:text-app-text'}`} title="Record Audio">
                                     {isRecording ? <StopCircle size={20} /> : <Mic size={20} />}
                                 </button>
                                 {isRecording && <span className="text-xs font-mono text-red-400 min-w-[30px]">{formatTime(recordingDuration)}</span>}*/}
@@ -574,7 +574,7 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
                             <button
                                 onClick={handleSummarize}
                                 disabled={loading || (!textContext.trim() && attachments.length === 0)}
-                                className="bg-discord-accent hover:bg-discord-accentHover text-white px-6 py-2 rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg"
+                                className="bg-app-accent hover:bg-app-accentHover text-app-text px-6 py-2 rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg"
                             >
                                 {loading ? <Sparkles size={18} className="animate-spin" /> : <Sparkles size={18} />}
                                 Summarize
@@ -586,21 +586,21 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
 
 
                 <div className="flex flex-col gap-4 overflow-hidden h-full">
-                    <div className="bg-discord-panel p-6 rounded-xl border border-white/5 flex-1 flex flex-col overflow-hidden relative">
+                    <div className="bg-app-panel p-6 rounded-xl border border-app-border flex-1 flex flex-col overflow-hidden relative">
                         {result ? (
                             <>
-                                <div className="flex justify-between items-center mb-4 pb-4 border-b border-white/5">
-                                    <h3 className="font-bold text-white">Summary Result</h3>
+                                <div className="flex justify-between items-center mb-4 pb-4 border-b border-app-border">
+                                    <h3 className="font-bold text-app-text">Summary Result</h3>
                                     <div className="flex gap-2">
-                                        <button onClick={handleTTS} className="p-2 hover:bg-white/10 rounded-full text-discord-textMuted hover:text-white" title="Read Aloud">
+                                        <button onClick={handleTTS} className="p-2 hover:bg-white/10 rounded-full text-app-textMuted hover:text-app-text" title="Read Aloud">
                                             <Volume2 size={18} />
                                         </button>
-                                        <button onClick={handleGenerateFlashcards} className="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded text-xs font-medium text-white transition-colors">
+                                        <button onClick={handleGenerateFlashcards} className="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded text-xs font-medium text-app-text transition-colors">
                                             + Flashcards
                                         </button>
                                         <button
                                             onClick={() => setShowSaveModal(true)}
-                                            className="p-2 bg-discord-green hover:bg-green-600 text-white rounded-full shadow-lg transition-colors"
+                                            className="p-2 bg-discord-green hover:bg-green-600 text-app-text rounded-full shadow-lg transition-colors"
                                             title="Add to Notes"
                                         >
                                             <Plus size={18} />
@@ -611,20 +611,20 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
                                     <ReactMarkdown>{result}</ReactMarkdown>
 
                                     {flashcards.length > 0 && (
-                                        <div className="mt-8 pt-8 border-t border-white/10">
-                                            <h4 className="text-white font-bold mb-4">Learning Chunks (Key Concepts)</h4>
+                                        <div className="mt-8 pt-8 border-t border-app-border">
+                                            <h4 className="text-app-text font-bold mb-4">Learning Chunks (Key Concepts)</h4>
                                             <div className="grid grid-cols-1 gap-3">
                                                 {flashcards.map((card, i) => (
-                                                    <div key={i} className="bg-discord-bg p-4 rounded-lg border border-white/5 hover:border-discord-accent/50 transition-colors">
+                                                    <div key={i} className="bg-app-bg p-4 rounded-lg border border-app-border hover:border-app-accent/50 transition-colors">
                                                         <div className="flex items-start gap-3">
                                                             <div className="mt-1">
-                                                                <div className="w-6 h-6 rounded-full bg-discord-accent/20 flex items-center justify-center text-discord-accent text-xs font-bold">
+                                                                <div className="w-6 h-6 rounded-full bg-app-accent/20 flex items-center justify-center text-app-accent text-xs font-bold">
                                                                     {i + 1}
                                                                 </div>
                                                             </div>
                                                             <div>
-                                                                <h5 className="text-white font-bold text-sm mb-1">{card.front}</h5>
-                                                                <p className="text-discord-textMuted text-sm">{card.back}</p>
+                                                                <h5 className="text-app-text font-bold text-sm mb-1">{card.front}</h5>
+                                                                <p className="text-app-textMuted text-sm">{card.back}</p>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -635,7 +635,7 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
                                 </div>
                             </>
                         ) : (
-                            <div className="flex-1 flex flex-col items-center justify-center text-discord-textMuted/40">
+                            <div className="flex-1 flex flex-col items-center justify-center text-app-textMuted/40">
                                 <Paperclip size={48} className="mb-4 opacity-50" />
                                 <p className="text-lg font-medium">Ready to Summarize</p>
                                 <p className="text-sm max-w-xs text-center">Paste or type your content on the left, then click Summarize.</p>
@@ -648,46 +648,46 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
 
             {showSaveModal && (
                 <div className="absolute inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-                    <div className="bg-discord-panel p-6 rounded-2xl w-full max-w-md border border-white/10 shadow-2xl animate-in zoom-in-95">
+                    <div className="bg-app-panel p-6 rounded-2xl w-full max-w-md border border-app-border shadow-2xl animate-in zoom-in-95">
                         <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-xl font-bold text-white">Add to Notes</h3>
-                            <button onClick={() => setShowSaveModal(false)} className="text-discord-textMuted hover:text-white"><X size={24} /></button>
+                            <h3 className="text-xl font-bold text-app-text">Add to Notes</h3>
+                            <button onClick={() => setShowSaveModal(false)} className="text-app-textMuted hover:text-app-text"><X size={24} /></button>
                         </div>
 
                         {saveSuccess ? (
                             <div className="flex flex-col items-center py-10">
                                 <CheckCircle size={48} className="text-green-500 mb-4 animate-bounce" />
-                                <p className="text-white font-medium">Added to notes successfully!</p>
+                                <p className="text-app-text font-medium">Added to notes successfully!</p>
                             </div>
                         ) : (
                             <div className="space-y-4">
                                 <button
                                     onClick={() => handleSaveToNote(null)}
-                                    className="w-full bg-discord-accent hover:bg-discord-accentHover p-4 rounded-xl flex items-center gap-4 transition-all group text-left"
+                                    className="w-full bg-app-accent hover:bg-app-accentHover p-4 rounded-xl flex items-center gap-4 transition-all group text-left"
                                 >
-                                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center text-white">
+                                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center text-app-text">
                                         <FilePlus size={20} />
                                     </div>
                                     <div>
-                                        <h4 className="font-bold text-white">Create New Note</h4>
-                                        <p className="text-xs text-white/70">Start a fresh canvas with this summary.</p>
+                                        <h4 className="font-bold text-app-text">Create New Note</h4>
+                                        <p className="text-xs text-app-text/70">Start a fresh canvas with this summary.</p>
                                     </div>
                                 </button>
 
-                                <div className="text-xs font-bold text-discord-textMuted uppercase mt-4 mb-2">Or add to existing</div>
+                                <div className="text-xs font-bold text-app-textMuted uppercase mt-4 mb-2">Or add to existing</div>
 
                                 <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
                                     {notes.map(note => (
                                         <button
                                             key={note.id}
                                             onClick={() => handleSaveToNote(note.id)}
-                                            className="w-full bg-discord-bg hover:bg-discord-hover p-3 rounded-xl border border-white/5 flex items-center gap-3 transition-colors text-left group"
+                                            className="w-full bg-app-bg hover:bg-app-hover p-3 rounded-xl border border-app-border flex items-center gap-3 transition-colors text-left group"
                                         >
-                                            <BookOpen size={16} className="text-discord-textMuted group-hover:text-discord-accent" />
-                                            <span className="text-discord-text group-hover:text-white truncate">{note.title}</span>
+                                            <BookOpen size={16} className="text-app-textMuted group-hover:text-app-accent" />
+                                            <span className="text-discord-text group-hover:text-app-text truncate">{note.title}</span>
                                         </button>
                                     ))}
-                                    {notes.length === 0 && <p className="text-discord-textMuted text-sm text-center py-4">No existing notes found.</p>}
+                                    {notes.length === 0 && <p className="text-app-textMuted text-sm text-center py-4">No existing notes found.</p>}
                                 </div>
                             </div>
                         )}
@@ -698,9 +698,9 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
             {/* Custom Mode Modal */}
             {showCustomModeModal && (
                 <div className="absolute inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-                    <div className="bg-discord-panel p-6 rounded-2xl w-full max-w-lg border border-white/10 shadow-2xl animate-in zoom-in-95">
+                    <div className="bg-app-panel p-6 rounded-2xl w-full max-w-lg border border-app-border shadow-2xl animate-in zoom-in-95">
                         <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-xl font-bold text-white">
+                            <h3 className="text-xl font-bold text-app-text">
                                 {editingCustomMode ? 'Edit Custom Mode' : 'Create Custom Mode'}
                             </h3>
                             <button 
@@ -710,7 +710,7 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
                                     setCustomModePrompt('');
                                     setEditingCustomMode(null);
                                 }} 
-                                className="text-discord-textMuted hover:text-white"
+                                className="text-app-textMuted hover:text-app-text"
                             >
                                 <X size={24} />
                             </button>
@@ -718,30 +718,30 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
 
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-white mb-2">Mode Name</label>
+                                <label className="block text-sm font-medium text-app-text mb-2">Mode Name</label>
                                 <input
                                     type="text"
                                     value={customModeText}
                                     onChange={(e) => setCustomModeText(e.target.value)}
                                     placeholder="e.g., Technical, Creative, Research Notes"
-                                    className="w-full bg-discord-bg border border-white/10 rounded-lg px-4 py-3 text-white placeholder-discord-textMuted/50 focus:outline-none focus:border-discord-accent transition-colors"
+                                    className="w-full bg-app-bg border border-app-border rounded-lg px-4 py-3 text-app-text placeholder-discord-textMuted/50 focus:outline-none focus:border-app-accent transition-colors"
                                     autoFocus
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-white mb-2">System Prompt</label>
+                                <label className="block text-sm font-medium text-app-text mb-2">System Prompt</label>
                                 <textarea
                                     value={customModePrompt}
                                     onChange={(e) => setCustomModePrompt(e.target.value)}
                                     placeholder="Define how the AI should summarize content in this mode. For example: 'Summarize with a focus on technical concepts and include code examples when relevant.'"
-                                    className="w-full h-32 bg-discord-bg border border-white/10 rounded-lg px-4 py-3 text-white placeholder-discord-textMuted/50 focus:outline-none focus:border-discord-accent transition-colors resize-none"
+                                    className="w-full h-32 bg-app-bg border border-app-border rounded-lg px-4 py-3 text-app-text placeholder-discord-textMuted/50 focus:outline-none focus:border-app-accent transition-colors resize-none"
                                 />
                             </div>
 
-                            <div className="bg-discord-bg/50 rounded-lg p-4 border border-white/5">
-                                <h4 className="text-sm font-medium text-white mb-2">Examples:</h4>
-                                <div className="space-y-2 text-xs text-discord-textMuted">
+                            <div className="bg-app-bg/50 rounded-lg p-4 border border-app-border">
+                                <h4 className="text-sm font-medium text-app-text mb-2">Examples:</h4>
+                                <div className="space-y-2 text-xs text-app-textMuted">
                                     <div><strong>Technical:</strong> "Focus on technical concepts, include definitions, and use bullet points for clarity."</div>
                                     <div><strong>Creative:</strong> "Write in an engaging, narrative style with creative analogies and examples."</div>
                                     <div><strong>Research:</strong> "Organize information hierarchically with key findings, methodologies, and conclusions."</div>
@@ -756,14 +756,14 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
                                         setCustomModePrompt('');
                                         setEditingCustomMode(null);
                                     }}
-                                    className="px-4 py-2 text-discord-textMuted hover:text-white transition-colors"
+                                    className="px-4 py-2 text-app-textMuted hover:text-app-text transition-colors"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={saveCustomMode}
                                     disabled={!customModeText.trim() || !customModePrompt.trim()}
-                                    className="px-6 py-2 bg-discord-accent hover:bg-discord-accentHover text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    className="px-6 py-2 bg-app-accent hover:bg-app-accentHover text-app-text rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
                                     <Save size={16} />
                                     {editingCustomMode ? 'Update' : 'Create'}

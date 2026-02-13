@@ -1,6 +1,8 @@
 import React from 'react';
 import { UserPreferences, Summary, Note, UserStats } from '../types';
-import { BookOpen, FileText, Calendar, Flame, Trophy, ArrowRight, BrainCircuit } from 'lucide-react';
+import { BookOpen, FileText, Calendar, Flame, Trophy, ArrowRight, BrainCircuit, Zap } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { useTheme } from '../contexts/ThemeContext';
 import StudyActivityChart from '../components/StudyActivityChart';
 
 interface DashboardProps {
@@ -21,6 +23,8 @@ interface StatCard {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ user, summaries, notes, stats, onNoteClick }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   const safeStats = stats || {
     id: '',
@@ -58,7 +62,21 @@ const Dashboard: React.FC<DashboardProps> = ({ user, summaries, notes, stats, on
   // In future this would use spaced repetition data
   const suggestedNote = notes.length > 0 ? notes[Math.floor(Math.random() * notes.length)] : null;
 
+  const getLast7Days = () => {
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().split('T')[0];
+      days.push({
+        name: d.toLocaleDateString('en-US', { weekday: 'short' }),
+        hours: (safeStats.dailyActivity[key] || 0) / 60
+      });
+    }
+    return days;
+  };
 
+  const activityData = getLast7Days();
 
 
   return (
@@ -135,12 +153,18 @@ const Dashboard: React.FC<DashboardProps> = ({ user, summaries, notes, stats, on
           <div style={{ width: '100%', height: '256px', minWidth: 0 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={activityData}>
-                <XAxis dataKey="name" stroke="#949ba4" tickLine={false} axisLine={false} />
-                <YAxis stroke="#949ba4" tickLine={false} axisLine={false} allowDecimals={false} />
+                <XAxis dataKey="name" stroke={isDark ? '#949ba4' : '#6b7280'} tickLine={false} axisLine={false} />
+                <YAxis stroke={isDark ? '#949ba4' : '#6b7280'} tickLine={false} axisLine={false} allowDecimals={false} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#111214', border: '1px solid #2b2d31', borderRadius: '12px' }}
-                  itemStyle={{ color: '#dbdee1' }}
-                  cursor={{ fill: '#35373c' }}
+                  contentStyle={{ 
+                    backgroundColor: isDark ? '#111214' : '#ffffff', 
+                    border: isDark ? '1px solid #2b2d31' : '1px solid #e5e7eb', 
+                    borderRadius: '12px',
+                    boxShadow: isDark ? 'none' : '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }}
+                  itemStyle={{ color: isDark ? '#dbdee1' : '#1f2937' }}
+                  labelStyle={{ color: isDark ? '#dbdee1' : '#1f2937' }}
+                  cursor={{ fill: isDark ? '#35373c' : '#f3f4f6' }}
                 />
                 <Bar dataKey="hours" fill="#5865F2" radius={[6, 6, 0, 0]} barSize={48} />
               </BarChart>
@@ -174,17 +198,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, summaries, notes, stats, on
             ))}
             {notes.length === 0 && (
               <div className="text-center py-8">
-                <BookOpen size={28} className="mx-auto mb-2 text-discord-textMuted/40" />
-                <p className="text-xs text-discord-textMuted">Start creating notes to see them here</p>
+                <BookOpen size={28} className="mx-auto mb-2 text-app-textMuted/40" />
+                <p className="text-xs text-app-textMuted">Start creating notes to see them here</p>
               </div>
-            </div>
-          ))}
-          {notes.length === 0 && (
-            <div className="col-span-full text-center py-8">
-              <BookOpen size={28} className="mx-auto mb-2 text-app-textMuted/40" />
-              <p className="text-sm text-app-textMuted">Start creating notes to see them here</p>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>

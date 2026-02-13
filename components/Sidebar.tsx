@@ -1,6 +1,6 @@
 import React from 'react';
-import { ViewState } from '../types';
-import { LayoutDashboard, FileText, BookOpen, Clock, BrainCircuit, Gamepad2, LogOut, Flame, Globe, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { ViewState, UserRole } from '../types';
+import { LayoutDashboard, FileText, BookOpen, Clock, BrainCircuit, Gamepad2, LogOut, Flame, Globe, PanelLeftClose, PanelLeftOpen, Users, GraduationCap } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 
 interface SidebarProps {
@@ -35,8 +35,8 @@ const Sidebar: React.FC<SidebarProps> = ({
         onClick={() => onNavigate(view)}
         className={`w-full flex items-center ${collapsed ? 'justify-center px-2' : 'gap-3 px-4'} py-3 rounded-xl transition-all duration-300 font-medium group relative overflow-hidden flex-1 max-h-16
           ${active
-            ? 'bg-gradient-to-r from-app-panel to-app-panel/80 text-app-text shadow-lg shadow-app-accent/20 border border-app-accent/30'
-            : 'text-app-textMuted hover:bg-gradient-to-r hover:from-app-hover hover:to-app-hover/80 hover:text-app-text hover:scale-105'
+            ? 'bg-gradient-to-r from-app-panel to-app-panel/80 text-gray-900 dark:text-white shadow-lg shadow-app-accent/20 border border-app-accent/30'
+            : 'text-app-textMuted hover:bg-gradient-to-r hover:from-app-hover hover:to-app-hover/80 hover:text-gray-900 dark:hover:text-white hover:scale-105'
           }`}
         title={collapsed ? label : undefined}
       >
@@ -45,7 +45,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         )}
         <Icon size={20} className={`transition-all duration-300 relative z-10 ${collapsed ? 'flex-shrink-0' : ''} ${active
           ? 'text-app-accent drop-shadow-sm'
-          : 'text-app-textMuted group-hover:text-app-text group-hover:scale-110'
+          : 'text-app-textMuted group-hover:text-gray-900 dark:group-hover:text-white group-hover:scale-110'
           }`} />
         {!collapsed && (
           <>
