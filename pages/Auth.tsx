@@ -91,7 +91,11 @@ const Auth: React.FC<AuthPageProps> = ({ onLoginSuccess, onGuestAccess, onBack }
             onLoginSuccess();
         } catch (err: any) {
             console.error(err);
-            setError(err.message || 'Authentication failed');
+            if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+                setError('Invalid email or password. Please check your credentials or Sign Up if you are new.');
+            } else {
+                setError(err.message || 'Authentication failed');
+            }
         } finally {
             setLoading(false);
         }

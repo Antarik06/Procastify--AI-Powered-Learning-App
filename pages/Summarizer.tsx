@@ -79,7 +79,7 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
 
     const saveCustomMode = async () => {
         if (!customModeText.trim() || !customModePrompt.trim()) return;
-        
+
         try {
             const newMode: CustomMode = {
                 id: editingCustomMode?.id || Date.now().toString(),
@@ -91,10 +91,10 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
 
             await StorageService.saveCustomMode(newMode);
             await loadCustomModes();
-            
+
             // Set the new mode as active
             setMode(newMode.name);
-            
+
             // Reset form
             setCustomModeText('');
             setCustomModePrompt('');
@@ -118,7 +118,7 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
         try {
             await StorageService.deleteCustomMode(modeId);
             await loadCustomModes();
-            
+
             // If the deleted mode was active, switch to short mode
             const deletedMode = customModes.find(m => m.id === modeId);
             if (deletedMode && mode === deletedMode.name) {
@@ -277,7 +277,7 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
         try {
             // Get custom prompt if using a custom mode
             const customPrompt = getCustomPromptForMode(mode);
-            
+
             // summarizeContent in geminiService handles the normalization via extractionService
             const summaryText = await summarizeContent(textContext, attachments, mode, customPrompt);
             setResult(summaryText);
@@ -294,7 +294,7 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
                 originalText: textContext,
                 attachments: attachments
             };
-            
+
             // Save to history
             try {
                 const updated = [newSummary, ...summaryHistory];
@@ -304,7 +304,7 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
                 console.error('Failed to save to history:', saveError);
                 // Continue - don't block summarization if history save fails
             }
-            
+
             onSave(newSummary);
         } catch (error) {
             console.error('Summarization failed:', error);
@@ -356,25 +356,25 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
         } else {
             setTextContext('');
         }
-        
+
         // Load attachments
         if (summary.attachments !== undefined && Array.isArray(summary.attachments)) {
             setAttachments([...summary.attachments]);
         } else {
             setAttachments([]);
         }
-        
+
         // Load mode
         setMode(summary.mode);
-        
+
         // Close modal
         setShowHistoryModal(false);
     };
 
     const handleDeleteSummary = async (summaryId: string) => {
         try {
+            await StorageService.deleteSummary(summaryId);
             const updated = summaryHistory.filter(s => s.id !== summaryId);
-            await StorageService.saveSummaries(updated);
             setSummaryHistory(updated);
         } catch (error) {
             console.error('Failed to delete summary:', error);
@@ -776,7 +776,7 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
                             <h3 className="text-xl font-bold text-app-text">
                                 {editingCustomMode ? 'Edit Custom Mode' : 'Create Custom Mode'}
                             </h3>
-                            <button 
+                            <button
                                 onClick={() => {
                                     setShowCustomModeModal(false);
                                     setCustomModeText('');
@@ -852,7 +852,7 @@ const Summarizer: React.FC<SummarizerProps> = ({ onSave, notes, onAddToNote }) =
                 isOpen={showHistoryModal}
                 onClose={() => setShowHistoryModal(false)}
                 summaries={summaryHistory}
-                onSelectSummary={() => {}}
+                onSelectSummary={() => { }}
                 onDeleteSummary={handleDeleteSummary}
                 onLoadContent={handleLoadContent}
             />

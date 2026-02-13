@@ -30,9 +30,16 @@ const HistoryItem: React.FC<HistoryItemProps> = ({ summary, onSelect, onDelete }
   };
 
   return (
-    <button
+    <div
       onClick={onSelect}
-      className="w-full bg-discord-bg hover:bg-discord-hover p-4 rounded-xl border border-white/5 transition-all group text-left"
+      className="w-full bg-discord-bg hover:bg-discord-hover p-4 rounded-xl border border-white/5 transition-all group text-left cursor-pointer"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          onSelect();
+        }
+      }}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
@@ -55,7 +62,7 @@ const HistoryItem: React.FC<HistoryItemProps> = ({ summary, onSelect, onDelete }
           <Trash2 size={16} />
         </button>
       </div>
-    </button>
+    </div>
   );
 };
 

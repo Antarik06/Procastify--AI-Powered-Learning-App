@@ -73,6 +73,10 @@ let currentUserId: string | null = null;
 let isGuestMode: boolean = true;
 
 export const StorageService = {
+  get currentUserId() {
+    return currentUserId;
+  },
+
   setSession: (user: UserPreferences) => {
     currentUserId = user.id;
     isGuestMode = user.isGuest;
@@ -123,18 +127,18 @@ export const StorageService = {
       const snap = await getDoc(docRef);
       if (snap.exists()) {
         const profile = snap.data() as UserPreferences;
-        
+
         // Ensure isGuest is false for authenticated users
         if (profile.isGuest === undefined || profile.isGuest === null) {
           profile.isGuest = false;
         }
-        
+
         // Assign default role if missing (backward compatibility)
         if (!profile.role) {
           profile.role = "student";
           await setDoc(docRef, profile);
         }
-        
+
         return profile;
       }
       return null;
@@ -437,6 +441,17 @@ export const StorageService = {
     }
   },
 
+  deleteSummary: async (summaryId: string) => {
+    if (!currentUserId) return;
+    if (isGuestMode) {
+      const summaries = getLocalUserItems<Summary>(LOCAL_KEYS.SUMMARIES, currentUserId);
+      const filtered = summaries.filter(s => s.id !== summaryId);
+      saveLocalUserItems(LOCAL_KEYS.SUMMARIES, currentUserId, filtered);
+    } else {
+      await FirebaseService.deleteDocument(doc(db, "users", currentUserId, "summaries", summaryId));
+    }
+  },
+
   publishNote: async (note: Note) => {
     if (!currentUserId || isGuestMode) return;
     await FirebaseService.publishNote(currentUserId, note);
@@ -704,62 +719,62 @@ export const StorageService = {
     if (!currentUserId || isGuestMode) {
       throw new Error("Guest users cannot update invitations");
     }
-    
+
     try {
       console.log('updateInvitationStatus called:', { invitationId, status, studentId, currentUserId });
-      
+
       // First, get the invitation to know which classroom to update
       const invitationRef = doc(db, "invitations", invitationId);
       console.log('Fetching invitation document...');
       const invitationDoc = await getDoc(invitationRef);
-      
+
       if (!invitationDoc.exists()) {
         console.error('Invitation not found:', invitationId);
         throw new Error("Invitation not found");
       }
-      
+
       const invitation = invitationDoc.data() as Invitation;
       console.log('Invitation found:', invitation);
-      
+
       // Update invitation status
       const updates: Partial<Invitation> = {
         status,
         respondedAt: Date.now(),
       };
-      
+
       if (studentId) {
         updates.studentId = studentId;
       }
-      
+
       console.log('Updating invitation with:', updates);
       await FirebaseService.updateInvitation(invitationId, updates);
       console.log('Invitation updated successfully');
-      
+
       // If accepted, add student to classroom
       if (status === "accepted" && studentId) {
         console.log('Adding student to classroom:', invitation.classroomId);
         const classroomRef = doc(db, "classrooms", invitation.classroomId);
         const classroomDoc = await getDoc(classroomRef);
-        
+
         if (!classroomDoc.exists()) {
           console.error('Classroom not found:', invitation.classroomId);
           throw new Error("Classroom not found");
         }
-        
+
         const classroom = classroomDoc.data() as Classroom;
         console.log('Classroom found:', classroom);
-        
+
         if (!classroom.studentIds.includes(studentId)) {
           classroom.studentIds.push(studentId);
           console.log('Updating classroom with new studentIds:', classroom.studentIds);
-          
-          await setDoc(classroomRef, { 
+
+          await setDoc(classroomRef, {
             studentIds: classroom.studentIds,
             updatedAt: Date.now()
           }, { merge: true });
-          
+
           console.log('Student added to classroom successfully');
-          
+
           // Log activity for invitation acceptance
           const studentProfile = await StorageService.getUserProfile(studentId);
           await FirebaseService.logActivity({
@@ -840,25 +855,25 @@ export const StorageService = {
         lastActivityDate: new Date().toISOString(),
       };
     }
-    
+
     try {
       const classrooms = await FirebaseService.getClassroomsByTeacher(userId);
       const totalStudents = classrooms.reduce((sum, c) => sum + c.studentIds.length, 0);
-      
+
       let totalAnnouncements = 0;
       let totalResourcesShared = 0;
       let pendingInvitations = 0;
-      
+
       for (const classroom of classrooms) {
         const announcements = await FirebaseService.getAnnouncements(classroom.id);
         const resources = await FirebaseService.getResources(classroom.id);
         const invitations = await FirebaseService.getInvitationsByClassroom(classroom.id);
-        
+
         totalAnnouncements += announcements.length;
         totalResourcesShared += resources.length;
         pendingInvitations += invitations.filter(inv => inv.status === 'pending').length;
       }
-      
+
       return {
         id: `stats_${userId}`,
         userId,
@@ -905,7 +920,7 @@ export const StorageService = {
     } else {
       const colRef = collection(db, "users", currentUserId, collectionName);
       const snap = await getDocs(colRef);
-      return snap.docs.map((d) => d.data() as T);
+      return snap.docs.map((d) => ({ ...d.data(), id: d.id }) as T);
     }
   },
 };
