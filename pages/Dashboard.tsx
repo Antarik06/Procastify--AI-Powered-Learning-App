@@ -1,7 +1,7 @@
 import React from 'react';
 import { UserPreferences, Summary, Note, UserStats } from '../types';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { Clock, BookOpen, FileText, Zap, Calendar, Flame, Trophy, ArrowRight, BrainCircuit } from 'lucide-react';
+import { BookOpen, FileText, Calendar, Flame, Trophy, ArrowRight, BrainCircuit } from 'lucide-react';
+import StudyActivityChart from '../components/StudyActivityChart';
 
 interface DashboardProps {
   user: UserPreferences;
@@ -37,33 +37,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, summaries, notes, stats, on
 
   const highScore = safeStats.highScore || 0;
 
-
   const actualNotesCreated = notes.length;
   const actualSummariesCount = summaries.length;
-
-
-  const getLast7Days = () => {
-    const getLocalDateKey = (date: Date): string => {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    };
-
-    const days = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const key = getLocalDateKey(d);
-      days.push({
-        name: d.toLocaleDateString('en-US', { weekday: 'short' }),
-        hours: (safeStats.dailyActivity[key] || 0) / 60 // Convert minutes to hours
-      });
-    }
-    return days;
-  };
-
-  const activityData = getLast7Days();
 
   const statCards: StatCard[] = [
     {
@@ -202,8 +177,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, summaries, notes, stats, on
                 <BookOpen size={28} className="mx-auto mb-2 text-discord-textMuted/40" />
                 <p className="text-xs text-discord-textMuted">Start creating notes to see them here</p>
               </div>
-            )}
-          </div>
+            </div>
+          ))}
+          {notes.length === 0 && (
+            <div className="col-span-full text-center py-8">
+              <BookOpen size={28} className="mx-auto mb-2 text-app-textMuted/40" />
+              <p className="text-sm text-app-textMuted">Start creating notes to see them here</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
