@@ -1,28 +1,39 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { RoutineTask } from '../types';
-import { Play, Pause, Square, Coffee, BrainCircuit, ChevronLeft, Volume2, VolumeX, Activity, Settings2, Sparkles, Zap, Wind } from 'lucide-react';
+import {
+  Play, Pause, Square, Coffee, BrainCircuit, ChevronLeft, Volume2, VolumeX,
+  Settings2, Sparkles, Zap, Wind, Timer, StopCircle, RotateCcw, BarChart3, ShieldAlert
+} from 'lucide-react';
 
 interface FocusProps {
   initialTask?: RoutineTask;
   onExit: (minutesSpent: number) => void;
 }
 
-
-type FocusPhase = 'warmup' | 'flow' | 'fatigue' | 'completed' | 'break';
-type FocusQuality = 'excellent' | 'good' | 'scattered';
-type SoundType = 'brown-noise' | 'rain' | 'none';
+type FocusPhase = 'warmup' | 'flow' | 'fatigue' | 'completed' | 'break' | 'stopwatch';
+type FocusMode = 'countdown' | 'stopwatch';
+type SoundType = 'brown-noise' | 'heavy-rain' | 'forest' | 'none';
 
 const PRESETS = [
-  { label: 'Pomodoro', focus: 25, break: 5 },
-  { label: 'Deep Work', focus: 50, break: 10 },
-  { label: 'Extended', focus: 90, break: 20 },
+  { label: 'Pomodoro', focus: 25 },
+  { label: 'Deep Work', focus: 50 },
+  { label: 'Extended', focus: 90 },
 ];
 
+const SOUND_LIBRARY: Record<SoundType, string | null> = {
+  'brown-noise': null, // Generated via Web Audio
+  'heavy-rain': 'https://www.soundjay.com/nature/rain-01.mp3',
+  'forest': 'https://www.soundjay.com/nature/forest-01.mp3',
+  'none': null
+};
 
+// --- Enhanced Audio Engine ---
 class AmbientSoundEngine {
   private ctx: AudioContext | null = null;
   private gainNode: GainNode | null = null;
-  private oscillator: OscillatorNode | null = null;
+  // Use AudioNode as the base type to support both buffers and media elements
+  private source: AudioNode | null = null;
+  private audioTag: HTMLAudioElement | null = null;
   private isPlaying = false;
 
   init() {
@@ -34,32 +45,38 @@ class AmbientSoundEngine {
     }
   }
 
-  playBrownNoise() {
+  play(type: SoundType) {
+    this.stop();
     this.init();
-    if (!this.ctx || !this.gainNode || this.isPlaying) return;
+    if (!this.ctx || !this.gainNode) return;
 
-
-    const bufferSize = this.ctx.sampleRate * 2;
-    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    let lastOut = 0;
-    for (let i = 0; i < bufferSize; i++) {
-      const white = Math.random() * 2 - 1;
-      lastOut = (lastOut + (0.02 * white)) / 1.02;
-      data[i] = lastOut * 3.5;
+    if (type === 'brown-noise') {
+      const bufferSize = this.ctx.sampleRate * 2;
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      let lastOut = 0;
+      for (let i = 0; i < bufferSize; i++) {
+        const white = Math.random() * 2 - 1;
+        lastOut = (lastOut + (0.02 * white)) / 1.02;
+        data[i] = lastOut * 3.5;
+      }
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+      noise.loop = true;
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 400;
+      noise.connect(filter);
+      filter.connect(this.gainNode);
+      noise.start();
+      this.source = noise;
+    } else if (SOUND_LIBRARY[type]) {
+      this.audioTag = new Audio(SOUND_LIBRARY[type]!);
+      this.audioTag.loop = true;
+      this.source = this.ctx.createMediaElementSource(this.audioTag);
+      this.source.connect(this.gainNode);
+      this.audioTag.play();
     }
-
-    const noise = this.ctx.createBufferSource();
-    noise.buffer = buffer;
-    noise.loop = true;
-
-    const filter = this.ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = 400;
-
-    noise.connect(filter);
-    filter.connect(this.gainNode);
-    noise.start();
 
     this.isPlaying = true;
     this.fadeIn();
@@ -68,273 +85,248 @@ class AmbientSoundEngine {
   stop() {
     if (this.isPlaying) {
       this.fadeOut(() => {
-        if (this.ctx) this.ctx.suspend();
+        if (this.audioTag) { this.audioTag.pause(); this.audioTag = null; }
+        if (this.source instanceof AudioBufferSourceNode) this.source.stop();
         this.isPlaying = false;
       });
     }
   }
 
-  toggle(shouldPlay: boolean) {
-    if (shouldPlay && !this.isPlaying) {
-      if (this.ctx?.state === 'suspended') this.ctx.resume();
-      else this.playBrownNoise();
-    } else if (!shouldPlay && this.isPlaying) {
-      this.stop();
-    }
-  }
-
   private fadeIn() {
     if (!this.gainNode || !this.ctx) return;
-    this.gainNode.gain.cancelScheduledValues(this.ctx.currentTime);
-    this.gainNode.gain.setValueAtTime(0, this.ctx.currentTime);
-    this.gainNode.gain.linearRampToValueAtTime(0.05, this.ctx.currentTime + 2); // Low volume
+    this.gainNode.gain.linearRampToValueAtTime(0.1, this.ctx.currentTime + 2);
   }
 
-  private fadeOut(callback?: () => void) {
-    if (!this.gainNode || !this.ctx) return;
-    this.gainNode.gain.cancelScheduledValues(this.ctx.currentTime);
-    this.gainNode.gain.setValueAtTime(this.gainNode.gain.value, this.ctx.currentTime);
-    this.gainNode.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 1.5);
-    setTimeout(() => callback && callback(), 1500);
+  private fadeOut(cb: () => void) {
+    if (!this.gainNode || !this.ctx) return cb();
+    this.gainNode.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 1);
+    setTimeout(cb, 1000);
   }
 }
 
 const soundEngine = new AmbientSoundEngine();
 
 const Focus: React.FC<FocusProps> = ({ initialTask, onExit }) => {
-  const isBreakType = initialTask?.type === 'break' || initialTask?.type === 'procastify';
-  const defaultSeconds = (initialTask?.durationMinutes || 25) * 60;
-
-  const [initialSeconds, setInitialSeconds] = useState(defaultSeconds);
-  const [timeLeft, setTimeLeft] = useState(defaultSeconds);
+  // --- State ---
+  const [mode, setMode] = useState<FocusMode>('countdown');
+  const [initialSeconds, setInitialSeconds] = useState((initialTask?.durationMinutes || 25) * 60);
+  const [timeLeft, setTimeLeft] = useState(initialSeconds);
   const [isActive, setIsActive] = useState(false);
-  const [taskTitle, setTaskTitle] = useState(initialTask?.title || (isBreakType ? 'Break Time' : 'Deep Work Session'));
   const [secondsSpent, setSecondsSpent] = useState(0);
-
-  const [soundEnabled, setSoundEnabled] = useState(false);
-  const [showPresets, setShowPresets] = useState(false);
   const [pauseCount, setPauseCount] = useState(0);
+  const [showSummary, setShowSummary] = useState(false);
 
-  const progressPercent = ((initialSeconds - timeLeft) / initialSeconds) * 100;
+  // Customization & Features
+  const [soundType, setSoundType] = useState<SoundType>('none');
+  const [blockedUrls, setBlockedUrls] = useState<string[]>(['facebook.com', 'twitter.com', 'youtube.com']);
+  const [distractionCount, setDistractionCount] = useState(0);
 
-  const currentPhase: FocusPhase = useMemo(() => {
-    if (timeLeft === 0) return 'completed';
-    if (isBreakType) return 'break';
-    if (progressPercent < 15) return 'warmup';
-    if (progressPercent > 85) return 'fatigue';
-    return 'flow';
-  }, [timeLeft, isBreakType, progressPercent]);
-
-  const focusQuality: FocusQuality = useMemo(() => {
-    if (pauseCount === 0) return 'excellent';
-    if (pauseCount < 3) return 'good';
-    return 'scattered';
-  }, [pauseCount]);
+  // --- Logic ---
+  const progressPercent = mode === 'countdown' ? ((initialSeconds - timeLeft) / initialSeconds) * 100 : 0;
 
   useEffect(() => {
     let interval: any = null;
-    if (isActive && timeLeft > 0) {
+    if (isActive) {
       interval = setInterval(() => {
-        setTimeLeft(t => t - 1);
-        setSecondsSpent(s => s + 1);
+        if (mode === 'countdown') {
+          if (timeLeft > 0) {
+            setTimeLeft(t => t - 1);
+            setSecondsSpent(s => s + 1);
+          } else {
+            setIsActive(false);
+            setShowSummary(true);
+          }
+        } else {
+          setTimeLeft(t => t + 1);
+          setSecondsSpent(s => s + 1);
+        }
       }, 1000);
-    } else if (timeLeft === 0) {
-      setIsActive(false);
-
     }
     return () => clearInterval(interval);
-  }, [isActive, timeLeft]);
+  }, [isActive, timeLeft, mode]);
 
   useEffect(() => {
-    soundEngine.toggle(soundEnabled && isActive);
-    return () => soundEngine.stop();
-  }, [soundEnabled, isActive]);
+    if (isActive && soundType !== 'none') soundEngine.play(soundType);
+    else soundEngine.stop();
+  }, [isActive, soundType]);
 
+  // Distraction Blocking (Tab Visibility API)
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.hidden && isActive) {
+        setDistractionCount(prev => prev + 1);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [isActive]);
 
+  const currentPhase: FocusPhase = useMemo(() => {
+    if (mode === 'stopwatch') return 'stopwatch';
+    if (timeLeft === 0) return 'completed';
+    if (progressPercent < 15) return 'warmup';
+    if (progressPercent > 85) return 'fatigue';
+    return 'flow';
+  }, [timeLeft, progressPercent, mode]);
 
-  const toggleTimer = () => {
-    if (isActive) {
-      setPauseCount(c => c + 1);
-    }
-    setIsActive(!isActive);
-  };
-
-  const handleExit = () => {
-    soundEngine.stop();
-    onExit(Math.floor(secondsSpent / 60));
-  };
-
-  const applyPreset = (focusMin: number) => {
-    if (isActive) return;
-    setInitialSeconds(focusMin * 60);
-    setTimeLeft(focusMin * 60);
-    setShowPresets(false);
-  };
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
+  const formatTime = (s: number) => {
+    const mins = Math.floor(s / 60);
+    const secs = s % 60;
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
-
   const getPhaseStyles = () => {
     switch (currentPhase) {
-      case 'warmup': return { color: '#60a5fa', glow: 'shadow-[0_0_30px_rgba(96,165,250,0.2)]', text: 'Entering Flow' };
-      case 'flow': return { color: '#5865F2', glow: 'shadow-[0_0_50px_rgba(88,101,242,0.4)]', text: 'Deep Flow' };
-      case 'fatigue': return { color: '#fb923c', glow: 'shadow-[0_0_30px_rgba(251,146,60,0.2)]', text: 'Fatigue Zone' };
-      case 'break': return { color: '#23a559', glow: 'shadow-[0_0_30px_rgba(35,165,89,0.2)]', text: 'Recharge' };
-      case 'completed': return { color: '#10b981', glow: 'shadow-[0_0_60px_rgba(16,185,129,0.6)]', text: 'Completed' };
+      case 'warmup': return { color: '#60a5fa', text: 'Entering Flow' };
+      case 'flow': return { color: '#5865F2', text: 'Deep Flow' };
+      case 'fatigue': return { color: '#fb923c', text: 'Fatigue Zone' };
+      case 'stopwatch': return { color: '#a855f7', text: 'Open Focus' };
+      default: return { color: '#10b981', text: 'Completed' };
     }
   };
 
-  const phaseStyle = getPhaseStyles();
-  const breathingSpeed = currentPhase === 'flow' ? 'duration-[4000ms]' : 'duration-[2000ms]';
+  const style = getPhaseStyles();
 
   return (
-    <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#0f1012] relative overflow-hidden transition-colors duration-1000">
+    <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#0f1012] text-white overflow-hidden">
 
-
-      <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
-        <div
-          className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-[150px] opacity-10 transition-all duration-1000 ${isActive ? 'scale-110' : 'scale-100'}`}
-          style={{ backgroundColor: phaseStyle.color }}
-        ></div>
-
-        {isActive && (
-          <div
-            className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-[100px] opacity-5 animate-pulse ${breathingSpeed}`}
-            style={{ backgroundColor: phaseStyle.color }}
-          ></div>
-        )}
-      </div>
-
-
-      <div className="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-20">
-        <button onClick={handleExit} className="text-white/40 hover:text-white transition-colors flex items-center gap-2 text-sm font-medium group px-4 py-2 rounded-lg hover:bg-white/5">
-          <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-          Exit Focus
+      {/* --- Top Bar --- */}
+      <div className="absolute top-0 w-full p-4 md:p-6 flex justify-between items-center z-20">
+        <button onClick={() => onExit(Math.floor(secondsSpent / 60))} className="flex items-center gap-2 opacity-50 hover:opacity-100 transition-opacity">
+          <ChevronLeft size={18} /> Exit
         </button>
 
-        <div className="flex items-center gap-4">
-
+        <div className="flex items-center gap-4 bg-white/5 p-1 rounded-lg border border-white/10">
           <button
-            onClick={() => setSoundEnabled(!soundEnabled)}
-            className={`p-2 rounded-full border transition-all ${soundEnabled ? 'bg-white/10 text-white border-white/20' : 'text-white/20 border-transparent hover:text-white/50'}`}
-            title="Ambient Sound (Brown Noise)"
-          >
-            {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
-          </button>
+            onClick={() => { setMode('countdown'); setIsActive(false); setTimeLeft(initialSeconds); }}
+            className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${mode === 'countdown' ? 'bg-white/10 text-white' : 'text-white/40'}`}
+          >Countdown</button>
+          <button
+            onClick={() => { setMode('stopwatch'); setIsActive(false); setTimeLeft(0); }}
+            className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${mode === 'stopwatch' ? 'bg-white/10 text-white' : 'text-white/40'}`}
+          >Stopwatch</button>
         </div>
       </div>
 
+      {/* --- Main Timer Circle --- */}
+      <div className="relative flex flex-col items-center">
+        <div
+          className="absolute inset-0 rounded-full blur-[120px] opacity-20 transition-colors duration-1000"
+          style={{ backgroundColor: style.color }}
+        />
 
-      <div className="z-10 flex flex-col items-center justify-center w-full max-w-4xl px-6 py-12 h-full gap-8">
-
-
-        <div className="text-center animate-in fade-in slide-in-from-top-4 duration-700">
-          <h1 className="text-3xl md:text-5xl font-bold text-white tracking-tight leading-tight min-h-[4rem] flex items-center justify-center">
-            {taskTitle}
-          </h1>
-        </div>
-
-
-        <div className="relative group cursor-pointer flex-none" onClick={toggleTimer}>
-
-          <svg width="340" height="340" viewBox="0 0 340 340" className="transform -rotate-90 drop-shadow-2xl overflow-visible">
-            <circle
-              cx="170" cy="170" r="160"
-              stroke="currentColor" strokeWidth="3" fill="none"
-              className="text-white/5"
-            />
-
-            <circle
-              cx="170" cy="170" r="160"
-              stroke={phaseStyle.color} strokeWidth="6" fill="none"
-              strokeDasharray={1005}
-              strokeDashoffset={1005 - (1005 * progressPercent) / 100}
-              strokeLinecap="round"
-              className={`transition-all duration-1000 ease-linear ${phaseStyle.glow} ${!isActive ? 'opacity-50 grayscale-[0.5]' : ''}`}
-              style={{
-                filter: isActive && currentPhase === 'flow' ? 'drop-shadow(0 0 8px currentColor)' : 'none'
-              }}
-            />
-          </svg>
-
-
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-
-            <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 text-white/90 text-xs font-bold uppercase tracking-widest backdrop-blur-sm transition-all duration-1000`}
-              style={{ backgroundColor: `${phaseStyle.color}20`, borderColor: `${phaseStyle.color}40` }}
-            >
-              {isBreakType ? <Coffee size={12} /> : currentPhase === 'flow' ? <Sparkles size={12} /> : <BrainCircuit size={12} />}
-              <span>{phaseStyle.text}</span>
-            </div>
-
-
-            <span className={`text-8xl font-mono font-medium text-white tracking-tighter tabular-nums drop-shadow-lg transition-all duration-300 ${isActive ? 'scale-105' : 'scale-100 opacity-90'}`}>
-              {formatTime(timeLeft)}
-            </span>
-
-
-            <span className="text-white/30 text-xs font-bold tracking-[0.2em] uppercase transition-opacity duration-300">
-              {isActive ? (
-                <span className="flex items-center gap-2 animate-pulse"><Zap size={10} /> Focus Active</span>
-              ) : 'Paused'}
-            </span>
+        <div className="relative z-10 flex flex-col items-center">
+          <div className="mb-4 px-4 py-1 rounded-full border border-white/10 bg-white/5 flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold">
+            <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: style.color }} />
+            {style.text}
           </div>
-        </div>
 
+          <h1 className="text-6xl md:text-9xl font-mono font-medium tracking-tighter mb-4 md:mb-8 tabular-nums">
+            {formatTime(timeLeft)}
+          </h1>
 
-        <div className="flex flex-col items-center gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 w-full min-h-[120px] justify-start">
-          <div className="flex items-center gap-6 justify-center">
+          <div className="flex items-center gap-4 md:gap-6">
+            {mode === 'stopwatch' && (
+              <button onClick={() => { setTimeLeft(0); setIsActive(false); }} className="p-3 md:p-4 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-all">
+                <RotateCcw size={24} />
+              </button>
+            )}
+
             <button
-              onClick={toggleTimer}
-              className={`w-20 h-20 rounded-full flex items-center justify-center hover:scale-105 transition-all shadow-xl ${isActive ? 'bg-white text-black' : 'bg-discord-accent text-white'}`}
+              onClick={() => { if (isActive) setPauseCount(p => p + 1); setIsActive(!isActive); }}
+              className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center bg-white text-black hover:scale-105 transition-transform"
             >
-              {isActive ? <Pause size={32} fill="currentColor" /> : <Play size={32} fill="currentColor" className="ml-1" />}
+              {isActive ? <Pause size={32} className="md:w-10 md:h-10" fill="currentColor" /> : <Play size={32} className="ml-1 md:ml-2 md:w-10 md:h-10" fill="currentColor" />}
+            </button>
+
+            <button onClick={() => setShowSummary(true)} className="p-3 md:p-4 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-all">
+              <Square size={24} />
             </button>
           </div>
-
-
-          {!isActive && !initialTask && (
-            <div className="flex flex-col items-center gap-3">
-              <button
-                onClick={() => setShowPresets(!showPresets)}
-                className="text-xs text-white/30 hover:text-white flex items-center gap-1 transition-colors uppercase tracking-widest font-bold"
-              >
-                <Settings2 size={12} /> Adjust Timer
-              </button>
-
-              {showPresets && (
-                <div className="flex gap-2 p-1.5 bg-white/5 rounded-xl border border-white/5 animate-in slide-in-from-bottom-2">
-                  {PRESETS.map(p => (
-                    <button
-                      key={p.label}
-                      onClick={() => applyPreset(p.focus)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${initialSeconds === p.focus * 60 ? 'bg-white/20 text-white' : 'text-white/50 hover:bg-white/10'}`}
-                    >
-                      {p.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-
-          {soundEnabled && isActive && (
-            <div className="flex items-center gap-2 text-white/30 text-xs animate-pulse font-medium">
-              <Wind size={12} /> Ambient Audio Active
-            </div>
-          )}
         </div>
-
       </div>
 
+      {/* --- Part 1: Custom Duration & Part 2: Sound Controls --- */}
+      {!isActive && !showSummary && (
+        <div className="mt-8 md:mt-12 flex flex-col md:flex-row items-center gap-6 md:gap-8 animate-in fade-in slide-in-from-bottom-4 w-full px-4 md:px-0 md:w-auto">
+          <div className="flex flex-col gap-2 items-center">
+            <span className="text-[10px] uppercase font-bold text-white/30 tracking-widest">Adjust Duration</span>
+            <div className="flex flex-wrap justify-center gap-2">
+              <input
+                type="number"
+                value={Math.floor(initialSeconds / 60)}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value) || 0;
+                  setInitialSeconds(val * 60);
+                  if (mode === 'countdown') setTimeLeft(val * 60);
+                }}
+                className="w-20 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-white/30"
+              />
+              {PRESETS.map(p => (
+                <button key={p.label} onClick={() => { setInitialSeconds(p.focus * 60); setTimeLeft(p.focus * 60); }} className="px-3 py-2 bg-white/5 rounded-lg text-xs hover:bg-white/10">
+                  {p.focus}m
+                </button>
+              ))}
+            </div>
+          </div>
 
-      <div className="absolute bottom-6 right-6 text-white/10 text-xs font-mono font-medium">
-        ETA: {new Date(Date.now() + timeLeft * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          <div className="flex flex-col gap-2 items-center">
+            <span className="text-[10px] uppercase font-bold text-white/30 tracking-widest">Focus Sounds</span>
+            <div className="flex flex-wrap justify-center gap-2">
+              {(['none', 'brown-noise', 'heavy-rain', 'forest'] as SoundType[]).map(s => (
+                <button
+                  key={s}
+                  onClick={() => setSoundType(s)}
+                  className={`px-3 py-2 rounded-lg text-xs capitalize transition-all ${soundType === s ? 'bg-white/20 text-white' : 'bg-white/5 text-white/40'}`}
+                >
+                  {s.replace('-', ' ')}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- Part 1: Session Summary Report --- */}
+      {showSummary && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 md:p-6">
+          <div className="bg-[#1a1b1e] border border-white/10 p-6 md:p-8 rounded-3xl max-w-md w-full shadow-2xl">
+            <div className="flex items-center gap-3 mb-6">
+              <BarChart3 className="text-indigo-400" />
+              <h2 className="text-2xl font-bold">Session Report</h2>
+            </div>
+
+            <div className="space-y-4 mb-8">
+              <div className="flex justify-between p-4 bg-white/5 rounded-2xl">
+                <span className="text-white/50">Focused Time</span>
+                <span className="font-mono font-bold text-xl">{formatTime(secondsSpent)}</span>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-white/5 rounded-2xl">
+                  <span className="text-[10px] uppercase text-white/40 block mb-1">Pauses</span>
+                  <span className="text-xl font-bold">{pauseCount}</span>
+                </div>
+                <div className="p-4 bg-white/5 rounded-2xl">
+                  <span className="text-[10px] uppercase text-white/40 block mb-1">Distractions</span>
+                  <span className="text-xl font-bold text-orange-400">{distractionCount}</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => onExit(Math.floor(secondsSpent / 60))}
+              className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 rounded-2xl font-bold transition-all shadow-lg shadow-indigo-500/20"
+            >
+              Complete Session
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* --- Part 3: Distraction Block Indicator --- */}
+      <div className="absolute bottom-4 left-4 md:bottom-6 md:left-6 flex items-center gap-3 text-white/20 text-[10px] font-bold tracking-widest uppercase">
+        <ShieldAlert size={14} className={distractionCount > 0 ? 'text-orange-500' : ''} />
+        Guard Active: {blockedUrls.length} Sites Restricted
       </div>
     </div>
   );

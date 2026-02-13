@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
-import { UserPreferences, RoutineTask, Question, Flashcard, Note, QueueItem, Attachment } from '../types';
+import { UserPreferences, RoutineTask, Question, Flashcard, Note, QueueItem, Attachment, QuizReport } from '../types';
 
 const getAI = () => {
   const apiKey = (import.meta.env as any).VITE_GEMINI_API_KEY || (process.env as any).VITE_GEMINI_API_KEY;
@@ -434,7 +434,8 @@ export const generateQuizFromNotes = async (
               text: { type: Type.STRING },
               options: { type: Type.ARRAY, items: { type: Type.STRING } },
               correctIndex: { type: Type.INTEGER },
-              explanation: { type: Type.STRING }
+              explanation: { type: Type.STRING },
+              difficulty: { type: Type.STRING, enum: ['easy', 'medium', 'hard'] }
             }
           }
         }
@@ -446,7 +447,8 @@ export const generateQuizFromNotes = async (
     return data.map((q, i) => ({
       ...q,
       id: q.id || `q_${Date.now()}_${i}`,
-      explanation: q.explanation || "No explanation provided"
+      explanation: q.explanation || "No explanation provided",
+      difficulty: q.difficulty || difficulty // Fallback to requested difficulty if AI omits it
     }));
   } catch (error) {
     console.error("Quiz Gen Error:", error);
@@ -647,3 +649,87 @@ export const generateReels = async (content: string): Promise<string[]> => {
     return [];
   }
 };
+
+export const generateQuizReport = async (
+  attemptedQuestions: Array<{
+    question: string;
+    userAnswer: number;
+    correctAnswer: number;
+    isCorrect: boolean;
+    difficulty?: 'easy' | 'medium' | 'hard';
+  }>
+): Promise<QuizReport> => {
+  const ai = getAI();
+
+  const performanceSummary = attemptedQuestions.map((q, i) =>
+    `Q${i + 1} (${q.difficulty || 'medium'}): ${q.question.substring(0, 50)}... - ${q.isCorrect ? 'CORRECT' : 'WRONG'}`
+  ).join('\n');
+
+  const accuracy = Math.round((attemptedQuestions.filter(q => q.isCorrect).length / attemptedQuestions.length) * 100);
+  const difficulties = attemptedQuestions.map(q => q.difficulty || 'medium');
+
+  try {
+    const response = await ai.models.generateContent({
+      model: MODEL_TEXT,
+      contents: [
+        {
+          text: `Analyze this quiz performance and generate a learning report.
+Performance Summary:
+${performanceSummary}
+
+Return JSON with:
+- strengths: array of strings (concepts they know well)
+- weaknesses: array of strings (concepts they need to review)
+- suggestions: array of strings (actionable advice)
+- difficultyProgression: array of 'easy'|'medium'|'hard' matching the questions order (just echo back what I sent effectively, or infer if missing)
+- overallAccuracy: number (0-100)
+
+Make the insights personalized. Look for patterns:
+- Did they struggle specifically with 'hard' questions?
+- Did accuracy improve when difficulty changed?
+- Are there specific topics (e.g., definitions vs application) they missed?
+Reflect these patterns in the suggestions.`
+        }
+      ],
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            overallAccuracy: { type: Type.NUMBER },
+            difficultyProgression: { type: Type.ARRAY, items: { type: Type.STRING, enum: ['easy', 'medium', 'hard'] } },
+            strengths: { type: Type.ARRAY, items: { type: Type.STRING } },
+            weaknesses: { type: Type.ARRAY, items: { type: Type.STRING } },
+            suggestions: { type: Type.ARRAY, items: { type: Type.STRING } }
+          }
+        }
+      }
+    });
+
+    if (!response || !response.text) throw new Error("No report generated");
+
+    const report = safeJSONParse<QuizReport>(response.text, {
+      overallAccuracy: accuracy,
+      difficultyProgression: difficulties,
+      strengths: ["Completed the quiz"],
+      weaknesses: [],
+      suggestions: ["Review the questions you missed."]
+    });
+    
+    // Ensure accuracy matches actual calculation if AI drifts
+    report.overallAccuracy = accuracy; 
+    
+    return report;
+
+  } catch (error) {
+    console.error("Report Gen Error:", error);
+    return {
+      overallAccuracy: accuracy,
+      difficultyProgression: difficulties,
+      strengths: [],
+      weaknesses: [],
+      suggestions: ["Could not generate detailed AI report. Please review your answers manually."]
+    };
+  }
+};
+

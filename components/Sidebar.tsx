@@ -9,10 +9,26 @@ interface SidebarProps {
   onLogout: () => void;
   collapsed: boolean;
   onToggleCollapse: () => void;
+  userRole?: UserRole;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onLogout, collapsed, onToggleCollapse }) => {
-  const NavItem = ({ view, icon: Icon, label }: { view: ViewState; icon: any; label: string }) => {
+const Sidebar: React.FC<SidebarProps> = ({
+  currentView,
+  onNavigate,
+  onLogout,
+  collapsed,
+  onToggleCollapse,
+  userRole = "student",
+}) => {
+  const NavItem = ({
+    view,
+    icon: Icon,
+    label,
+  }: {
+    view: ViewState;
+    icon: any;
+    label: string;
+  }) => {
     const active = currentView === view;
     return (
       <button
@@ -33,7 +49,9 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onLogout, co
           }`} />
         {!collapsed && (
           <>
-            <span className="relative z-10 group-hover:translate-x-1 transition-transform duration-300">{label}</span>
+            <span className="relative z-10 group-hover:translate-x-1 transition-transform duration-300">
+              {label}
+            </span>
             {active && (
               <div className="absolute right-2 w-2 h-2 bg-app-accent rounded-full animate-pulse"></div>
             )}
@@ -62,7 +80,10 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onLogout, co
               className="flex items-center justify-center w-8 h-8 text-app-textMuted hover:text-app-text hover:bg-app-hover rounded-lg transition-all duration-300 group"
               title="Collapse sidebar"
             >
-              <PanelLeftClose size={18} className="group-hover:scale-110 transition-transform" />
+              <PanelLeftClose
+                size={18}
+                className="group-hover:scale-110 transition-transform"
+              />
             </button>
           </>
         ) : (
@@ -80,7 +101,10 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onLogout, co
             className="flex items-center justify-center w-10 h-10 text-app-textMuted hover:text-app-text hover:bg-app-hover rounded-lg transition-all duration-300 group"
             title="Expand sidebar"
           >
-            <PanelLeftOpen size={20} className="group-hover:scale-110 transition-transform" />
+            <PanelLeftOpen
+              size={20}
+              className="group-hover:scale-110 transition-transform"
+            />
           </button>
         </div>
       )}
@@ -88,12 +112,23 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onLogout, co
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 flex flex-col justify-evenly gap-1 overflow-y-auto no-scrollbar">
         <NavItem view="dashboard" icon={LayoutDashboard} label="Dashboard" />
-        <NavItem view="summarizer" icon={FileText} label="Summarizer" />
-        <NavItem view="notes" icon={BookOpen} label="My Notes" />
-        <NavItem view="feed" icon={Flame} label="Learning Feed" />
-        <NavItem view="quiz" icon={Gamepad2} label="Quiz Arena" />
-        <NavItem view="routine" icon={Clock} label="Routine" />
-        <NavItem view="focus" icon={BrainCircuit} label="Focus Mode" />
+        
+        {userRole === "teacher" ? (
+          <>
+            <NavItem view="classrooms" icon={GraduationCap} label="My Classrooms" />
+            <NavItem view="notes" icon={BookOpen} label="My Notes" />
+          </>
+        ) : (
+          <>
+            <NavItem view="summarizer" icon={FileText} label="Summarizer" />
+            <NavItem view="notes" icon={BookOpen} label="My Notes" />
+            <NavItem view="studentClassrooms" icon={Users} label="Classrooms" />
+            <NavItem view="feed" icon={Flame} label="Learning Feed" />
+            <NavItem view="quiz" icon={Gamepad2} label="Quiz Arena" />
+            <NavItem view="routine" icon={Clock} label="Routine" />
+            <NavItem view="focus" icon={BrainCircuit} label="Focus Mode" />
+          </>
+        )}
       </nav>
 
       {/* Theme Toggle */}
@@ -105,11 +140,18 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onLogout, co
       <div className={`${collapsed ? 'p-3 mb-4' : 'p-4 mx-4 mb-4'} border-t border-app-border`}>
         <button
           onClick={onLogout}
-          className={`w-full flex items-center ${collapsed ? 'justify-center px-2' : 'gap-3 px-4'} py-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-all duration-300 font-medium group hover:scale-105 border border-transparent hover:border-red-500/20`}
+          className={`w-full flex items-center ${collapsed ? "justify-center px-2" : "gap-3 px-4"} py-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-all duration-300 font-medium group hover:scale-105 border border-transparent hover:border-red-500/20`}
           title={collapsed ? "Log Out" : undefined}
         >
-          <LogOut size={20} className="group-hover:rotate-12 transition-transform duration-300 flex-shrink-0" />
-          {!collapsed && <span className="group-hover:translate-x-1 transition-transform duration-300">Log Out</span>}
+          <LogOut
+            size={20}
+            className="group-hover:rotate-12 transition-transform duration-300 flex-shrink-0"
+          />
+          {!collapsed && (
+            <span className="group-hover:translate-x-1 transition-transform duration-300">
+              Log Out
+            </span>
+          )}
         </button>
       </div>
     </div>

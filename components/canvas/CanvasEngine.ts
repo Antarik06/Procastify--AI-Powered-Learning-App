@@ -123,6 +123,12 @@ export class CanvasEngine {
         this.render();
     }
 
+    public addShapes(elements: Shape[]) {
+        this.shapes = [...this.shapes, ...elements];
+        this.render();
+        this.save();
+    }
+
     public setTool(tool: ToolType) {
         this.activeTool = tool;
         this.isDrawing = false;
