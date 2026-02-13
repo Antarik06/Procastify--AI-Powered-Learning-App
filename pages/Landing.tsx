@@ -56,13 +56,26 @@ const Landing: React.FC<LandingProps> = ({ onLogin, onGuestAccess }) => {
 
   return (
     <div className="min-h-screen bg-[#0f1114] text-gray-100 font-sans selection:bg-indigo-500/30 overflow-x-hidden">
-      {/* Background Gradients */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-purple-500/10 rounded-full mix-blend-screen filter blur-[100px] opacity-30"></div>
-        <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-blue-500/10 rounded-full mix-blend-screen filter blur-[100px] opacity-30"></div>
-        <div className="absolute -bottom-32 left-1/3 w-[500px] h-[500px] bg-pink-500/10 rounded-full mix-blend-screen filter blur-[100px] opacity-20"></div>
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150"></div>
-      </div>
+      {/* Premium Layered Background */}
+<div className="fixed inset-0 pointer-events-none overflow-hidden">
+  
+  {/* Base gradient */}
+  <div className="absolute inset-0 bg-gradient-to-br from-[#0f1114] via-[#0b0c10] to-[#050505]" />
+
+  {/* Animated mesh gradient */}
+  <div className="absolute inset-0 opacity-30 animate-gradient bg-[radial-gradient(circle_at_20%_30%,rgba(139,92,246,0.25),transparent_40%),radial-gradient(circle_at_80%_40%,rgba(59,130,246,0.25),transparent_40%),radial-gradient(circle_at_50%_80%,rgba(236,72,153,0.2),transparent_40%)]" />
+
+  {/* Soft glow behind hero */}
+  <div className="absolute top-32 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-indigo-600/20 blur-[120px] rounded-full opacity-40" />
+
+  {/* Floating orbs */}
+  <div className="absolute top-20 left-10 w-72 h-72 bg-purple-500/10 blur-[100px] rounded-full animate-float-slow" />
+  <div className="absolute bottom-10 right-10 w-72 h-72 bg-blue-500/10 blur-[100px] rounded-full animate-float-slower" />
+
+  {/* Subtle noise texture */}
+  <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay" />
+</div>
+
 
       {/* Navbar */}
       <nav className="relative z-50 max-w-7xl mx-auto px-6 py-6 flex justify-between items-center bg-transparent">
@@ -465,23 +478,73 @@ const Landing: React.FC<LandingProps> = ({ onLogin, onGuestAccess }) => {
       </main>
 
       {/* Footer */}
-      <footer className="py-12 border-t border-white/5 bg-[#0a0b0c] text-gray-400 text-sm">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-indigo-600 rounded-lg flex items-center justify-center">
-              <BrainCircuit className="text-white" size={14} />
-            </div>
-            <span className="font-bold text-white">Procastify</span>
-          </div>
+      <footer className="relative z-20 bg-[#070809] border-t border-white/5 pt-20 pb-10 text-gray-400">
+  <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
 
-          <p>© 2024 Procastify. All rights reserved.</p>
-
-          <div className="flex gap-4">
-             <a href="#" className="hover:text-white transition-colors"><Twitter size={18} /></a>
-             <a href="#" className="hover:text-white transition-colors"><Github size={18} /></a>
-          </div>
+    {/* Brand */}
+    <div>
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <BrainCircuit className="text-white" size={20} />
         </div>
-      </footer>
+        <span className="text-xl font-bold text-white">Procastify</span>
+      </div>
+      <p className="text-sm text-gray-500 leading-relaxed">
+        Turning chaos into clarity through intelligent learning systems.
+      </p>
+      <p className="mt-4 italic text-gray-600 text-xs">
+        “Mastery isn’t about time spent. It’s about focus applied.”
+      </p>
+    </div>
+
+    {/* Product */}
+    <div>
+      <h4 className="text-white font-semibold mb-4">Product</h4>
+      <ul className="space-y-2 text-sm">
+        <li><a href="#" className="hover:text-white transition-colors">Features</a></li>
+        <li><a href="#" className="hover:text-white transition-colors">Learning Feed</a></li>
+        <li><a href="#" className="hover:text-white transition-colors">Deep Focus</a></li>
+        <li><a href="#" className="hover:text-white transition-colors">Quizzes</a></li>
+      </ul>
+    </div>
+
+    {/* Resources */}
+    <div>
+      <h4 className="text-white font-semibold mb-4">Resources</h4>
+      <ul className="space-y-2 text-sm">
+        <li><a href="#" className="hover:text-white transition-colors">About Us</a></li>
+        <li><a href="#" className="hover:text-white transition-colors">FAQ</a></li>
+        <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
+        <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
+      </ul>
+    </div>
+
+    {/* Legal */}
+    <div>
+      <h4 className="text-white font-semibold mb-4">Legal</h4>
+      <ul className="space-y-2 text-sm">
+        <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
+        <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
+        <li><a href="#" className="hover:text-white transition-colors">Cookies</a></li>
+      </ul>
+
+      {/* Socials */}
+      <div className="flex gap-4 mt-6">
+        <a href="#" className="p-2 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
+          <Twitter size={18} />
+        </a>
+        <a href="#" className="p-2 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
+          <Github size={18} />
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div className="border-t border-white/5 mt-16 pt-6 text-center text-xs text-gray-600">
+    © 2024 Procastify. All rights reserved.
+  </div>
+</footer>
+
     </div>
   );
 };
