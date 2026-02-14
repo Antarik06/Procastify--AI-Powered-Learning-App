@@ -547,8 +547,14 @@ export const StorageService = {
   },
 
   getTasks: async (): Promise<RoutineTask[]> => {
-    return StorageService.loadCollection<RoutineTask>("tasks");
-  },
+  const tasks = await StorageService.loadCollection<RoutineTask>("tasks");
+
+  return tasks.map(task => ({
+    ...task,
+    subTasks: task.subTasks || []  
+  }));
+},
+
 
   saveTasks: async (tasks: RoutineTask[]) => {
     if (!currentUserId) return;

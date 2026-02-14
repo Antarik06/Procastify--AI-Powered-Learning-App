@@ -3,6 +3,53 @@ import { UserPreferences, RoutineTask, Note, QueueItem } from '../types';
 import { analyzeNoteWorkload, generateAdaptiveRoutine, generatePanicDecomposition } from '../services/geminiService';
 import { StorageService } from '../services/storageService';
 import { Clock, CheckCircle, RefreshCw, CalendarCheck, PlayCircle, Plus, BrainCircuit, Settings, Coffee, Trash2, AlertTriangle, Zap } from 'lucide-react';
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+
+import { CSS } from "@dnd-kit/utilities";
+
+interface SortableTaskProps {
+  id: string;
+  children: React.ReactNode;
+}
+
+const SortableTask = ({ id, children }: SortableTaskProps) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+    >
+      {children}
+    </div>
+  );
+};
 
 interface RoutineProps {
     user: UserPreferences;
@@ -12,10 +59,66 @@ interface RoutineProps {
     onStartTask: (task: RoutineTask) => void;
 }
 
-const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onStartTask }) => {
-    const [activeTab, setActiveTab] = useState<'plan' | 'schedule'>('plan');
-    const [queue, setQueue] = useState<QueueItem[]>([]);
-    const [tasks, setTasks] = useState<RoutineTask[]>([]);
+const Routine: React.FC<RoutineProps> = ({
+  user,
+  setUser,
+  notes,
+  setNotes,
+  onStartTask
+}) => {
+const sensors = useSensors(
+  useSensor(PointerSensor, {
+    activationConstraint: {
+      distance: 5,
+    },
+  })
+);
+const handleDragEnd = (event: any) => {
+  const { active, over } = event;
+
+  if (!over || active.id === over.id) return;
+
+  setTasks((items) => {
+    const oldIndex = items.findIndex((t) => t.id === active.id);
+    const newIndex = items.findIndex((t) => t.id === over.id);
+    return arrayMove(items, oldIndex, newIndex);
+  });
+};
+
+
+  const [activeTab, setActiveTab] = useState<'plan' | 'schedule'>('plan');
+  const [queue, setQueue] = useState<QueueItem[]>([]);
+  const [tasks, setTasks] = useState<RoutineTask[]>([]);
+
+  
+  useEffect(() => {
+    const saved = localStorage.getItem("routine_tasks");
+    if (saved) {
+      setTasks(JSON.parse(saved));
+    }
+  }, []);
+
+
+  useEffect(() => {
+    localStorage.setItem("routine_tasks", JSON.stringify(tasks));
+  }, [tasks]);
+
+  const addManualTask = () => {
+    if (!user) return;
+
+    const newTask: RoutineTask = {
+      id: `task_${Date.now()}`,
+      userId: user.id,
+      title: "New Task",
+      durationMinutes: 25,
+      type: "focus",
+      completed: false,
+      subTasks: []
+    };
+
+    setTasks(prev => [...prev, newTask]);
+  };
+
 
 
     const [loadingAnalysis, setLoadingAnalysis] = useState<string | null>(null); // Note ID being analyzed
@@ -118,19 +221,26 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
         setQueue(queue.filter(q => q.id !== id));
     };
 
-    const generatePlan = async () => {
-        if (queue.length === 0) return;
-        setGeneratingRoutine(true);
+   const generatePlan = async () => {
+    if (queue.length === 0) return;
+    setGeneratingRoutine(true);
 
-        const result = await generateAdaptiveRoutine(queue, notes, user);
-        setTasks(result.tasks);
-        setRoutineMeta({ projection: result.projection, confidence: result.confidence });
-        setGeneratingRoutine(false);
-        setPanicMode(false);
+    const result = await generateAdaptiveRoutine(queue, notes, user);
 
+    setTasks(
+      result.tasks.map(task => ({
+        ...task,
+        subTasks: []
+      }))
+    );
 
-        setActiveTab('schedule');
-    };
+    setRoutineMeta({ projection: result.projection, confidence: result.confidence });
+    setGeneratingRoutine(false);
+    setPanicMode(false);
+
+    setActiveTab('schedule');
+};
+
 
     const updateTaskStatus = (taskId: string) => {
         const newTasks = tasks.map(t => t.id === taskId ? { ...t, completed: !t.completed } : t);
@@ -145,7 +255,13 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
         const panicTasks = await generatePanicDecomposition(tasks);
 
         if (panicTasks.length > 0) {
-            setTasks(panicTasks);
+            setTasks(
+  panicTasks.map(task => ({
+    ...task,
+    subTasks: []
+  }))
+);
+
             setPanicMode(true);
             setRoutineMeta({
                 projection: "PANIC PROTOCOL ENGAGED. Breaking everything down. Just do the first tiny thing.",
@@ -351,10 +467,126 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
                     </div>
                 )}
 
-                {tasks.map((task, idx) => (
-                    <div key={task.id} className={`relative flex items-start gap-6 group ${task.completed ? 'opacity-50 grayscale' : ''}`}>
+                {/* Add Task Button */}
+<button
+  onClick={addManualTask}
+  className="mb-6 px-4 py-2 rounded-lg bg-discord-accent text-white hover:opacity-90 transition"
+>
+  + Add Task
+</button>
 
-                        <div className={`
+<DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={tasks.map((t) => t.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {tasks.map((task, idx) => (
+              <SortableTask key={task.id} id={task.id}>
+                <div className="relative bg-discord-card p-4 rounded-xl">
+                  {/* Delete Task */}
+                  <button
+                    onClick={() => setTasks(prev => prev.filter(t => t.id !== task.id))}
+                    className="absolute top-3 right-3 text-red-400 hover:text-red-600 transition"
+                  >
+                    ✕
+                  </button>
+
+                  <div className="mt-4 border-t border-gray-700 pt-3">
+                    <button
+                      onClick={() => {
+                        const newSubtask = {
+                          id: crypto.randomUUID(),
+                          title: "New Subtask",
+                          completed: false,
+                        };
+                        setTasks(prev =>
+                          prev.map(t =>
+                            t.id === task.id
+                              ? { ...t, subTasks: [...(t.subTasks || []), newSubtask] }
+                              : t
+                          )
+                        );
+                      }}
+                      className="text-sm text-indigo-400 hover:text-indigo-600 mb-2"
+                    >
+                      + Add Subtask
+                    </button>
+
+
+      <div className="space-y-2">
+        {(task.subTasks || []).map(sub => (
+          <div key={sub.id} className="flex items-center gap-2">
+
+            <input
+              type="checkbox"
+              checked={sub.completed}
+              onChange={() =>
+                setTasks(prev =>
+                  prev.map(t =>
+                    t.id === task.id
+                      ? {
+                          ...t,
+                          subTasks: t.subTasks.map(s =>
+                            s.id === sub.id
+                              ? { ...s, completed: !s.completed }
+                              : s
+                          )
+                        }
+                      : t
+                  )
+                )
+              }
+            />
+
+            <input
+              value={sub.title}
+              onChange={(e) =>
+                setTasks(prev =>
+                  prev.map(t =>
+                    t.id === task.id
+                      ? {
+                          ...t,
+                          subTasks: t.subTasks.map(s =>
+                            s.id === sub.id
+                              ? { ...s, title: e.target.value }
+                              : s
+                          )
+                        }
+                      : t
+                  )
+                )
+              }
+              className="bg-transparent border-b border-gray-600 text-sm text-white focus:outline-none"
+            />
+
+            <button
+              onClick={() =>
+                setTasks(prev =>
+                  prev.map(t =>
+                    t.id === task.id
+                      ? {
+                          ...t,
+                          subTasks: t.subTasks.filter(s => s.id !== sub.id)
+                        }
+                      : t
+                  )
+                )
+              }
+              className="text-red-400 text-xs"
+            >
+              ✕
+            </button>
+            </div>
+             ))}
+      </div></div>
+
+
+          
+ <div className={`
                           w-12 h-12 rounded-full border-4 shrink-0 flex items-center justify-center z-10 transition-colors
                           ${task.completed ? 'bg-discord-bg border-discord-textMuted' :
                                 task.type === 'procastify' ? 'bg-discord-bg border-purple-400' :
@@ -388,10 +620,42 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
                                             {task.type === 'procastify' ? 'Guilt-Free Break' : task.type}
                                         </span>
                                         <span className="text-xs text-discord-textMuted flex items-center gap-1">
-                                            <Clock size={12} /> {task.durationMinutes}m
+                                            <div className="flex items-center gap-1">
+  <Clock size={12} />
+  <input
+    type="number"
+    value={task.durationMinutes}
+    onChange={(e) =>
+      setTasks(prev =>
+        prev.map(t =>
+          t.id === task.id
+            ? { ...t, durationMinutes: Number(e.target.value) }
+            : t
+        )
+      )
+    }
+    className="w-14 bg-transparent border-b border-gray-600 text-white text-sm focus:outline-none focus:border-indigo-500"
+  />
+  <span className="text-gray-400 text-sm">m</span>
+</div>
+
                                         </span>
                                     </div>
-                                    <h3 className="font-bold text-xl text-white">{task.title}</h3>
+                                    <input
+  type="text"
+  value={task.title}
+  onChange={(e) =>
+    setTasks(prev =>
+      prev.map(t =>
+        t.id === task.id
+          ? { ...t, title: e.target.value }
+          : t
+      )
+    )
+  }
+  className="font-bold text-xl text-white bg-transparent border-b border-gray-600 focus:outline-none focus:border-indigo-500 w-full"
+/>
+
                                 </div>
                                 <button
                                     onClick={() => updateTaskStatus(task.id)}
@@ -413,7 +677,10 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
                             )}
                         </div>
                     </div>
+                    </SortableTask>
                 ))}
+                </SortableContext>
+        </DndContext>
             </div>
         </div>
     );

@@ -205,6 +205,13 @@ export function isSummarySession(summary: Summary): summary is SummarySession {
          summary.originalText !== undefined && summary.attachments !== undefined;
 }
 
+export interface SubTask {
+  id: string;
+  title: string;
+  durationMinutes?: number;
+  completed?: boolean;
+}
+
 export interface RoutineTask {
   id: string;
   userId: string;
@@ -215,7 +222,9 @@ export interface RoutineTask {
   timeSlot?: string;
   noteId?: string;
   confidence?: "high" | "medium" | "low";
+  subTasks: SubTask[];
 }
+
 
 export interface Question {
   id: string;
