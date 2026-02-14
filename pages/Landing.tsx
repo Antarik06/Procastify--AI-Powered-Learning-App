@@ -1,9 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
 import { 
-  BrainCircuit, ArrowRight, FileText, Layers, Target, Zap, Layout, 
-  Sparkles, Calendar, Smartphone, Timer, CheckCircle, Github, Twitter, 
-  Play, Clock, PenTool, MoveRight, ChevronDown 
+  BrainCircuit, 
+  ArrowRight, 
+  FileText, 
+  Layers, 
+  Target, 
+  Zap, 
+  Layout, 
+  Sparkles, 
+  Calendar, 
+  Smartphone, 
+  Timer, 
+  CheckCircle, 
+  Github, 
+  Twitter, 
+  Play, 
+  Clock, 
+  PenTool, 
+  MoveRight, 
+  ChevronDown 
 } from 'lucide-react';
 
 interface LandingProps {
@@ -36,9 +52,29 @@ const Landing: React.FC<LandingProps> = ({ onLogin, onGuestAccess }) => {
   const [currentHeroStep, setCurrentHeroStep] = useState(0);
   const hasMounted = useRef(false);
 
+  // --- PARALLAX LOGIC ---
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  // Smooth out the mouse movement with spring physics
+  const springConfig = { damping: 25, stiffness: 150 };
+  const smoothMouseX = useSpring(mouseX, springConfig);
+  const smoothMouseY = useSpring(mouseY, springConfig);
+
   useEffect(() => {
     hasMounted.current = true;
-  }, []);
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      // Normalize mouse position to a range of -0.5 to 0.5
+      const { clientX, clientY } = e;
+      const { innerWidth, innerHeight } = window;
+      mouseX.set((clientX / innerWidth) - 0.5);
+      mouseY.set((clientY / innerHeight) - 0.5);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [mouseX, mouseY]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -47,96 +83,230 @@ const Landing: React.FC<LandingProps> = ({ onLogin, onGuestAccess }) => {
     return () => clearInterval(timer);
   }, []);
 
-  // Guarded initial values: on React StrictMode remount, hasMounted.current
-  // is already true (refs persist across unmount/remount), so we return false
-  // to prevent framer-motion from re-applying opacity:0 and causing a flash.
   const fadeUp = hasMounted.current ? false : { opacity: 0, y: 20 };
   const heroTextIn = hasMounted.current ? false : { opacity: 0, y: 30, filter: 'blur(10px)' };
   const fadeIn = hasMounted.current ? false : { opacity: 0 };
 
   return (
     <div className="min-h-screen bg-[#0f1114] text-gray-100 font-sans selection:bg-indigo-500/30 overflow-x-hidden">
-      {/* Background Gradients */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-purple-500/10 rounded-full mix-blend-screen filter blur-[100px] opacity-30"></div>
-        <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-blue-500/10 rounded-full mix-blend-screen filter blur-[100px] opacity-30"></div>
-        <div className="absolute -bottom-32 left-1/3 w-[500px] h-[500px] bg-pink-500/10 rounded-full mix-blend-screen filter blur-[100px] opacity-20"></div>
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150"></div>
+      
+
+      {/* --- NAVBAR --- */}
+<nav className="fixed top-0 left-0 w-full z-50 backdrop-blur-xl bg-black/0 border-b border-white/10">
+  <div className="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
+
+    {/* Logo */}
+    <div className="flex items-center gap-3 group cursor-pointer">
+      <div className="w-11 h-11 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 
+                      rounded-xl flex items-center justify-center
+                      shadow-lg shadow-purple-500/30
+                      group-hover:scale-110 group-hover:rotate-6
+                      transition-all duration-500">
+        <BrainCircuit className="text-white animate-pulse" size={24} />
       </div>
 
-      {/* Navbar */}
-      <nav className="relative z-50 max-w-7xl mx-auto px-6 py-6 flex justify-between items-center bg-transparent">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-            <BrainCircuit className="text-white" size={24} />
-          </div>
-          <span className="text-xl font-bold tracking-tight">Procastify</span>
-        </div>
-        <div className="flex gap-4">
-          <button onClick={onLogin} className="text-gray-400 hover:text-white transition-colors font-medium text-sm">
-            Sign In
-          </button>
-          <button onClick={onGuestAccess} className="bg-white/5 hover:bg-white/10 border border-white/10 text-white px-5 py-2 rounded-full font-medium text-sm backdrop-blur-sm transition-all hover:border-white/20">
-            Try Guest Mode
-          </button>
-        </div>
-      </nav>
+      <span className="text-2xl font-extrabold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 
+                       bg-clip-text text-transparent tracking-tight">
+        Procastify
+      </span>
+    </div>
 
-      <main className="relative z-10 w-full">
-        {/* Hero Section */}
-        <section className="pt-20 pb-20 px-6 flex flex-col items-center justify-center text-center">
-            <div className="relative h-[330px] w-full max-w-5xl flex items-center justify-center mb-0">
-               <AnimatePresence mode="wait">
-                 <motion.div
-                   key={currentHeroStep}
-                   initial={heroTextIn}
-                   animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                   exit={{ opacity: 0, y: -30, filter: 'blur(10px)' }}
-                   transition={{ duration: 0.8, ease: "easeInOut" }}
-                   className="absolute inset-x-0 top-10 flex flex-col items-center justify-center"
-                 >
-                    <h1 className="text-6xl md:text-8xl font-bold mb-6 tracking-tight leading-[1.1]">
-                      {heroContent[currentHeroStep].title} <br />
-                      <span className={`text-transparent bg-clip-text bg-gradient-to-r ${heroContent[currentHeroStep].color}`}>
-                        {heroContent[currentHeroStep].sub}
-                      </span>
-                    </h1>
-                    <p className="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
-                      {heroContent[currentHeroStep].desc}
-                    </p>
-                 </motion.div>
-               </AnimatePresence>
-            </div>
+    {/* Buttons */}
+    <div className="flex gap-5 items-center">
 
-            <motion.div 
-               initial={fadeUp}
-               animate={{ opacity: 1, y: 0 }}
-               transition={{ delay: 0.3, duration: 0.5 }}
-               className="flex flex-col items-center gap-8 relative z-20 mt-24"
-            >
-              <button
-                onClick={onGuestAccess}
-                 className="group bg-white text-black hover:bg-gray-200 px-8 py-4 rounded-xl font-bold text-lg shadow-2xl shadow-indigo-500/10 flex items-center justify-center gap-2 transition-all hover:scale-[1.02]"
-              >
-                Start Learning <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-              </button>
+      <button
+        onClick={onLogin}
+        className="relative text-gray-300 hover:text-white font-medium text-sm
+                   transition-all duration-300
+                   after:absolute after:-bottom-1 after:left-0 after:h-[2px]
+                   after:w-0 after:bg-gradient-to-r after:from-indigo-400 after:to-pink-400
+                   hover:after:w-full after:transition-all after:duration-300">
+        Sign In
+      </button>
 
-              <div className="inline-flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/5 text-sm text-gray-400">
-                <Sparkles size={14} className="text-yellow-500" />
-                <span className="hidden md:inline">Smart summaries • Meaningful notes • Personalized routines • Intelligent tests • Unparalleled focus</span>
-                <span className="md:hidden">AI Powered Learning Engine</span>
-              </div>
+      <button
+        onClick={onGuestAccess}
+        className="relative px-6 py-2 rounded-full font-semibold text-sm
+                   bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500
+                   hover:scale-105 hover:shadow-lg hover:shadow-purple-500/40
+                   transition-all duration-300 text-white">
+        Try Guest Mode
+      </button>
 
-              <motion.div
-                initial={fadeIn}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1, duration: 1 }}
-                className="text-gray-600 animate-bounce mt-8"
-              >
-                <ChevronDown size={32} />
-              </motion.div>
-            </motion.div>
-        </section>
+    </div>
+  </div>
+</nav>
+
+      {/* --- HERO SECTION --- */}
+<main className="relative z-10 w-full">
+  <section className="relative overflow-hidden pt-20 pb-20 px-6 flex flex-col items-center justify-center text-center min-h-[90vh]">
+
+    {/* ================= INTENSE VISUAL ENGINE ================= */}
+
+{/* Animated Gradient Mesh Background */}
+<motion.div
+  animate={{
+    backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"]
+  }}
+  transition={{
+    duration: 20,
+    repeat: Infinity,
+    ease: "linear"
+  }}
+  className="absolute inset-0 opacity-40"
+  style={{
+    background: `
+      radial-gradient(circle at 20% 30%, rgba(99,102,241,0.5), transparent 40%),
+      radial-gradient(circle at 80% 70%, rgba(168,85,247,0.5), transparent 40%),
+      radial-gradient(circle at 50% 50%, rgba(236,72,153,0.4), transparent 50%)
+    `,
+    backgroundSize: "200% 200%"
+  }}
+/>
+
+{/* Strong AI Core Glow */}
+<motion.div
+  animate={{ scale: [1, 1.2, 1] }}
+  transition={{ duration: 4, repeat: Infinity }}
+  className="absolute left-1/2 top-1/2 w-[1000px] h-[1000px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-600/30 blur-[200px]"
+/>
+
+{/* Rotating Gradient Ring */}
+<motion.div
+  animate={{ rotate: 360 }}
+  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+  className="absolute left-1/2 top-1/2 w-[600px] h-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-transparent"
+  style={{
+    background: "conic-gradient(from 0deg, #6366f1, #a855f7, #ec4899, #6366f1)",
+    WebkitMask: "radial-gradient(circle 280px at center, transparent 99%, black 100%)",
+    mask: "radial-gradient(circle 280px at center, transparent 99%, black 100%)"
+  }}
+/>
+
+{/* Animated Grid */}
+<motion.div
+  animate={{ y: [0, -40] }}
+  transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+  className="absolute inset-0 opacity-10"
+  style={{
+    backgroundImage:
+      "linear-gradient(rgba(255,255,255,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.2) 1px, transparent 1px)",
+    backgroundSize: "60px 60px"
+  }}
+/>
+
+{/* Larger Floating Particles */}
+{[...Array(25)].map((_, i) => (
+  <motion.div
+    key={i}
+    className="absolute w-2 h-2 rounded-full"
+    style={{
+      background:
+        i % 3 === 0
+          ? "#6366f1"
+          : i % 3 === 1
+          ? "#a855f7"
+          : "#ec4899",
+      left: `${Math.random() * 100}%`,
+      top: `${Math.random() * 100}%`
+    }}
+    animate={{
+      y: [0, -80, 0],
+      opacity: [0.3, 1, 0.3],
+      scale: [1, 1.8, 1]
+    }}
+    transition={{
+      duration: 6 + Math.random() * 4,
+      repeat: Infinity,
+      ease: "easeInOut"
+    }}
+  />
+))}
+
+{/* Enhanced Structured Output Card */}
+<motion.div
+  initial={{ y: 100, opacity: 0, scale: 0.8 }}
+  animate={{ y: 0, opacity: 1, scale: 1 }}
+  transition={{ duration: 1.2, delay: 1 }}
+  className="absolute bottom-24 right-1/4 w-80 h-44 bg-black/40 backdrop-blur-2xl border border-green-400/50 rounded-3xl p-6 shadow-[0_0_80px_rgba(34,197,94,0.4)]"
+>
+  <motion.div
+    animate={{ x: [-200, 200] }}
+    transition={{ duration: 2, repeat: Infinity }}
+    className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-30"
+  />
+
+  <div className="relative z-10">
+    <div className="w-1/2 h-3 bg-green-400 rounded mb-4"></div>
+    <div className="w-full h-2 bg-white/20 rounded mb-2"></div>
+    <div className="w-5/6 h-2 bg-white/20 rounded mb-2"></div>
+    <div className="w-4/6 h-2 bg-white/20 rounded"></div>
+  </div>
+</motion.div>
+
+
+    {/* ================= HERO TEXT ================= */}
+
+    <div className="relative h-[380px] w-full max-w-6xl flex items-center justify-center mb-0 z-10">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentHeroStep}
+          initial={{ opacity: 0, y: 30, filter: 'blur(15px)', scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, filter: 'blur(0px)', scale: 1 }}
+          exit={{ opacity: 0, y: -30, filter: 'blur(15px)', scale: 1.05 }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          className="absolute inset-x-0 flex flex-col items-center justify-center"
+        >
+          <h1 className="text-6xl md:text-[5.5rem] font-black mb-8 tracking-tighter leading-[0.95] text-white">
+            {heroContent[currentHeroStep].title} <br />
+            <span className={`text-transparent bg-clip-text bg-gradient-to-r ${heroContent[currentHeroStep].color} drop-shadow-2xl`}>
+              {heroContent[currentHeroStep].sub}
+            </span>
+          </h1>
+
+          <p className="text-lg md:text-2xl text-gray-400 max-w-2xl mx-auto leading-relaxed font-medium">
+            {heroContent[currentHeroStep].desc}
+          </p>
+        </motion.div>
+      </AnimatePresence>
+    </div>
+
+    {/* ================= CTA ================= */}
+
+    <motion.div 
+      initial={fadeUp}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.4, duration: 0.8 }}
+      className="flex flex-col items-center gap-10 relative z-20 mt-16"
+    >
+      <button
+        onClick={onGuestAccess}
+        className="group relative bg-white text-black hover:bg-gray-100 px-10 py-5 rounded-2xl font-bold text-xl shadow-[0_0_60px_rgba(255,255,255,0.15)] flex items-center justify-center gap-3 transition-all hover:scale-[1.05] active:scale-95"
+      >
+        Start Learning 
+        <ArrowRight size={22} className="group-hover:translate-x-2 transition-transform duration-300" />
+      </button>
+
+      <div className="inline-flex items-center gap-3 bg-white/[0.03] backdrop-blur-xl px-6 py-3 rounded-2xl border border-white/10 shadow-2xl">
+        <Sparkles size={16} className="text-yellow-500" />
+        <span className="hidden md:inline text-sm font-semibold tracking-wide text-gray-300 uppercase">
+          Smart summaries • Meaningful notes • Intelligent tests
+        </span>
+        <span className="md:hidden text-sm font-bold uppercase tracking-wider">
+          AI Powered Learning
+        </span>
+      </div>
+
+      <motion.div
+        animate={{ y: [0, 12, 0] }}
+        transition={{ duration: 2, repeat: Infinity }}
+        className="text-gray-600 mt-12 opacity-50"
+      >
+        <ChevronDown size={40} strokeWidth={1} />
+      </motion.div>
+    </motion.div>
+
+  </section>
 
         {/* Visualizing the Engine Section */}
         <section className="py-32 border-t border-white/5 bg-[#050505] relative z-20">
@@ -465,23 +635,73 @@ const Landing: React.FC<LandingProps> = ({ onLogin, onGuestAccess }) => {
       </main>
 
       {/* Footer */}
-      <footer className="py-12 border-t border-white/5 bg-[#0a0b0c] text-gray-400 text-sm">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-indigo-600 rounded-lg flex items-center justify-center">
-              <BrainCircuit className="text-white" size={14} />
-            </div>
-            <span className="font-bold text-white">Procastify</span>
-          </div>
+      <footer className="relative z-20 bg-[#070809] border-t border-white/5 pt-20 pb-10 text-gray-400">
+  <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
 
-          <p>© 2024 Procastify. All rights reserved.</p>
-
-          <div className="flex gap-4">
-             <a href="#" className="hover:text-white transition-colors"><Twitter size={18} /></a>
-             <a href="#" className="hover:text-white transition-colors"><Github size={18} /></a>
-          </div>
+    {/* Brand */}
+    <div>
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <BrainCircuit className="text-white" size={20} />
         </div>
-      </footer>
+        <span className="text-xl font-bold text-white">Procastify</span>
+      </div>
+      <p className="text-sm text-gray-500 leading-relaxed">
+        Turning chaos into clarity through intelligent learning systems.
+      </p>
+      <p className="mt-4 italic text-gray-600 text-xs">
+        “Mastery isn’t about time spent. It’s about focus applied.”
+      </p>
+    </div>
+
+    {/* Product */}
+    <div>
+      <h4 className="text-white font-semibold mb-4">Product</h4>
+      <ul className="space-y-2 text-sm">
+        <li><a href="#" className="hover:text-white transition-colors">Features</a></li>
+        <li><a href="#" className="hover:text-white transition-colors">Learning Feed</a></li>
+        <li><a href="#" className="hover:text-white transition-colors">Deep Focus</a></li>
+        <li><a href="#" className="hover:text-white transition-colors">Quizzes</a></li>
+      </ul>
+    </div>
+
+    {/* Resources */}
+    <div>
+      <h4 className="text-white font-semibold mb-4">Resources</h4>
+      <ul className="space-y-2 text-sm">
+        <li><a href="#" className="hover:text-white transition-colors">About Us</a></li>
+        <li><a href="#" className="hover:text-white transition-colors">FAQ</a></li>
+        <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
+        <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
+      </ul>
+    </div>
+
+    {/* Legal */}
+    <div>
+      <h4 className="text-white font-semibold mb-4">Legal</h4>
+      <ul className="space-y-2 text-sm">
+        <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
+        <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
+        <li><a href="#" className="hover:text-white transition-colors">Cookies</a></li>
+      </ul>
+
+      {/* Socials */}
+      <div className="flex gap-4 mt-6">
+        <a href="#" className="p-2 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
+          <Twitter size={18} />
+        </a>
+        <a href="#" className="p-2 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
+          <Github size={18} />
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div className="border-t border-white/5 mt-16 pt-6 text-center text-xs text-gray-600">
+    © 2024 Procastify. All rights reserved.
+  </div>
+</footer>
+
     </div>
   );
 };
