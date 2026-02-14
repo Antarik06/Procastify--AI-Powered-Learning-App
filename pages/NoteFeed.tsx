@@ -32,21 +32,21 @@ const ReelCard = ({ reel, isActive }: { reel: ReelItem; isActive: boolean }) => 
 
                 {/* Minimal Header */}
                 <div className="absolute top-10 left-0 right-0 text-center px-6">
-                    <span className="inline-block py-1 px-3 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-discord-textMuted uppercase tracking-widest backdrop-blur-md">
+                    <span className="inline-block py-1 px-3 rounded-full bg-white/5 border border-app-border text-xs font-bold text-app-textMuted uppercase tracking-widest backdrop-blur-md">
                         {reel.noteTitle} • {reel.index}/5
                     </span>
                 </div>
 
                 {/* MAIN CONTENT */}
                 <div className="px-8 py-12">
-                    <p className="text-3xl md:text-4xl font-bold text-white leading-tight text-center drop-shadow-2xl font-serif">
+                    <p className="text-3xl md:text-4xl font-bold text-app-text leading-tight text-center drop-shadow-2xl font-serif">
                         {reel.content}
                     </p>
                 </div>
 
                 {/* Footer hint */}
                 <div className="absolute bottom-12 left-0 right-0 text-center animate-bounce">
-                    <p className="text-xs text-white/30 font-medium">Swipe for next insight</p>
+                    <p className="text-xs text-app-text/30 font-medium">Swipe for next insight</p>
                 </div>
             </div>
         </div>
@@ -128,12 +128,12 @@ const NoteFeed: React.FC<NoteFeedProps> = ({ notes, user, onClose }) => {
             <div className="p-8 max-w-7xl mx-auto h-full flex flex-col animate-in fade-in">
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-discord-accent rounded-xl flex items-center justify-center shadow-lg shadow-discord-accent/20">
-                            <Play className="text-white" size={24} fill="currentColor" />
+                        <div className="w-12 h-12 bg-app-accent rounded-xl flex items-center justify-center shadow-lg shadow-discord-accent/20">
+                            <Play className="text-app-text" size={24} fill="currentColor" />
                         </div>
                         <div>
-                            <h2 className="text-3xl font-bold text-white">Learning Feed</h2>
-                            <p className="text-discord-textMuted text-sm">Select notes to generate your study reels.</p>
+                            <h2 className="text-3xl font-bold text-app-text">Learning Feed</h2>
+                            <p className="text-app-textMuted text-sm">Select notes to generate your study reels.</p>
                         </div>
                     </div>
                 </div>
@@ -141,8 +141,8 @@ const NoteFeed: React.FC<NoteFeedProps> = ({ notes, user, onClose }) => {
                 <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-3 gap-8">
 
                     {/* LEFT COLUMN: Note Selection (Vertical) */}
-                    <div className="lg:col-span-2 flex flex-col min-h-0 bg-discord-panel/50 rounded-2xl border border-white/5 p-6">
-                        <h3 className="text-sm font-bold text-discord-textMuted uppercase mb-4 flex items-center gap-2">
+                    <div className="lg:col-span-2 flex flex-col min-h-0 bg-app-panel/50 rounded-2xl border border-app-border p-6">
+                        <h3 className="text-sm font-bold text-app-textMuted uppercase mb-4 flex items-center gap-2">
                             <BookOpen size={16} /> Available Notes
                         </h3>
 
@@ -153,17 +153,17 @@ const NoteFeed: React.FC<NoteFeedProps> = ({ notes, user, onClose }) => {
                                     onClick={() => setSelectedNoteIds(prev => prev.includes(note.id) ? prev.filter(id => id !== note.id) : [...prev, note.id])}
                                     className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between group
                                     ${selectedNoteIds.includes(note.id)
-                                            ? 'bg-discord-accent/10 border-discord-accent text-white shadow-md'
-                                            : 'bg-discord-bg border-white/5 text-discord-textMuted hover:bg-[#2b2d31] hover:text-white'}`}
+                                            ? 'bg-app-accent/10 border-app-accent text-app-text shadow-md'
+                                            : 'bg-app-bg border-app-border text-app-textMuted hover:bg-app-panel hover:text-app-text'}`}
                                 >
                                     <div className="flex items-center gap-4">
                                         <div className={`w-6 h-6 rounded-md border flex items-center justify-center transition-colors shrink-0
-                                            ${selectedNoteIds.includes(note.id) ? 'bg-discord-accent border-discord-accent' : 'border-white/20 group-hover:border-white/40'}`}>
-                                            {selectedNoteIds.includes(note.id) && <CheckCircle size={14} className="text-white" />}
+                                            ${selectedNoteIds.includes(note.id) ? 'bg-app-accent border-app-accent' : 'border-app-border group-hover:border-app-accent/50'}`}>
+                                            {selectedNoteIds.includes(note.id) && <CheckCircle size={14} className="text-app-text" />}
                                         </div>
                                         <div className="min-w-0">
                                             <span className="font-bold text-sm block mb-1 truncate">{note.title}</span>
-                                            <span className="text-xs text-discord-textMuted/70 flex items-center gap-1.5">
+                                            <span className="text-xs text-app-textMuted/70 flex items-center gap-1.5">
                                                 <span className="px-1.5 py-0.5 bg-white/5 rounded text-[10px] truncate max-w-[80px]">{note.folder}</span>
                                                 <span className="shrink-0">•</span>
                                                 <span className="shrink-0">{new Date(note.lastModified).toLocaleDateString()}</span>
@@ -173,17 +173,17 @@ const NoteFeed: React.FC<NoteFeedProps> = ({ notes, user, onClose }) => {
                                 </div>
                             ))}
                             {notes.length === 0 && (
-                                <div className="text-center py-10 border-2 border-dashed border-white/5 rounded-xl">
-                                    <p className="text-discord-textMuted">No notes found. Create some notes first!</p>
+                                <div className="text-center py-10 border-2 border-dashed border-app-border rounded-xl">
+                                    <p className="text-app-textMuted">No notes found. Create some notes first!</p>
                                 </div>
                             )}
                         </div>
 
-                        <div className="pt-4 border-t border-white/5">
+                        <div className="pt-4 border-t border-app-border">
                             <button
                                 onClick={handleGenerate}
                                 disabled={selectedNoteIds.length === 0}
-                                className="w-full sm:w-auto px-8 bg-discord-green hover:bg-green-600 text-white py-3 rounded-xl font-bold text-lg transition-all disabled:opacity-50 disabled:grayscale flex items-center justify-center gap-3 shadow-lg hover:shadow-green-500/20"
+                                className="w-full sm:w-auto px-8 bg-discord-green hover:bg-green-600 text-app-text py-3 rounded-xl font-bold text-lg transition-all disabled:opacity-50 disabled:grayscale flex items-center justify-center gap-3 shadow-lg hover:shadow-green-500/20"
                             >
                                 Generate Feed <Play size={20} fill="currentColor" />
                             </button>
@@ -192,18 +192,18 @@ const NoteFeed: React.FC<NoteFeedProps> = ({ notes, user, onClose }) => {
 
                     {/* RIGHT COLUMN: Coming Soon Placeholder */}
                     <div className="flex flex-col gap-6">
-                        <div className="bg-gradient-to-br from-[#2b2d31] to-[#1e1f22] p-8 rounded-2xl border border-white/10 relative overflow-hidden group">
+                        <div className="bg-gradient-to-br from-[#2b2d31] to-[#1e1f22] p-8 rounded-2xl border border-app-border relative overflow-hidden group">
                             {/* Decorative Background Elements */}
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-discord-accent/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-app-accent/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
                             <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl -ml-5 -mb-5"></div>
 
                             <div className="relative z-10">
-                                <span className="inline-block py-1 px-3 rounded-full bg-discord-accent/20 border border-discord-accent/30 text-discord-accent text-xs font-bold uppercase tracking-wider mb-4">
+                                <span className="inline-block py-1 px-3 rounded-full bg-app-accent/20 border border-app-accent/30 text-app-accent text-xs font-bold uppercase tracking-wider mb-4">
                                     Coming Soon
                                 </span>
 
-                                <h3 className="text-2xl font-bold text-white mb-3">Immersive Learning</h3>
-                                <p className="text-discord-textMuted text-sm leading-relaxed mb-6">
+                                <h3 className="text-2xl font-bold text-app-text mb-3">Immersive Learning</h3>
+                                <p className="text-app-textMuted text-sm leading-relaxed mb-6">
                                     We're building a multimodal engine to turn your notes into video reels, image carousels, and interactive quizzes instantly.
                                 </p>
 
@@ -230,13 +230,13 @@ const NoteFeed: React.FC<NoteFeedProps> = ({ notes, user, onClose }) => {
                             </div>
                         </div>
 
-                        <div className="bg-discord-panel p-6 rounded-2xl border border-white/5 flex items-center gap-4 opacity-70">
+                        <div className="bg-app-panel p-6 rounded-2xl border border-app-border flex items-center gap-4 opacity-70">
                             <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center">
-                                <Clock size={20} className="text-discord-textMuted" />
+                                <Clock size={20} className="text-app-textMuted" />
                             </div>
                             <div>
-                                <p className="text-white font-bold text-sm">Study Streak</p>
-                                <p className="text-xs text-discord-textMuted">Keep generating reels to maintain momentum!</p>
+                                <p className="text-app-text font-bold text-sm">Study Streak</p>
+                                <p className="text-xs text-app-textMuted">Keep generating reels to maintain momentum!</p>
                             </div>
                         </div>
                     </div>
@@ -249,14 +249,14 @@ const NoteFeed: React.FC<NoteFeedProps> = ({ notes, user, onClose }) => {
     // --- VIEW: LOADING ---
     if (view === 'loading') {
         return (
-            <div className="fixed inset-0 z-[100] bg-[#111214] flex flex-col items-center justify-center text-white space-y-6">
+            <div className="fixed inset-0 z-[100] bg-[#111214] flex flex-col items-center justify-center text-app-text space-y-6">
                 <div className="relative">
-                    <div className="absolute inset-0 bg-discord-accent blur-xl opacity-20 animate-pulse"></div>
-                    <RefreshCw size={64} className="text-discord-accent animate-spin relative z-10" />
+                    <div className="absolute inset-0 bg-app-accent blur-xl opacity-20 animate-pulse"></div>
+                    <RefreshCw size={64} className="text-app-accent animate-spin relative z-10" />
                 </div>
                 <div className="text-center">
                     <h2 className="text-2xl font-bold mb-2">Curating your Feed...</h2>
-                    <p className="text-discord-textMuted">AI is slicing your notes into bite-sized reels.</p>
+                    <p className="text-app-textMuted">AI is slicing your notes into bite-sized reels.</p>
                 </div>
             </div>
         );
@@ -264,9 +264,9 @@ const NoteFeed: React.FC<NoteFeedProps> = ({ notes, user, onClose }) => {
 
     // --- VIEW: FEED ---
     return (
-        <div className="fixed inset-0 z-[100] bg-black text-white flex flex-col">
+        <div className="fixed inset-0 z-[100] bg-black text-app-text flex flex-col">
             <div className="absolute top-4 left-4 z-50 mix-blend-difference">
-                <button onClick={() => setView('selection')} className="p-3 bg-white/10 rounded-full text-white hover:bg-white/20 transition-all backdrop-blur-md border border-white/10">
+                <button onClick={() => setView('selection')} className="p-3 bg-white/10 rounded-full text-app-text hover:bg-white/20 transition-all backdrop-blur-md border border-app-border">
                     <ArrowLeft size={24} />
                 </button>
             </div>

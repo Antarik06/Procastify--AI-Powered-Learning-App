@@ -340,13 +340,13 @@ const Notes: React.FC<NotesProps> = ({
         <div className="flex justify-between items-center mb-8 max-w-6xl mx-auto">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl font-bold text-white">
+              <h1 className="text-3xl font-bold text-app-text">
                 {getHeaderTitle()}
               </h1>
               {activeFolderId !== undefined && (
                 <button
                   onClick={() => onNavigate("notes")}
-                  className="text-discord-textMuted hover:text-white transition-colors"
+                  className="text-app-textMuted hover:text-app-text transition-colors"
                   title="Clear filter"
                 >
                   <X size={20} />
@@ -354,7 +354,7 @@ const Notes: React.FC<NotesProps> = ({
               )}
             </div>
             {activeFolderId !== undefined && (
-              <p className="text-discord-textMuted text-sm">
+              <p className="text-app-textMuted text-sm">
                 {filteredNotes.length} note
                 {filteredNotes.length !== 1 ? "s" : ""}
               </p>
@@ -363,25 +363,25 @@ const Notes: React.FC<NotesProps> = ({
           <div className="flex gap-3">
             <button
               onClick={() => onNavigate("folders")}
-              className="bg-[#2b2d31] hover:bg-[#3f4147] border border-white/5 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all font-medium"
+              className="bg-app-panel hover:bg-app-hover border border-app-border text-app-text px-4 py-2 rounded-lg flex items-center gap-2 transition-all font-medium"
             >
               <FolderOpen size={18} /> Folders
             </button>
             <button
               onClick={() => onNavigate("store")}
-              className="bg-[#2b2d31] hover:bg-[#3f4147] border border-white/5 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all font-medium"
+              className="bg-app-panel hover:bg-app-hover border border-app-border text-app-text px-4 py-2 rounded-lg flex items-center gap-2 transition-all font-medium"
             >
               <Globe size={18} /> Community
             </button>
             <button
               onClick={() => setShowMigrationHub(true)}
-              className="bg-[#2b2d31] hover:bg-[#3f4147] border border-white/5 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all font-medium"
+              className="bg-app-panel hover:bg-app-hover border border-app-border text-app-text px-4 py-2 rounded-lg flex items-center gap-2 transition-all font-medium"
             >
               <Upload size={18} /> Import
             </button>
             <button
               onClick={createNote}
-              className="bg-discord-accent hover:bg-discord-accentHover text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors font-medium"
+              className="bg-app-accent hover:bg-app-accentHover text-app-text px-4 py-2 rounded-lg flex items-center gap-2 transition-colors font-medium"
             >
               <Plus size={18} /> New Note
             </button>
@@ -390,11 +390,11 @@ const Notes: React.FC<NotesProps> = ({
 
         <div className="mb-6 relative max-w-6xl mx-auto">
           <Search
-            className="absolute left-3 top-3 text-discord-textMuted"
+            className="absolute left-3 top-3 text-app-textMuted"
             size={20}
           />
           <input
-            className="w-full bg-discord-panel border border-white/5 rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:border-discord-accent transition-all"
+            className="w-full bg-app-panel border border-app-border rounded-lg pl-10 pr-4 py-3 text-app-text focus:outline-none focus:border-app-accent transition-all"
             placeholder="Search notes..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -412,12 +412,12 @@ const Notes: React.FC<NotesProps> = ({
               <div
                 key={note.id}
                 onClick={() => setSelectedNoteId(note.id)}
-                className="bg-discord-panel aspect-video rounded-xl border border-white/5 hover:border-discord-accent/50 cursor-pointer transition-all group relative overflow-hidden shadow-sm hover:shadow-md flex flex-col"
+                className="bg-app-panel aspect-video rounded-xl border border-app-border hover:border-app-accent/50 cursor-pointer transition-all group relative overflow-hidden shadow-sm hover:shadow-md flex flex-col"
               >
                 {/* Folder Badge */}
                 {note.folderId && (
                   <div
-                    className="absolute top-3 left-3 px-2 py-1 rounded text-xs font-medium text-white z-20"
+                    className="absolute top-3 left-3 px-2 py-1 rounded text-xs font-medium text-app-text z-20"
                     style={{
                       backgroundColor: folderColor || "#5865F2",
                     }}
@@ -428,7 +428,7 @@ const Notes: React.FC<NotesProps> = ({
                 )}
 
                 {/* Preview Area - Simple representation */}
-                <div className="flex-1 bg-[#2b2d31] relative overflow-hidden">
+                <div className="flex-1 bg-app-panel relative overflow-hidden">
                   {/* Mini Canvas Preview */}
                   <div className="absolute inset-0 opacity-50 scale-50 origin-top-left w-[200%] h-[200%] pointer-events-none">
                     {elements.slice(0, 5).map((el, i) => (
@@ -449,16 +449,16 @@ const Notes: React.FC<NotesProps> = ({
                   </div>
                 </div>
 
-                <div className="p-4 bg-discord-panel z-10 border-t border-white/5">
-                  <h3 className="font-bold text-lg text-white truncate">
+                <div className="p-4 bg-app-panel z-10 border-t border-app-border">
+                  <h3 className="font-bold text-lg text-app-text truncate">
                     {note.title}
                   </h3>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs text-discord-textMuted">
+                    <span className="text-xs text-app-textMuted">
                       {elements.length} canvas items
                     </span>
-                    <span className="text-xs text-discord-textMuted">•</span>
-                    <span className="text-xs text-discord-textMuted">
+                    <span className="text-xs text-app-textMuted">•</span>
+                    <span className="text-xs text-app-textMuted">
                       {new Date(note.lastModified).toLocaleDateString()}
                     </span>
                   </div>
@@ -466,7 +466,7 @@ const Notes: React.FC<NotesProps> = ({
 
                 <button
                   onClick={(e) => deleteNote(note.id, e)}
-                  className="absolute top-3 right-3 p-2 bg-black/60 hover:bg-red-500 rounded-lg text-white opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm z-20"
+                  className="absolute top-3 right-3 p-2 bg-black/60 hover:bg-red-500 rounded-lg text-app-text opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm z-20"
                 >
                   <Trash2 size={16} />
                 </button>
@@ -479,13 +479,13 @@ const Notes: React.FC<NotesProps> = ({
         {filteredNotes.length === 0 && (
           <div className="text-center py-16 max-w-6xl mx-auto">
             <FileText
-              className="mx-auto text-discord-textMuted mb-4"
+              className="mx-auto text-app-textMuted mb-4"
               size={64}
             />
-            <h3 className="text-xl font-bold text-white mb-2">
+            <h3 className="text-xl font-bold text-app-text mb-2">
               {search ? "No notes found" : "No notes yet"}
             </h3>
-            <p className="text-discord-textMuted mb-6">
+            <p className="text-app-textMuted mb-6">
               {search
                 ? "Try a different search term"
                 : activeFolderId !== undefined
@@ -495,7 +495,7 @@ const Notes: React.FC<NotesProps> = ({
             {!search && (
               <button
                 onClick={createNote}
-                className="bg-discord-accent hover:bg-discord-accentHover text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                className="bg-app-accent hover:bg-app-accentHover text-app-text px-6 py-3 rounded-lg font-medium transition-colors"
               >
                 Create Note
               </button>
@@ -516,13 +516,13 @@ const Notes: React.FC<NotesProps> = ({
   if (!activeNote) return null;
 
   return (
-    <div className="h-screen flex flex-col bg-[#1e1f22] overflow-hidden">
+    <div className="h-screen flex flex-col bg-app-bg overflow-hidden">
       {/* Header */}
-      <div className="h-16 border-b border-white/10 flex items-center justify-between px-6 bg-discord-panel shrink-0 z-50 shadow-sm">
+      <div className="h-16 border-b border-app-border flex items-center justify-between px-6 bg-app-panel shrink-0 z-50 shadow-sm">
         <div className="flex items-center gap-4">
           <button
             onClick={() => setSelectedNoteId(null)}
-            className="text-discord-textMuted hover:text-white transition-colors p-2 hover:bg-white/5 rounded-lg"
+            className="text-app-textMuted hover:text-app-text transition-colors p-2 hover:bg-white/5 rounded-lg"
           >
             <ChevronLeft size={20} />
           </button>
@@ -534,8 +534,8 @@ const Notes: React.FC<NotesProps> = ({
             onChange={(e) => updateTitle(e.target.value)}
             onFocus={() => setIsEditingTitle(true)}
             onBlur={() => setIsEditingTitle(false)}
-            className={`bg-transparent text-white font-bold text-xl focus:outline-none w-64 px-3 py-1.5 rounded-lg transition-all border border-transparent
-                ${isEditingTitle ? "bg-black/20 border-white/10" : "hover:bg-white/5 hover:border-white/5"}
+            className={`bg-transparent text-app-text font-bold text-xl focus:outline-none w-64 px-3 py-1.5 rounded-lg transition-all border border-transparent
+                ${isEditingTitle ? "bg-app-panel border-app-border" : "hover:bg-white/5 hover:border-app-border"}
             `}
             placeholder="Untitled Note"
           />
@@ -546,7 +546,7 @@ const Notes: React.FC<NotesProps> = ({
             onChange={(e) =>
               updateNoteFolder(activeNote.id, e.target.value || null)
             }
-            className="bg-black/20 border border-white/10 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-discord-accent transition-all"
+            className="bg-app-panel border border-app-border rounded-lg px-3 py-1.5 text-app-text text-sm focus:outline-none focus:border-app-accent transition-all"
           >
             <option value="">Uncategorized</option>
             {folders.map((folder) => (
@@ -558,12 +558,12 @@ const Notes: React.FC<NotesProps> = ({
         </div>
 
         {/* View Toggles */}
-        <div className="flex bg-black/20 p-1 rounded-lg border border-white/5 items-center">
+        <div className="flex bg-app-panel p-1 rounded-lg border border-app-border items-center">
           {!user.isGuest && (
             <>
               <button
                 onClick={handleTogglePublish}
-                className={`p-2 rounded-md transition-all flex items-center gap-2 ${activeNote.isPublic ? "bg-green-600 text-white" : "text-discord-textMuted hover:text-white hover:bg-white/5"}`}
+                className={`p-2 rounded-md transition-all flex items-center gap-2 ${activeNote.isPublic ? "bg-green-600 text-app-text" : "text-app-textMuted hover:text-app-text hover:bg-white/5"}`}
                 title={
                   activeNote.isPublic
                     ? "Published (Click to unpublish)"
@@ -596,7 +596,7 @@ const Notes: React.FC<NotesProps> = ({
             <>
               <button
                 onClick={() => setViewMode("document")}
-                className={`p-2 rounded-md transition-all flex items-center gap-2 ${viewMode === "document" ? "bg-[#5865F2] text-white" : "text-discord-textMuted hover:text-white"}`}
+                className={`p-2 rounded-md transition-all flex items-center gap-2 ${viewMode === "document" ? "bg-[#5865F2] text-app-text" : "text-app-textMuted hover:text-app-text"}`}
                 title="Document Only"
               >
                 <FileText size={18} />
@@ -604,7 +604,7 @@ const Notes: React.FC<NotesProps> = ({
               <div className="w-[1px] bg-white/10 my-1 mx-1"></div>
               <button
                 onClick={() => setViewMode("split")}
-                className={`p-2 rounded-md transition-all flex items-center gap-2 ${viewMode === "split" ? "bg-[#5865F2] text-white" : "text-discord-textMuted hover:text-white"}`}
+                className={`p-2 rounded-md transition-all flex items-center gap-2 ${viewMode === "split" ? "bg-[#5865F2] text-app-text" : "text-app-textMuted hover:text-app-text"}`}
                 title="Split View"
               >
                 <SplitSquareHorizontal size={18} />
@@ -612,7 +612,7 @@ const Notes: React.FC<NotesProps> = ({
               <div className="w-[1px] bg-white/10 my-1 mx-1"></div>
               <button
                 onClick={() => setViewMode("canvas")}
-                className={`p-2 rounded-md transition-all flex items-center gap-2 ${viewMode === "canvas" ? "bg-[#5865F2] text-white" : "text-discord-textMuted hover:text-white"}`}
+                className={`p-2 rounded-md transition-all flex items-center gap-2 ${viewMode === "canvas" ? "bg-[#5865F2] text-app-text" : "text-app-textMuted hover:text-app-text"}`}
                 title="Canvas Only"
               >
                 <ImageIcon size={18} />
@@ -627,7 +627,7 @@ const Notes: React.FC<NotesProps> = ({
         {/* Document Section */}
         {(viewMode === "document" || viewMode === "split") && (
           <div
-            className={`bg-[#1e1f22] flex flex-col overflow-hidden`}
+            className={`bg-app-bg flex flex-col overflow-hidden`}
             style={{
               width: viewMode === "split" ? `${splitPosition}%` : "100%",
             }}
@@ -643,14 +643,14 @@ const Notes: React.FC<NotesProps> = ({
         {/* Resizable Divider - Only in split mode */}
         {viewMode === "split" && (
           <div
-            className={`w-2 bg-[#2b2d31] hover:bg-discord-accent/50 cursor-col-resize flex items-center justify-center transition-colors group ${isDragging ? "bg-discord-accent" : ""}`}
+            className={`w-2 bg-app-panel hover:bg-app-accent/50 cursor-col-resize flex items-center justify-center transition-colors group ${isDragging ? "bg-app-accent" : ""}`}
             onMouseDown={(e) => {
               e.preventDefault();
               setIsDragging(true);
             }}
           >
             <div
-              className={`w-1 h-12 rounded-full transition-colors ${isDragging ? "bg-discord-accent" : "bg-white/20 group-hover:bg-discord-accent/70"}`}
+              className={`w-1 h-12 rounded-full transition-colors ${isDragging ? "bg-app-accent" : "bg-white/20 group-hover:bg-app-accent/70"}`}
             />
           </div>
         )}
@@ -658,7 +658,7 @@ const Notes: React.FC<NotesProps> = ({
         {/* Canvas Section */}
         {(viewMode === "canvas" || viewMode === "split") && (
           <div
-            className={`bg-[#1e1f22] overflow-hidden`}
+            className={`bg-app-bg overflow-hidden`}
             style={{
               width: viewMode === "split" ? `${100 - splitPosition}%` : "100%",
             }}

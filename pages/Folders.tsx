@@ -138,19 +138,19 @@ const Folders: React.FC<FoldersProps> = ({
   ).length;
 
   return (
-    <div className="p-8 h-full overflow-y-auto bg-[#1e1f22]">
+    <div className="p-8 h-full overflow-y-auto">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Folders</h1>
-            <p className="text-discord-textMuted">
+            <h1 className="text-3xl font-bold text-app-text mb-2">Folders</h1>
+            <p className="text-app-textMuted">
               Organize your notes into folders
             </p>
           </div>
           <button
             onClick={() => setIsCreating(true)}
-            className="bg-discord-accent hover:bg-discord-accentHover text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors font-medium"
+            className="bg-app-accent hover:bg-app-accent/80 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors font-medium"
           >
             <Plus size={18} /> New Folder
           </button>
@@ -160,11 +160,11 @@ const Folders: React.FC<FoldersProps> = ({
         <div className="flex gap-4 mb-6">
           <div className="flex-1 relative">
             <Search
-              className="absolute left-3 top-3 text-discord-textMuted"
+              className="absolute left-3 top-3 text-app-textMuted"
               size={20}
             />
             <input
-              className="w-full bg-discord-panel border border-white/5 rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:border-discord-accent transition-all"
+              className="w-full bg-app-panel border border-app-border rounded-lg pl-10 pr-4 py-3 text-app-text focus:outline-none focus:border-app-accent transition-all"
               placeholder="Search folders..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -175,7 +175,7 @@ const Folders: React.FC<FoldersProps> = ({
             onChange={(e) =>
               setSortBy(e.target.value as "name" | "count" | "recent")
             }
-            className="bg-discord-panel border border-white/5 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-discord-accent transition-all"
+            className="bg-app-panel border border-app-border rounded-lg px-4 py-3 text-app-text focus:outline-none focus:border-app-accent transition-all"
           >
             <option value="name">Sort by Name</option>
             <option value="count">Sort by Note Count</option>
@@ -185,15 +185,15 @@ const Folders: React.FC<FoldersProps> = ({
 
         {/* Create Folder Form */}
         {isCreating && (
-          <div className="bg-discord-panel border border-white/10 rounded-xl p-6 mb-6 animate-in fade-in">
-            <h3 className="text-white font-bold mb-4">Create New Folder</h3>
+          <div className="bg-app-panel border border-app-border rounded-xl p-6 mb-6 animate-in fade-in">
+            <h3 className="text-app-text font-bold mb-4">Create New Folder</h3>
             <div className="flex gap-3">
               <input
                 type="text"
                 value={newFolderName}
                 onChange={(e) => setNewFolderName(e.target.value)}
                 placeholder="Folder name..."
-                className="flex-1 bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-discord-accent"
+                className="flex-1 bg-app-bg border border-app-border rounded-lg px-4 py-2 text-app-text focus:outline-none focus:border-app-accent"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") createFolder();
                   if (e.key === "Escape") setIsCreating(false);
@@ -202,7 +202,7 @@ const Folders: React.FC<FoldersProps> = ({
               />
               <button
                 onClick={createFolder}
-                className="bg-discord-accent hover:bg-discord-accentHover text-white px-4 py-2 rounded-lg transition-colors"
+                className="bg-app-accent hover:bg-app-accent/80 text-white px-4 py-2 rounded-lg transition-colors"
               >
                 <Check size={20} />
               </button>
@@ -211,7 +211,7 @@ const Folders: React.FC<FoldersProps> = ({
                   setIsCreating(false);
                   setNewFolderName("");
                 }}
-                className="bg-[#313338] hover:bg-[#3f4147] text-white px-4 py-2 rounded-lg transition-colors"
+                className="bg-app-hover hover:bg-app-border text-app-text px-4 py-2 rounded-lg transition-colors"
               >
                 <X size={20} />
               </button>
@@ -221,27 +221,27 @@ const Folders: React.FC<FoldersProps> = ({
 
         {/* Uncategorized Section */}
         <div
-          className="bg-discord-panel border border-white/5 rounded-xl p-6 mb-4 hover:border-discord-accent/50 cursor-pointer transition-all group"
+          className="bg-app-panel border border-app-border rounded-xl p-6 mb-4 hover:border-app-accent/50 cursor-pointer transition-all group"
           onClick={() => onNavigate("notes", null)}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gray-600 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-gray-500 rounded-lg flex items-center justify-center">
                 <FileText className="text-white" size={24} />
               </div>
               <div>
-                <h3 className="text-white font-bold text-lg">Uncategorized</h3>
-                <p className="text-discord-textMuted text-sm">
+                <h3 className="text-app-text font-bold text-lg">Uncategorized</h3>
+                <p className="text-app-textMuted text-sm">
                   Notes without a folder
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-discord-textMuted">
+              <span className="text-app-textMuted">
                 {uncategorizedCount} note{uncategorizedCount !== 1 ? "s" : ""}
               </span>
               <ChevronRight
-                className="text-discord-textMuted group-hover:text-white group-hover:translate-x-1 transition-all"
+                className="text-app-textMuted group-hover:text-app-text group-hover:translate-x-1 transition-all"
                 size={20}
               />
             </div>
@@ -253,7 +253,7 @@ const Folders: React.FC<FoldersProps> = ({
           {sortedFolders.map((folder) => (
             <div
               key={folder.id}
-              className="bg-discord-panel border border-white/5 rounded-xl p-6 hover:border-discord-accent/50 transition-all group relative"
+              className="bg-app-panel border border-app-border rounded-xl p-6 hover:border-app-accent/50 transition-all group relative"
             >
               {/* Folder Content */}
               <div
@@ -279,15 +279,15 @@ const Folders: React.FC<FoldersProps> = ({
                           if (e.key === "Enter") saveEdit();
                           if (e.key === "Escape") setEditingFolderId(null);
                         }}
-                        className="w-full bg-black/20 border border-discord-accent rounded px-2 py-1 text-white text-lg font-bold focus:outline-none"
+                        className="w-full bg-app-bg border border-app-accent rounded px-2 py-1 text-app-text text-lg font-bold focus:outline-none"
                         autoFocus
                       />
                     ) : (
-                      <h3 className="text-white font-bold text-lg truncate">
+                      <h3 className="text-app-text font-bold text-lg truncate">
                         {folder.name}
                       </h3>
                     )}
-                    <p className="text-discord-textMuted text-sm mt-1">
+                    <p className="text-app-textMuted text-sm mt-1">
                       {folder.noteCount || 0} note
                       {folder.noteCount !== 1 ? "s" : ""}
                     </p>
@@ -327,7 +327,7 @@ const Folders: React.FC<FoldersProps> = ({
                       e.stopPropagation();
                       saveEdit();
                     }}
-                    className="flex-1 bg-discord-accent hover:bg-discord-accentHover text-white px-3 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+                    className="flex-1 bg-app-accent hover:bg-app-accent/80 text-white px-3 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
                   >
                     <Check size={16} />
                     Save
@@ -337,7 +337,7 @@ const Folders: React.FC<FoldersProps> = ({
                       e.stopPropagation();
                       setEditingFolderId(null);
                     }}
-                    className="flex-1 bg-[#313338] hover:bg-[#3f4147] text-white px-3 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+                    className="flex-1 bg-app-hover hover:bg-app-border text-app-text px-3 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
                   >
                     <X size={16} />
                     Cancel
@@ -352,13 +352,13 @@ const Folders: React.FC<FoldersProps> = ({
         {sortedFolders.length === 0 && !isCreating && (
           <div className="text-center py-16">
             <FolderOpen
-              className="mx-auto text-discord-textMuted mb-4"
+              className="mx-auto text-app-textMuted mb-4"
               size={64}
             />
-            <h3 className="text-xl font-bold text-white mb-2">
+            <h3 className="text-xl font-bold text-app-text mb-2">
               No folders yet
             </h3>
-            <p className="text-discord-textMuted mb-6">
+            <p className="text-app-textMuted mb-6">
               {search
                 ? "No folders match your search"
                 : "Create your first folder to organize your notes"}
@@ -366,7 +366,7 @@ const Folders: React.FC<FoldersProps> = ({
             {!search && (
               <button
                 onClick={() => setIsCreating(true)}
-                className="bg-discord-accent hover:bg-discord-accentHover text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                className="bg-app-accent hover:bg-app-accent/80 text-white px-6 py-3 rounded-lg font-medium transition-colors"
               >
                 Create Folder
               </button>

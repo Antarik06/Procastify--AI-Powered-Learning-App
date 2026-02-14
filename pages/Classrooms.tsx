@@ -91,7 +91,7 @@ const Classrooms: React.FC<ClassroomsProps> = ({ user, onNavigate }) => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-2">
+          <h1 className="text-3xl font-bold text-app-text flex items-center gap-2">
             <GraduationCap size={32} />
             My Classrooms
           </h1>
@@ -101,7 +101,7 @@ const Classrooms: React.FC<ClassroomsProps> = ({ user, onNavigate }) => {
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="bg-[#5865F2] hover:bg-[#4752c4] text-white px-6 py-3 rounded-xl font-medium transition-all flex items-center gap-2 shadow-lg shadow-[#5865F2]/20"
+          className="bg-[#5865F2] hover:bg-[#4752c4] text-app-text px-6 py-3 rounded-xl font-medium transition-all flex items-center gap-2 shadow-lg shadow-[#5865F2]/20"
         >
           <Plus size={20} />
           Create Classroom
@@ -113,18 +113,18 @@ const Classrooms: React.FC<ClassroomsProps> = ({ user, onNavigate }) => {
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-[#2b2d31] border border-white/5 rounded-xl p-12 text-center"
+          className="bg-app-panel border border-app-border rounded-xl p-12 text-center"
         >
           <div className="w-20 h-20 bg-[#5865F2]/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <GraduationCap size={40} className="text-[#5865F2]" />
           </div>
-          <h3 className="text-xl font-bold text-white mb-2">No Classrooms Yet</h3>
+          <h3 className="text-xl font-bold text-app-text mb-2">No Classrooms Yet</h3>
           <p className="text-gray-400 mb-6 max-w-md mx-auto">
             Create your first classroom to start inviting students and sharing resources
           </p>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="bg-[#5865F2] hover:bg-[#4752c4] text-white px-6 py-3 rounded-xl font-medium transition-all inline-flex items-center gap-2"
+            className="bg-[#5865F2] hover:bg-[#4752c4] text-app-text px-6 py-3 rounded-xl font-medium transition-all inline-flex items-center gap-2"
           >
             <Plus size={20} />
             Create Your First Classroom
@@ -139,7 +139,7 @@ const Classrooms: React.FC<ClassroomsProps> = ({ user, onNavigate }) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
               onClick={() => onNavigate('classroomDetail', classroom.id)}
-              className="bg-[#2b2d31] border border-white/5 rounded-xl p-6 hover:border-[#5865F2]/50 hover:bg-[#2b2d31]/80 transition-all text-left group"
+              className="bg-app-panel border border-app-border rounded-xl p-6 hover:border-[#5865F2]/50 hover:bg-app-panel/80 transition-all text-left group"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="w-12 h-12 bg-[#5865F2]/10 rounded-lg flex items-center justify-center">
@@ -147,7 +147,7 @@ const Classrooms: React.FC<ClassroomsProps> = ({ user, onNavigate }) => {
                 </div>
                 <ArrowRight size={20} className="text-gray-500 group-hover:text-[#5865F2] transition-colors" />
               </div>
-              <h3 className="text-lg font-bold text-white mb-2 line-clamp-1">
+              <h3 className="text-lg font-bold text-app-text mb-2 line-clamp-1">
                 {classroom.name}
               </h3>
               <p className="text-gray-400 text-sm mb-4 line-clamp-2 min-h-[40px]">
@@ -182,14 +182,14 @@ const Classrooms: React.FC<ClassroomsProps> = ({ user, onNavigate }) => {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-[#2b2d31] rounded-xl p-8 max-w-md w-full border border-white/10"
+              className="bg-app-panel rounded-xl p-8 max-w-md w-full border border-app-border"
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-white">Create Classroom</h2>
+                <h2 className="text-2xl font-bold text-app-text">Create Classroom</h2>
                 <button
                   onClick={() => !saving && setShowCreateModal(false)}
                   disabled={saving}
-                  className="text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+                  className="text-gray-400 hover:text-app-text transition-colors disabled:opacity-50"
                 >
                   <X size={24} />
                 </button>
@@ -203,7 +203,7 @@ const Classrooms: React.FC<ClassroomsProps> = ({ user, onNavigate }) => {
 
               <form onSubmit={handleCreateClassroom} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">
+                  <label className="block text-sm font-medium text-app-textMuted mb-2">
                     Classroom Name *
                   </label>
                   <input
@@ -212,17 +212,17 @@ const Classrooms: React.FC<ClassroomsProps> = ({ user, onNavigate }) => {
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="e.g., Introduction to React"
                     maxLength={100}
-                    className="w-full bg-[#1e1f22] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#5865F2] transition-colors placeholder:text-gray-600"
+                    className="w-full bg-app-bg border border-app-border rounded-lg px-4 py-3 text-app-text focus:outline-none focus:border-app-accent transition-colors placeholder:text-app-textMuted"
                     disabled={saving}
                     required
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-app-textMuted mt-1">
                     {formData.name.length}/100 characters
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">
+                  <label className="block text-sm font-medium text-app-textMuted mb-2">
                     Description (Optional)
                   </label>
                   <textarea
@@ -230,7 +230,7 @@ const Classrooms: React.FC<ClassroomsProps> = ({ user, onNavigate }) => {
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Brief description of the classroom..."
                     rows={4}
-                    className="w-full bg-[#1e1f22] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#5865F2] transition-colors placeholder:text-gray-600 resize-none"
+                    className="w-full bg-app-bg border border-app-border rounded-lg px-4 py-3 text-app-text focus:outline-none focus:border-app-accent transition-colors placeholder:text-app-textMuted resize-none"
                     disabled={saving}
                   />
                 </div>
@@ -240,14 +240,14 @@ const Classrooms: React.FC<ClassroomsProps> = ({ user, onNavigate }) => {
                     type="button"
                     onClick={() => setShowCreateModal(false)}
                     disabled={saving}
-                    className="flex-1 bg-[#1e1f22] hover:bg-[#1e1f22]/80 text-white py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
+                    className="flex-1 bg-app-hover hover:bg-app-border text-app-text py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={saving || !formData.name.trim()}
-                    className="flex-1 bg-[#5865F2] hover:bg-[#4752c4] text-white py-3 rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="flex-1 bg-app-accent hover:bg-app-accent/80 text-white py-3 rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {saving ? (
                       <>

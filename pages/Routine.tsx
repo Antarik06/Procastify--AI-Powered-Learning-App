@@ -177,31 +177,31 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
     const renderQueue = () => (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-            <div className="lg:col-span-1 bg-discord-panel p-6 rounded-2xl border border-white/5 h-fit">
-                <h3 className="font-bold text-white mb-4 flex items-center gap-2">
-                    <BrainCircuit size={18} className="text-discord-accent" /> Notes Library
+            <div className="lg:col-span-1 bg-app-panel p-6 rounded-2xl border border-app-border h-fit">
+                <h3 className="font-bold text-app-text mb-4 flex items-center gap-2">
+                    <BrainCircuit size={18} className="text-app-accent" /> Notes Library
                 </h3>
                 <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
                     {notes.map(note => {
                         const inQueue = queue.find(q => q.noteId === note.id);
                         return (
-                            <div key={note.id} className="p-3 bg-discord-bg rounded-xl border border-white/5 hover:border-discord-accent/30 transition-all">
+                            <div key={note.id} className="p-3 bg-app-bg rounded-xl border border-app-border hover:border-app-accent/30 transition-all">
                                 <div className="flex justify-between items-start mb-2">
-                                    <h4 className="font-medium text-white truncate w-32">{note.title}</h4>
+                                    <h4 className="font-medium text-app-text truncate w-32">{note.title}</h4>
                                     {inQueue ? (
                                         <span className="text-xs text-green-400 font-medium">In Queue</span>
                                     ) : (
                                         <button
                                             onClick={() => addToQueue(note.id)}
                                             disabled={!!loadingAnalysis}
-                                            className="p-1.5 bg-discord-accent hover:bg-discord-accentHover text-white rounded-lg transition-colors disabled:opacity-50"
+                                            className="p-1.5 bg-app-accent hover:bg-app-accentHover text-app-text rounded-lg transition-colors disabled:opacity-50"
                                         >
                                             {loadingAnalysis === note.id ? <RefreshCw size={14} className="animate-spin" /> : <Plus size={14} />}
                                         </button>
                                     )}
                                 </div>
                                 <div className="flex gap-2">
-                                    <span className="text-xs text-discord-textMuted bg-discord-panel px-2 py-0.5 rounded">{note.folder}</span>
+                                    <span className="text-xs text-app-textMuted bg-app-panel px-2 py-0.5 rounded">{note.folder}</span>
                                     {note.aiAnalysis && (
                                         <span className={`text-xs px-2 py-0.5 rounded capitalize ${getDifficultyColor(note.aiAnalysis.difficulty)}`}>
                                             {note.aiAnalysis.estimatedMinutes}m
@@ -211,22 +211,22 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
                             </div>
                         );
                     })}
-                    {notes.length === 0 && <p className="text-discord-textMuted text-sm">Create notes to study.</p>}
+                    {notes.length === 0 && <p className="text-app-textMuted text-sm">Create notes to study.</p>}
                 </div>
             </div>
 
 
             <div className="lg:col-span-2 space-y-6">
-                <div className="bg-discord-panel p-6 rounded-2xl border border-white/5 min-h-[400px]">
+                <div className="bg-app-panel p-6 rounded-2xl border border-app-border min-h-[400px]">
                     <div className="flex justify-between items-center mb-6">
                         <div>
-                            <h3 className="text-xl font-bold text-white">Active Learning Queue</h3>
-                            <p className="text-discord-textMuted text-sm">Select what you want to conquer today.</p>
+                            <h3 className="text-xl font-bold text-app-text">Active Learning Queue</h3>
+                            <p className="text-app-textMuted text-sm">Select what you want to conquer today.</p>
                         </div>
                         <button
                             onClick={generatePlan}
                             disabled={queue.length === 0 || generatingRoutine}
-                            className="bg-discord-green hover:bg-green-600 text-white px-6 py-2 rounded-xl font-bold flex items-center gap-2 transition-all disabled:opacity-50 disabled:grayscale"
+                            className="bg-discord-green hover:bg-green-600 text-app-text px-6 py-2 rounded-xl font-bold flex items-center gap-2 transition-all disabled:opacity-50 disabled:grayscale"
                         >
                             {generatingRoutine ? <RefreshCw className="animate-spin" /> : <PlayCircle />}
                             {generatingRoutine ? "Generating..." : "Generate Routine"}
@@ -234,9 +234,9 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
                     </div>
 
                     {queue.length === 0 ? (
-                        <div className="text-center py-20 border-2 border-dashed border-white/5 rounded-xl">
-                            <BrainCircuit size={48} className="mx-auto text-discord-textMuted opacity-30 mb-4" />
-                            <p className="text-discord-textMuted">Your queue is empty. Add notes from the library.</p>
+                        <div className="text-center py-20 border-2 border-dashed border-app-border rounded-xl">
+                            <BrainCircuit size={48} className="mx-auto text-app-textMuted opacity-30 mb-4" />
+                            <p className="text-app-textMuted">Your queue is empty. Add notes from the library.</p>
                         </div>
                     ) : (
                         <div className="space-y-4">
@@ -245,28 +245,28 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
                                 .map((item, idx) => {
                                     const note = notes.find(n => n.id === item.noteId);
                                     return (
-                                        <div key={item.id} className="bg-discord-bg p-4 rounded-xl border border-white/5 flex items-center justify-between group">
+                                        <div key={item.id} className="bg-app-bg p-4 rounded-xl border border-app-border flex items-center justify-between group">
                                             <div className="flex items-center gap-4">
-                                                <div className="flex flex-col items-center justify-center w-12 h-12 bg-discord-panel rounded-lg border border-white/5 text-discord-textMuted font-bold text-lg">
+                                                <div className="flex flex-col items-center justify-center w-12 h-12 bg-app-panel rounded-lg border border-app-border text-app-textMuted font-bold text-lg">
                                                     {idx + 1}
                                                 </div>
                                                 <div>
-                                                    <h4 className="font-bold text-white text-lg">{note?.title}</h4>
+                                                    <h4 className="font-bold text-app-text text-lg">{note?.title}</h4>
                                                     <div className="flex items-center gap-3 mt-1">
                                                         {note?.aiAnalysis ? (
                                                             <>
                                                                 <span className={`text-xs px-2 py-0.5 rounded capitalize ${getDifficultyColor(note?.aiAnalysis.difficulty)}`}>
                                                                     {note?.aiAnalysis.difficulty}
                                                                 </span>
-                                                                <span className="text-xs text-discord-textMuted flex items-center gap-1">
+                                                                <span className="text-xs text-app-textMuted flex items-center gap-1">
                                                                     <Clock size={12} /> {note?.aiAnalysis.estimatedMinutes}m est.
                                                                 </span>
-                                                                <span className="text-xs text-discord-textMuted capitalize">
+                                                                <span className="text-xs text-app-textMuted capitalize">
                                                                     Load: {note?.aiAnalysis.cognitiveLoad}
                                                                 </span>
                                                             </>
                                                         ) : (
-                                                            <span className="text-xs text-discord-textMuted italic">Analysis pending...</span>
+                                                            <span className="text-xs text-app-textMuted italic">Analysis pending...</span>
                                                         )}
                                                     </div>
                                                 </div>
@@ -279,13 +279,13 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
                                                         const updated = queue.map(q => q.id === item.id ? { ...q, priority: e.target.value as any } : q);
                                                         setQueue(updated);
                                                     }}
-                                                    className="bg-discord-panel text-sm text-white border border-white/10 rounded-lg px-2 py-1 focus:outline-none"
+                                                    className="bg-app-panel text-sm text-app-text border border-app-border rounded-lg px-2 py-1 focus:outline-none"
                                                 >
                                                     <option value="high">High Priority</option>
                                                     <option value="medium">Medium</option>
                                                     <option value="low">Low</option>
                                                 </select>
-                                                <button onClick={() => removeFromQueue(item.id)} className="text-discord-textMuted hover:text-red-400 transition-colors">
+                                                <button onClick={() => removeFromQueue(item.id)} className="text-app-textMuted hover:text-red-400 transition-colors">
                                                     <Trash2 size={18} />
                                                 </button>
                                             </div>
@@ -302,15 +302,15 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
     const renderSchedule = () => (
         <div className="max-w-4xl mx-auto">
             {routineMeta && (
-                <div className={`mb-8 p-4 border rounded-xl flex items-start gap-4 ${panicMode ? 'bg-red-500/10 border-red-500/20' : 'bg-discord-accent/10 border-discord-accent/20'}`}>
+                <div className={`mb-8 p-4 border rounded-xl flex items-start gap-4 ${panicMode ? 'bg-red-500/10 border-red-500/20' : 'bg-app-accent/10 border-app-accent/20'}`}>
                     <div className="mt-1">
-                        {panicMode ? <AlertTriangle className="text-red-500" size={24} /> : <BrainCircuit className="text-discord-accent" size={24} />}
+                        {panicMode ? <AlertTriangle className="text-red-500" size={24} /> : <BrainCircuit className="text-app-accent" size={24} />}
                     </div>
                     <div>
-                        <h4 className={`font-bold mb-1 ${panicMode ? 'text-red-400' : 'text-white'}`}>{panicMode ? "PANIC MODE ACTIVE" : "AI Projection"}</h4>
-                        <p className="text-discord-text leading-relaxed">{routineMeta.projection}</p>
+                        <h4 className={`font-bold mb-1 ${panicMode ? 'text-red-400' : 'text-app-text'}`}>{panicMode ? "PANIC MODE ACTIVE" : "AI Projection"}</h4>
+                        <p className="text-app-text leading-relaxed">{routineMeta.projection}</p>
                         <div className="flex items-center gap-2 mt-2">
-                            <span className="text-xs text-discord-textMuted uppercase tracking-wider font-bold">Confidence:</span>
+                            <span className="text-xs text-app-textMuted uppercase tracking-wider font-bold">Confidence:</span>
                             <span className={`text-xs font-bold uppercase ${routineMeta.confidence === 'high' ? 'text-green-400' : 'text-yellow-400'}`}>
                                 {routineMeta.confidence}
                             </span>
@@ -323,7 +323,7 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
                 {panicMode && (
                     <button
                         onClick={undoPanicMode}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-all bg-discord-panel hover:bg-white/10 text-white border border-white/10"
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-all bg-app-panel hover:bg-white/10 text-app-text border border-app-border"
                     >
                         <RefreshCw size={16} /> Undo Panic
                     </button>
@@ -334,7 +334,7 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-all shadow-lg
                     ${panicMode
                             ? 'bg-red-500/20 text-red-400 border border-red-500/50 cursor-default'
-                            : 'bg-red-500 hover:bg-red-600 text-white animate-pulse'}`}
+                            : 'bg-red-500 hover:bg-red-600 text-app-text animate-pulse'}`}
                 >
                     {generatingRoutine && panicMode ? <RefreshCw className="animate-spin" size={16} /> : <Zap size={16} fill="currentColor" />}
                     {panicMode ? "Panic Mode Active" : "PANIC BUTTON"}
@@ -346,7 +346,7 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
                 <div className="absolute left-6 top-6 bottom-6 w-0.5 bg-white/5"></div>
 
                 {tasks.length === 0 && (
-                    <div className="text-center text-discord-textMuted py-10">
+                    <div className="text-center text-app-textMuted py-10">
                         No schedule yet. Go to Plan tab to generate one.
                     </div>
                 )}
@@ -356,16 +356,16 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
 
                         <div className={`
                           w-12 h-12 rounded-full border-4 shrink-0 flex items-center justify-center z-10 transition-colors
-                          ${task.completed ? 'bg-discord-bg border-discord-textMuted' :
-                                task.type === 'procastify' ? 'bg-discord-bg border-purple-400' :
-                                    task.type === 'break' ? 'bg-discord-bg border-green-400' :
-                                        panicMode ? 'bg-discord-bg border-red-400' :
-                                            'bg-discord-panel border-discord-accent'}
+                          ${task.completed ? 'bg-app-bg border-discord-textMuted' :
+                                task.type === 'procastify' ? 'bg-app-bg border-purple-400' :
+                                    task.type === 'break' ? 'bg-app-bg border-green-400' :
+                                        panicMode ? 'bg-app-bg border-red-400' :
+                                            'bg-app-panel border-app-accent'}
                       `}>
-                            {task.completed ? <CheckCircle size={20} className="text-discord-textMuted" /> :
+                            {task.completed ? <CheckCircle size={20} className="text-app-textMuted" /> :
                                 task.type === 'procastify' ? <Coffee size={20} className="text-purple-400" /> :
                                     task.type === 'break' ? <Coffee size={20} className="text-green-400" /> :
-                                        <span className="font-bold text-white text-sm">{idx + 1}</span>
+                                        <span className="font-bold text-app-text text-sm">{idx + 1}</span>
                             }
                         </div>
 
@@ -375,7 +375,7 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
                           ${task.type === 'procastify' ? 'bg-purple-500/5 border-purple-500/20' :
                                 task.type === 'break' ? 'bg-green-500/5 border-green-500/20' :
                                     panicMode ? 'bg-red-500/5 border-red-500/20' :
-                                        'bg-discord-panel border-white/5 hover:border-discord-accent/50'}
+                                        'bg-app-panel border-app-border hover:border-app-accent/50'}
                       `}>
                             <div className="flex justify-between items-start mb-2">
                                 <div>
@@ -383,20 +383,20 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
                                         <span className={`text-xs font-bold uppercase tracking-wider
                                           ${task.type === 'procastify' ? 'text-purple-400' :
                                                 task.type === 'break' ? 'text-green-400' :
-                                                    panicMode ? 'text-red-400' : 'text-discord-accent'}
+                                                    panicMode ? 'text-red-400' : 'text-app-accent'}
                                       `}>
                                             {task.type === 'procastify' ? 'Guilt-Free Break' : task.type}
                                         </span>
-                                        <span className="text-xs text-discord-textMuted flex items-center gap-1">
+                                        <span className="text-xs text-app-textMuted flex items-center gap-1">
                                             <Clock size={12} /> {task.durationMinutes}m
                                         </span>
                                     </div>
-                                    <h3 className="font-bold text-xl text-white">{task.title}</h3>
+                                    <h3 className="font-bold text-xl text-app-text">{task.title}</h3>
                                 </div>
                                 <button
                                     onClick={() => updateTaskStatus(task.id)}
                                     className={`w-8 h-8 rounded-full border flex items-center justify-center hover:bg-white/10 transition-colors
-                                      ${task.completed ? 'bg-discord-accent border-discord-accent text-white' : 'border-white/20 text-white'}
+                                      ${task.completed ? 'bg-app-accent border-app-accent text-app-text' : 'border-white/20 text-app-text'}
                                   `}
                                 >
                                     {task.completed && <CheckCircle size={16} />}
@@ -406,7 +406,7 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
                             {task.type === 'focus' && !task.completed && (
                                 <button
                                     onClick={() => onStartTask(task)}
-                                    className="mt-4 w-full py-2 bg-white/5 hover:bg-white/10 rounded-lg text-sm font-medium text-white transition-colors flex items-center justify-center gap-2"
+                                    className="mt-4 w-full py-2 bg-white/5 hover:bg-white/10 rounded-lg text-sm font-medium text-app-text transition-colors flex items-center justify-center gap-2"
                                 >
                                     <PlayCircle size={16} /> Start Timer
                                 </button>
@@ -423,16 +423,16 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
 
             <div className="flex justify-between items-center mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                        <CalendarCheck className="text-discord-accent" /> Intelligent Routine
+                    <h1 className="text-3xl font-bold text-app-text flex items-center gap-3">
+                        <CalendarCheck className="text-app-accent" /> Intelligent Routine
                     </h1>
-                    <p className="text-discord-textMuted mt-1">
+                    <p className="text-app-textMuted mt-1">
                         Optimized for <strong>{user.energyPeak}</strong> energy peak. {user.freeTimeHours}h free today.
                     </p>
                 </div>
                 <button
                     onClick={() => setShowSettings(!showSettings)}
-                    className="p-3 bg-discord-panel hover:bg-discord-hover text-discord-text rounded-xl transition-colors border border-white/5"
+                    className="p-3 bg-app-panel hover:bg-app-hover text-app-text rounded-xl transition-colors border border-app-border"
                 >
                     <Settings size={20} />
                 </button>
@@ -440,24 +440,24 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
 
 
             {showSettings && (
-                <div className="mb-8 bg-discord-panel p-6 rounded-2xl border border-white/5 animate-in slide-in-from-top-2">
-                    <h3 className="font-bold text-white mb-4">Daily Calibration</h3>
+                <div className="mb-8 bg-app-panel p-6 rounded-2xl border border-app-border animate-in slide-in-from-top-2">
+                    <h3 className="font-bold text-app-text mb-4">Daily Calibration</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
-                            <label className="text-xs text-discord-textMuted uppercase font-bold block mb-2">Available Hours</label>
+                            <label className="text-xs text-app-textMuted uppercase font-bold block mb-2">Available Hours</label>
                             <input
                                 type="number"
                                 value={user.freeTimeHours}
                                 onChange={(e) => setUser({ ...user, freeTimeHours: Number(e.target.value) })}
-                                className="w-full bg-discord-bg border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none"
+                                className="w-full bg-app-bg border border-app-border rounded-lg px-4 py-2 text-app-text focus:outline-none"
                             />
                         </div>
                         <div>
-                            <label className="text-xs text-discord-textMuted uppercase font-bold block mb-2">Energy Peak</label>
+                            <label className="text-xs text-app-textMuted uppercase font-bold block mb-2">Energy Peak</label>
                             <select
                                 value={user.energyPeak}
                                 onChange={(e) => setUser({ ...user, energyPeak: e.target.value as any })}
-                                className="w-full bg-discord-bg border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none"
+                                className="w-full bg-app-bg border border-app-border rounded-lg px-4 py-2 text-app-text focus:outline-none"
                             >
                                 <option value="morning">Morning</option>
                                 <option value="afternoon">Afternoon</option>
@@ -465,11 +465,11 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
                             </select>
                         </div>
                         <div>
-                            <label className="text-xs text-discord-textMuted uppercase font-bold block mb-2">Distraction Level</label>
+                            <label className="text-xs text-app-textMuted uppercase font-bold block mb-2">Distraction Level</label>
                             <select
                                 value={user.distractionLevel}
                                 onChange={(e) => setUser({ ...user, distractionLevel: e.target.value as any })}
-                                className="w-full bg-discord-bg border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none"
+                                className="w-full bg-app-bg border border-app-border rounded-lg px-4 py-2 text-app-text focus:outline-none"
                             >
                                 <option value="low">Low (Deep Work)</option>
                                 <option value="medium">Medium</option>
@@ -481,7 +481,7 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
             )}
 
 
-            <div className="flex gap-1 bg-discord-panel p-1 rounded-xl border border-white/5 w-fit mb-8">
+            <div className="flex gap-1 bg-app-panel p-1 rounded-xl border border-app-border w-fit mb-8">
                 {[
                     { id: 'plan', label: '1. Plan & Queue', icon: BrainCircuit },
                     { id: 'schedule', label: '2. Today\'s Schedule', icon: CalendarCheck },
@@ -491,8 +491,8 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
                         onClick={() => setActiveTab(tab.id as any)}
                         className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all
                     ${activeTab === tab.id
-                                ? 'bg-discord-accent text-white shadow-md'
-                                : 'text-discord-textMuted hover:bg-white/5 hover:text-white'}
+                                ? 'bg-app-accent text-app-text shadow-md'
+                                : 'text-app-textMuted hover:bg-white/5 hover:text-app-text'}
                 `}
                     >
                         <tab.icon size={16} /> {tab.label}

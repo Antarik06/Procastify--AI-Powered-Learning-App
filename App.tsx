@@ -1,42 +1,28 @@
-import React, { useState, useEffect } from "react";
-import {
-  ViewState,
-  UserPreferences,
-  Summary,
-  Note,
-  RoutineTask,
-  UserStats,
-  Flashcard,
-  NoteElement,
-  Folder,
-} from "./types";
-import { StorageService } from "./services/storageService";
-import { auth } from "./firebaseConfig";
-import {
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-} from "firebase/auth";
-import Sidebar from "./components/Sidebar";
-import Landing from "./pages/Landing";
-import Dashboard from "./pages/Dashboard";
-import Summarizer from "./pages/Summarizer";
-import Notes from "./pages/Notes";
-import Routine from "./pages/Routine";
-import Focus from "./pages/Focus";
-import QuizPage from "./pages/Quiz";
-import NoteFeed from "./pages/NoteFeed";
-import NotesStore from "./pages/NotesStore";
-import Folders from "./pages/Folders";
-import Auth from "./pages/Auth";
-import RoleSelection from "./pages/RoleSelection";
-import TeacherDashboard from "./pages/TeacherDashboard";
-import Classrooms from "./pages/Classrooms";
-import ClassroomDetail from "./pages/ClassroomDetail";
-import StudentClassrooms from "./pages/StudentClassrooms";
-import StudentClassroomView from "./pages/StudentClassroomView";
-import { AlertCircle, LogIn, X, Loader2 } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { ViewState, UserPreferences, Summary, Note, RoutineTask, UserStats, Flashcard, NoteElement, Folder } from './types';
+import { StorageService } from './services/storageService';
+import { auth } from './firebaseConfig';
+import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
+import { ThemeProvider } from './contexts/ThemeContext';
+import Sidebar from './components/Sidebar';
+import Landing from './pages/Landing';
+import Dashboard from './pages/Dashboard';
+import Summarizer from './pages/Summarizer';
+import Notes from './pages/Notes';
+import Routine from './pages/Routine';
+import Focus from './pages/Focus';
+import QuizPage from './pages/Quiz';
+import NoteFeed from './pages/NoteFeed';
+import NotesStore from './pages/NotesStore';
+import StudentClassrooms from './pages/StudentClassrooms';
+import StudentClassroomView from './pages/StudentClassroomView';
+import Classrooms from './pages/Classrooms';
+import ClassroomDetail from './pages/ClassroomDetail';
+import TeacherDashboard from './pages/TeacherDashboard';
+import Folders from './pages/Folders';
+import RoleSelection from './pages/RoleSelection';
+import Auth from './pages/Auth';
+import { AlertCircle, LogIn, X, Loader2 } from 'lucide-react';
 
 const App: React.FC = () => {
   const [view, setView] = useState<ViewState | "folders">("landing");
@@ -319,7 +305,7 @@ const App: React.FC = () => {
 
   if (loadingAuth) {
     return (
-      <div className="min-h-screen bg-[#1e1f22] flex items-center justify-center text-white">
+      <div className="min-h-screen bg-app-bg flex items-center justify-center text-app-text">
         <Loader2 className="animate-spin mr-2" /> Loading Procastify...
       </div>
     );
@@ -352,7 +338,7 @@ const App: React.FC = () => {
     return <Focus initialTask={focusTask} onExit={handleFocusExit} />;
 
   return (
-    <div className="flex min-h-screen bg-[#1e1f22]">
+    <div className="flex min-h-screen bg-app-bg">
       <Sidebar
         currentView={view === "folders" ? "notes" : view}
         onNavigate={handleNavigate}

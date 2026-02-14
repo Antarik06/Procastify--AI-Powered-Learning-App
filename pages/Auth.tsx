@@ -219,7 +219,7 @@ const Auth: React.FC<AuthPageProps> = ({ onLoginSuccess, onGuestAccess, onBack }
                                             placeholder="First Name"
                                             value={firstName}
                                             onChange={(e) => setFirstName(e.target.value)}
-                                            className="w-full bg-[#2b2d31] border border-black/20 group-focus-within:border-[#5865F2] rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none transition-all placeholder:text-gray-600"
+                                            className="w-full bg-app-panel border border-black/20 group-focus-within:border-[#5865F2] rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none transition-all placeholder:text-gray-600"
                                             required={isSignUp}
                                         />
                                     </div>
@@ -230,7 +230,7 @@ const Auth: React.FC<AuthPageProps> = ({ onLoginSuccess, onGuestAccess, onBack }
                                             placeholder="Last Name"
                                             value={lastName}
                                             onChange={(e) => setLastName(e.target.value)}
-                                            className="w-full bg-[#2b2d31] border border-black/20 group-focus-within:border-[#5865F2] rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none transition-all placeholder:text-gray-600"
+                                            className="w-full bg-app-panel border border-black/20 group-focus-within:border-[#5865F2] rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none transition-all placeholder:text-gray-600"
                                             required={isSignUp}
                                         />
                                     </div>
@@ -245,7 +245,7 @@ const Auth: React.FC<AuthPageProps> = ({ onLoginSuccess, onGuestAccess, onBack }
                                 placeholder="Email Address"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="w-full bg-[#2b2d31] border border-black/20 group-focus-within:border-[#5865F2] rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none transition-all placeholder:text-gray-600"
+                                className="w-full bg-app-panel border border-black/20 group-focus-within:border-[#5865F2] rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none transition-all placeholder:text-gray-600"
                                 required
                             />
                         </div>
@@ -257,7 +257,7 @@ const Auth: React.FC<AuthPageProps> = ({ onLoginSuccess, onGuestAccess, onBack }
                                 placeholder="Password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full bg-[#2b2d31] border border-black/20 group-focus-within:border-[#5865F2] rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none transition-all placeholder:text-gray-600"
+                                className="w-full bg-app-panel border border-black/20 group-focus-within:border-[#5865F2] rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none transition-all placeholder:text-gray-600"
                                 required
                             />
                         </div>

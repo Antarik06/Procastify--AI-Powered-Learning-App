@@ -49,7 +49,7 @@ const RoleSelection: React.FC<RoleSelectionProps> = ({ onRoleSelected }) => {
     ];
 
     return (
-        <div className="min-h-screen w-full bg-[#1e1f22] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+        <div className="min-h-screen w-full bg-app-bg flex flex-col items-center justify-center p-6 relative overflow-hidden">
             {/* Background Effects */}
             <div className="absolute top-0 -left-20 w-96 h-96 bg-[#5865F2]/20 rounded-full blur-[100px]" />
             <div className="absolute bottom-0 -right-20 w-96 h-96 bg-purple-500/20 rounded-full blur-[100px]" />
@@ -61,7 +61,7 @@ const RoleSelection: React.FC<RoleSelectionProps> = ({ onRoleSelected }) => {
                     animate={{ opacity: 1, y: 0 }}
                     className="text-center mb-12"
                 >
-                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+                    <h1 className="text-4xl md:text-5xl font-bold text-app-text mb-4">
                         Choose Your Role
                     </h1>
                     <p className="text-gray-400 text-lg">
@@ -87,7 +87,7 @@ const RoleSelection: React.FC<RoleSelectionProps> = ({ onRoleSelected }) => {
                                     relative p-8 rounded-2xl border-2 transition-all duration-300
                                     ${isSelected 
                                         ? 'border-[#5865F2] bg-[#5865F2]/10 scale-105' 
-                                        : 'border-white/5 bg-[#2b2d31] hover:border-white/20 hover:scale-105'
+                                        : 'border-app-border bg-app-panel hover:border-app-border hover:scale-105'
                                     }
                                     disabled:opacity-50 disabled:cursor-not-allowed
                                     text-left group
@@ -108,7 +108,7 @@ const RoleSelection: React.FC<RoleSelectionProps> = ({ onRoleSelected }) => {
                                 </div>
 
                                 {/* Title & Description */}
-                                <h2 className="text-2xl font-bold text-white mb-3">
+                                <h2 className="text-2xl font-bold text-app-text mb-3">
                                     {roleData.title}
                                 </h2>
                                 <p className="text-gray-400 mb-6">
@@ -143,13 +143,13 @@ const RoleSelection: React.FC<RoleSelectionProps> = ({ onRoleSelected }) => {
                                         animate={{ opacity: 1 }}
                                         className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-2xl"
                                     >
-                                        <Loader2 className="animate-spin text-white" size={32} />
+                                        <Loader2 className="animate-spin text-app-text" size={32} />
                                     </motion.div>
                                 )}
 
                                 {/* Hover Arrow */}
                                 <div className="absolute bottom-8 right-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <ArrowRight size={24} className="text-white" />
+                                    <ArrowRight size={24} className="text-app-text" />
                                 </div>
                             </motion.button>
                         );

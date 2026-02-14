@@ -275,7 +275,7 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
           <p>Classroom not found</p>
           <button
             onClick={() => onNavigate('classrooms')}
-            className="mt-4 text-[#5865F2] hover:text-white"
+            className="mt-4 text-[#5865F2] hover:text-app-text"
           >
             Back to Classrooms
           </button>
@@ -297,17 +297,17 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
       <div>
         <button
           onClick={() => onNavigate('classrooms')}
-          className="text-gray-400 hover:text-white flex items-center gap-2 mb-4 transition-colors"
+          className="text-gray-400 hover:text-app-text flex items-center gap-2 mb-4 transition-colors"
         >
           <ArrowLeft size={20} />
           Back to Classrooms
         </button>
-        <h1 className="text-3xl font-bold text-white">{classroom.name}</h1>
+        <h1 className="text-3xl font-bold text-app-text">{classroom.name}</h1>
         <p className="text-gray-400 mt-2">{classroom.description || 'No description'}</p>
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-white/10">
+      <div className="border-b border-app-border">
         <div className="flex gap-6">
           {tabs.map(tab => {
             const Icon = tab.icon;
@@ -317,8 +317,8 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
                 onClick={() => setActiveTab(tab.id)}
                 className={`pb-4 px-2 flex items-center gap-2 transition-colors border-b-2 ${
                   activeTab === tab.id
-                    ? 'border-[#5865F2] text-white'
-                    : 'border-transparent text-gray-400 hover:text-white'
+                    ? 'border-[#5865F2] text-app-text'
+                    : 'border-transparent text-gray-400 hover:text-app-text'
                 }`}
               >
                 <Icon size={18} />
@@ -335,10 +335,10 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
         {activeTab === 'announcements' && (
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <h2 className="text-xl font-bold text-white">Announcements</h2>
+              <h2 className="text-xl font-bold text-app-text">Announcements</h2>
               <button
                 onClick={() => setShowAnnouncementModal(true)}
-                className="bg-[#5865F2] hover:bg-[#4752c4] text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                className="bg-[#5865F2] hover:bg-[#4752c4] text-app-text px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
               >
                 <Plus size={18} />
                 New Announcement
@@ -346,7 +346,7 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
             </div>
 
             {announcements.length === 0 ? (
-              <div className="bg-[#2b2d31] border border-white/5 rounded-xl p-12 text-center">
+              <div className="bg-app-panel border border-app-border rounded-xl p-12 text-center">
                 <MessageSquare size={48} className="mx-auto mb-4 text-gray-600" />
                 <p className="text-gray-400">No announcements yet</p>
               </div>
@@ -357,7 +357,7 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
                     key={announcement.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-[#2b2d31] border border-white/5 rounded-xl p-6"
+                    className="bg-app-panel border border-app-border rounded-xl p-6"
                   >
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex items-center gap-3">
@@ -365,7 +365,7 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
                           <MessageSquare size={20} className="text-[#5865F2]" />
                         </div>
                         <div>
-                          <p className="text-white font-medium">{announcement.teacherName}</p>
+                          <p className="text-app-text font-medium">{announcement.teacherName}</p>
                           <p className="text-gray-500 text-xs flex items-center gap-1">
                             <Calendar size={12} />
                             {new Date(announcement.createdAt).toLocaleDateString()}
@@ -391,10 +391,10 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
         {activeTab === 'resources' && (
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <h2 className="text-xl font-bold text-white">Shared Resources</h2>
+              <h2 className="text-xl font-bold text-app-text">Shared Resources</h2>
               <button
                 onClick={() => setShowResourceModal(true)}
-                className="bg-[#5865F2] hover:bg-[#4752c4] text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                className="bg-[#5865F2] hover:bg-[#4752c4] text-app-text px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
               >
                 <Plus size={18} />
                 Share Resource
@@ -402,7 +402,7 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
             </div>
 
             {resources.length === 0 ? (
-              <div className="bg-[#2b2d31] border border-white/5 rounded-xl p-12 text-center">
+              <div className="bg-app-panel border border-app-border rounded-xl p-12 text-center">
                 <Share2 size={48} className="mx-auto mb-4 text-gray-600" />
                 <p className="text-gray-400 mb-2">No resources shared yet</p>
                 <p className="text-gray-500 text-sm">Share notes with your students to help them learn!</p>
@@ -414,7 +414,7 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
                     key={resource.id}
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="bg-[#2b2d31] border border-white/5 rounded-xl p-5 hover:border-[#5865F2]/50 transition-all group"
+                    className="bg-app-panel border border-app-border rounded-xl p-5 hover:border-[#5865F2]/50 transition-all group"
                   >
                     <div className="flex justify-between items-start mb-4">
                       <div className="w-12 h-12 bg-[#5865F2]/10 rounded-lg flex items-center justify-center">
@@ -427,7 +427,7 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
                         <Trash2 size={18} />
                       </button>
                     </div>
-                    <h3 className="text-white font-medium mb-2 line-clamp-2 min-h-[48px]">{resource.resourceTitle}</h3>
+                    <h3 className="text-app-text font-medium mb-2 line-clamp-2 min-h-[48px]">{resource.resourceTitle}</h3>
                     <div className="space-y-1">
                       <p className="text-gray-500 text-xs flex items-center gap-1">
                         <Calendar size={12} />
@@ -448,7 +448,7 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
         {activeTab === 'students' && (
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <h2 className="text-xl font-bold text-white">Enrolled Students</h2>
+              <h2 className="text-xl font-bold text-app-text">Enrolled Students</h2>
               <div className="bg-[#5865F2]/10 px-4 py-2 rounded-lg">
                 <span className="text-[#5865F2] font-medium">
                   {enrolledStudents.length} Student{enrolledStudents.length !== 1 ? 's' : ''}
@@ -457,7 +457,7 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
             </div>
 
             {enrolledStudents.length === 0 ? (
-              <div className="bg-[#2b2d31] border border-white/5 rounded-xl p-12 text-center">
+              <div className="bg-app-panel border border-app-border rounded-xl p-12 text-center">
                 <Users size={48} className="mx-auto mb-4 text-gray-600" />
                 <p className="text-gray-400 mb-2">No students enrolled yet</p>
                 <p className="text-gray-500 text-sm">Send invitations to get started!</p>
@@ -470,7 +470,7 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    className="bg-[#2b2d31] border border-white/5 rounded-xl p-4 hover:border-[#5865F2]/30 transition-all"
+                    className="bg-app-panel border border-app-border rounded-xl p-4 hover:border-[#5865F2]/30 transition-all"
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-[#5865F2]/10 rounded-full flex items-center justify-center">
@@ -479,7 +479,7 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
                         </span>
                       </div>
                       <div className="flex-1">
-                        <p className="text-white font-medium">{student.name}</p>
+                        <p className="text-app-text font-medium">{student.name}</p>
                         <p className="text-gray-400 text-sm">{student.email}</p>
                       </div>
                       <div className="text-gray-500 text-xs">
@@ -497,10 +497,10 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
         {activeTab === 'invitations' && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-xl font-bold text-white">Invitations</h2>
+              <h2 className="text-xl font-bold text-app-text">Invitations</h2>
               <button
                 onClick={() => setShowInviteModal(true)}
-                className="bg-[#5865F2] hover:bg-[#4752c4] text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                className="bg-[#5865F2] hover:bg-[#4752c4] text-app-text px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
               >
                 <Plus size={18} />
                 Invite Student
@@ -509,15 +509,15 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
 
             {/* Classroom Code Section */}
             {classroom?.code && (
-              <div className="bg-[#2b2d31] border border-white/5 rounded-xl p-6">
+              <div className="bg-app-panel border border-app-border rounded-xl p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h3 className="text-lg font-bold text-white mb-1">Classroom Code</h3>
+                    <h3 className="text-lg font-bold text-app-text mb-1">Classroom Code</h3>
                     <p className="text-gray-400 text-sm">Share this code with students for instant joining</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="flex-1 bg-[#1e1f22] border border-white/10 rounded-lg p-4">
+                  <div className="flex-1 bg-[#1e1f22] border border-app-border rounded-lg p-4">
                     <p className="text-2xl font-mono font-bold text-[#5865F2] tracking-wider text-center">
                       {classroom.code}
                     </p>
@@ -528,7 +528,7 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
                       // You could add a toast notification here
                       alert('Classroom code copied to clipboard!');
                     }}
-                    className="bg-[#5865F2] hover:bg-[#4752c4] text-white px-6 py-4 rounded-lg transition-colors flex items-center gap-2 font-medium"
+                    className="bg-[#5865F2] hover:bg-[#4752c4] text-app-text px-6 py-4 rounded-lg transition-colors flex items-center gap-2 font-medium"
                   >
                     <Share2 size={18} />
                     Copy Code
@@ -540,10 +540,10 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
               </div>
             )}
 
-            <div className="border-t border-white/5 pt-6">
-              <h3 className="text-lg font-bold text-white mb-4">Email Invitations</h3>
+            <div className="border-t border-app-border pt-6">
+              <h3 className="text-lg font-bold text-app-text mb-4">Email Invitations</h3>
               {invitations.length === 0 ? (
-                <div className="bg-[#2b2d31] border border-white/5 rounded-xl p-12 text-center">
+                <div className="bg-app-panel border border-app-border rounded-xl p-12 text-center">
                   <Mail size={48} className="mx-auto mb-4 text-gray-600" />
                   <p className="text-gray-400">No email invitations sent yet</p>
                 </div>
@@ -552,10 +552,10 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
                   {invitations.map(invitation => (
                     <div
                       key={invitation.id}
-                      className="bg-[#2b2d31] border border-white/5 rounded-xl p-4 flex justify-between items-center"
+                      className="bg-app-panel border border-app-border rounded-xl p-4 flex justify-between items-center"
                     >
                       <div>
-                        <p className="text-white font-medium">{invitation.studentEmail}</p>
+                        <p className="text-app-text font-medium">{invitation.studentEmail}</p>
                         <p className="text-gray-500 text-sm">
                           Sent {new Date(invitation.createdAt).toLocaleDateString()}
                         </p>
@@ -591,14 +591,14 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
               animate={{ scale: 1 }}
               exit={{ scale: 0.95 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-[#2b2d31] rounded-xl p-6 max-w-lg w-full border border-white/10"
+              className="bg-app-panel rounded-xl p-6 max-w-lg w-full border border-app-border"
             >
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-white">New Announcement</h3>
+                <h3 className="text-xl font-bold text-app-text">New Announcement</h3>
                 <button
                   onClick={() => setShowAnnouncementModal(false)}
                   disabled={savingAnnouncement}
-                  className="text-gray-400 hover:text-white"
+                  className="text-gray-400 hover:text-app-text"
                 >
                   <X size={24} />
                 </button>
@@ -609,7 +609,7 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
                 placeholder="Write your announcement..."
                 rows={6}
                 maxLength={5000}
-                className="w-full bg-[#1e1f22] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#5865F2] resize-none"
+                className="w-full bg-[#1e1f22] border border-app-border rounded-lg px-4 py-3 text-app-text focus:outline-none focus:border-[#5865F2] resize-none"
                 disabled={savingAnnouncement}
               />
               <p className="text-xs text-gray-500 mt-2">{announcementText.length}/5000</p>
@@ -617,14 +617,14 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
                 <button
                   onClick={() => setShowAnnouncementModal(false)}
                   disabled={savingAnnouncement}
-                  className="flex-1 bg-[#1e1f22] hover:bg-[#1e1f22]/80 text-white py-2 rounded-lg transition-colors"
+                  className="flex-1 bg-[#1e1f22] hover:bg-[#1e1f22]/80 text-app-text py-2 rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleCreateAnnouncement}
                   disabled={savingAnnouncement || !announcementText.trim()}
-                  className="flex-1 bg-[#5865F2] hover:bg-[#4752c4] text-white py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="flex-1 bg-[#5865F2] hover:bg-[#4752c4] text-app-text py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {savingAnnouncement ? <Loader2 className="animate-spin" size={18} /> : <Send size={18} />}
                   Post
@@ -650,14 +650,14 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
               animate={{ scale: 1 }}
               exit={{ scale: 0.95 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-[#2b2d31] rounded-xl p-6 max-w-md w-full border border-white/10"
+              className="bg-app-panel rounded-xl p-6 max-w-md w-full border border-app-border"
             >
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-white">Invite Student</h3>
+                <h3 className="text-xl font-bold text-app-text">Invite Student</h3>
                 <button
                   onClick={() => setShowInviteModal(false)}
                   disabled={sendingInvite}
-                  className="text-gray-400 hover:text-white"
+                  className="text-gray-400 hover:text-app-text"
                 >
                   <X size={24} />
                 </button>
@@ -667,7 +667,7 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
                 value={inviteEmail}
                 onChange={(e) => setInviteEmail(e.target.value)}
                 placeholder="student@example.com"
-                className="w-full bg-[#1e1f22] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#5865F2]"
+                className="w-full bg-[#1e1f22] border border-app-border rounded-lg px-4 py-3 text-app-text focus:outline-none focus:border-[#5865F2]"
                 disabled={sendingInvite}
               />
               <p className="text-xs text-gray-500 mt-2">Student must already have an account</p>
@@ -675,14 +675,14 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
                 <button
                   onClick={() => setShowInviteModal(false)}
                   disabled={sendingInvite}
-                  className="flex-1 bg-[#1e1f22] hover:bg-[#1e1f22]/80 text-white py-2 rounded-lg transition-colors"
+                  className="flex-1 bg-[#1e1f22] hover:bg-[#1e1f22]/80 text-app-text py-2 rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSendInvitation}
                   disabled={sendingInvite || !inviteEmail.trim()}
-                  className="flex-1 bg-[#5865F2] hover:bg-[#4752c4] text-white py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="flex-1 bg-[#5865F2] hover:bg-[#4752c4] text-app-text py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {sendingInvite ? <Loader2 className="animate-spin" size={18} /> : <Send size={18} />}
                   Send Invite
@@ -701,18 +701,18 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-[#2b2d31] rounded-xl p-6 max-w-2xl w-full border border-white/10 max-h-[85vh] flex flex-col"
+              className="bg-app-panel rounded-xl p-6 max-w-2xl w-full border border-app-border max-h-[85vh] flex flex-col"
             >
               {/* Header */}
               <div className="flex justify-between items-center mb-3">
-                <h3 className="text-xl font-bold text-white">Share Resource</h3>
+                <h3 className="text-xl font-bold text-app-text">Share Resource</h3>
                 <button
                   onClick={() => {
                     setShowResourceModal(false);
                     setSelectedNoteId('');
                   }}
                   disabled={sharingResource}
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className="text-gray-400 hover:text-app-text transition-colors"
                 >
                   <X size={24} />
                 </button>
@@ -725,7 +725,7 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
               {/* Content */}
               <div className="flex-1 overflow-y-auto mb-4 pr-2">
                 {userNotes.length === 0 ? (
-                  <div className="bg-[#1e1f22] border border-white/10 rounded-lg p-8 text-center">
+                  <div className="bg-[#1e1f22] border border-app-border rounded-lg p-8 text-center">
                     <Share2 size={32} className="mx-auto mb-3 text-gray-600" />
                     <p className="text-gray-400 mb-2">No notes available to share</p>
                     <p className="text-gray-500 text-sm mb-4">Create some notes first!</p>
@@ -735,7 +735,7 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
                         setSelectedNoteId('');
                         onNavigate('notes');
                       }}
-                      className="bg-[#5865F2] hover:bg-[#4752c4] text-white px-4 py-2 rounded-lg text-sm transition-colors inline-flex items-center gap-2"
+                      className="bg-[#5865F2] hover:bg-[#4752c4] text-app-text px-4 py-2 rounded-lg text-sm transition-colors inline-flex items-center gap-2"
                     >
                       <Plus size={16} />
                       Create a Note
@@ -759,7 +759,7 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
                           } ${
                             isSelected
                               ? 'border-[#5865F2] bg-[#5865F2]/10'
-                              : 'border-white/10 hover:border-white/20'
+                              : 'border-app-border hover:border-white/20'
                           }`}
                         >
                           <div className="flex items-center gap-3 pointer-events-none">
@@ -767,12 +767,12 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
                             <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
                               isSelected ? 'bg-[#5865F2]' : 'bg-[#5865F2]/10'
                             }`}>
-                              <Share2 size={18} className={isSelected ? 'text-white' : 'text-[#5865F2]'} />
+                              <Share2 size={18} className={isSelected ? 'text-app-text' : 'text-[#5865F2]'} />
                             </div>
                             
                             {/* Content */}
                             <div className="flex-1 min-w-0">
-                              <h4 className="text-white font-medium mb-1 line-clamp-1">{note.title}</h4>
+                              <h4 className="text-app-text font-medium mb-1 line-clamp-1">{note.title}</h4>
                               <div className="flex items-center gap-2 text-xs text-gray-500">
                                 <span className="truncate">{note.folder || 'No folder'}</span>
                                 <span>•</span>
@@ -786,7 +786,7 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
                             {isSelected && (
                               <div className="flex-shrink-0">
                                 <div className="w-6 h-6 bg-[#5865F2] rounded-full flex items-center justify-center">
-                                  <Check size={14} className="text-white" />
+                                  <Check size={14} className="text-app-text" />
                                 </div>
                               </div>
                             )}
@@ -799,14 +799,14 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
               </div>
 
               {/* Footer Buttons */}
-              <div className="flex gap-3 pt-2 border-t border-white/10">
+              <div className="flex gap-3 pt-2 border-t border-app-border">
                 <button
                   onClick={() => {
                     setShowResourceModal(false);
                     setSelectedNoteId('');
                   }}
                   disabled={sharingResource}
-                  className="flex-1 bg-[#1e1f22] hover:bg-[#1e1f22]/80 text-white py-2.5 rounded-lg transition-colors disabled:opacity-50"
+                  className="flex-1 bg-[#1e1f22] hover:bg-[#1e1f22]/80 text-app-text py-2.5 rounded-lg transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -818,7 +818,7 @@ const ClassroomDetail: React.FC<ClassroomDetailProps> = ({ user, classroomId, on
                     }
                   }}
                   disabled={sharingResource || !selectedNoteId}
-                  className="flex-1 bg-[#5865F2] hover:bg-[#4752c4] text-white py-2.5 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="flex-1 bg-[#5865F2] hover:bg-[#4752c4] text-app-text py-2.5 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {sharingResource ? (
                     <>

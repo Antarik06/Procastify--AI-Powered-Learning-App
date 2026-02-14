@@ -1,20 +1,7 @@
-import React from "react";
-import { ViewState, UserRole } from "../types";
-import {
-  LayoutDashboard,
-  FileText,
-  BookOpen,
-  Clock,
-  BrainCircuit,
-  Gamepad2,
-  LogOut,
-  Flame,
-  Globe,
-  PanelLeftClose,
-  PanelLeftOpen,
-  GraduationCap,
-  Users,
-} from "lucide-react";
+import React from 'react';
+import { ViewState, UserRole } from '../types';
+import { LayoutDashboard, FileText, BookOpen, Clock, BrainCircuit, Gamepad2, LogOut, Flame, Globe, PanelLeftClose, PanelLeftOpen, Users, GraduationCap } from 'lucide-react';
+import { ThemeToggle } from './ThemeToggle';
 
 interface SidebarProps {
   currentView: ViewState;
@@ -46,25 +33,20 @@ const Sidebar: React.FC<SidebarProps> = ({
     return (
       <button
         onClick={() => onNavigate(view)}
-        className={`w-full flex items-center ${collapsed ? "justify-center px-2" : "gap-3 px-4"} py-3 rounded-xl transition-all duration-300 font-medium group relative overflow-hidden flex-1 max-h-16
-          ${
-            active
-              ? "bg-gradient-to-r from-discord-panel to-discord-panel/80 text-white shadow-lg shadow-discord-accent/20 border border-discord-accent/30"
-              : "text-discord-textMuted hover:bg-gradient-to-r hover:from-discord-hover hover:to-discord-hover/80 hover:text-white hover:scale-105"
+        className={`w-full flex items-center ${collapsed ? 'justify-center px-2' : 'gap-3 px-4'} py-3 rounded-xl transition-all duration-300 font-medium group relative overflow-hidden flex-1 max-h-16
+          ${active
+            ? 'bg-gradient-to-r from-app-panel to-app-panel/80 text-gray-900 dark:text-white shadow-lg shadow-app-accent/20 border border-app-accent/30'
+            : 'text-app-textMuted hover:bg-gradient-to-r hover:from-app-hover hover:to-app-hover/80 hover:text-gray-900 dark:hover:text-white hover:scale-105'
           }`}
         title={collapsed ? label : undefined}
       >
         {active && (
           <div className="absolute inset-0 bg-gradient-to-r from-discord-accent/10 to-purple-500/10 rounded-xl"></div>
         )}
-        <Icon
-          size={20}
-          className={`transition-all duration-300 relative z-10 ${collapsed ? "flex-shrink-0" : ""} ${
-            active
-              ? "text-discord-accent drop-shadow-sm"
-              : "text-discord-textMuted group-hover:text-white group-hover:scale-110"
-          }`}
-        />
+        <Icon size={20} className={`transition-all duration-300 relative z-10 ${collapsed ? 'flex-shrink-0' : ''} ${active
+          ? 'text-app-accent drop-shadow-sm'
+          : 'text-app-textMuted group-hover:text-gray-900 dark:group-hover:text-white group-hover:scale-110'
+          }`} />
         {!collapsed && (
           <>
             <span className="relative z-10 group-hover:translate-x-1 transition-transform duration-300">

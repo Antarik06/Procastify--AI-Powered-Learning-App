@@ -22,6 +22,20 @@
                 hover: '#35373c',
                 green: '#23a559',
                 red: '#da373c'
+              },
+              // Theme-aware colors using CSS variables
+              app: {
+                bg: 'var(--app-bg)',
+                panel: 'var(--app-panel)',
+                accent: 'var(--app-accent)',
+                accentHover: 'var(--app-accent-hover)',
+                text: 'var(--app-text)',
+                heading: 'var(--app-text-heading)',
+                textMuted: 'var(--app-text-muted)',
+                hover: 'var(--app-hover)',
+                border: 'var(--app-border)',
+                green: 'var(--app-green)',
+                red: 'var(--app-red)'
               }
             },
             fontFamily: {
@@ -33,6 +47,37 @@
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+      /* CSS Variables for Theme Support */
+      :root {
+        /* Light theme colors */
+        --app-bg: #f0fdf4;
+        --app-panel: #ffffff;
+        --app-accent: #5865F2;
+        --app-accent-hover: #4752c4;
+        --app-text: #1f2937;
+        --app-text-heading: #111827;
+        --app-text-muted: #6b7280;
+        --app-hover: #ecfdf5;
+        --app-border: rgba(0, 0, 0, 0.08);
+        --app-green: #38a169;
+        --app-red: #e53e3e;
+      }
+
+      .dark {
+        /* Dark theme colors */
+        --app-bg: #1e1f22;
+        --app-panel: #2b2d31;
+        --app-accent: #5865F2;
+        --app-accent-hover: #4752c4;
+        --app-text: #dbdee1;
+        --app-text-heading: #ffffff;
+        --app-text-muted: #949ba4;
+        --app-hover: #35373c;
+        --app-border: rgba(255, 255, 255, 0.1);
+        --app-green: #23a559;
+        --app-red: #da373c;
+      }
+
       body {
         background-color: #1e1f22;
         color: #dbdee1;

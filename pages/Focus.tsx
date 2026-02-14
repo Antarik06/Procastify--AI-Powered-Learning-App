@@ -188,7 +188,7 @@ const Focus: React.FC<FocusProps> = ({ initialTask, onExit }) => {
   const style = getPhaseStyles();
 
   return (
-    <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#0f1012] text-white overflow-hidden">
+    <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#0f1012] text-app-text overflow-hidden">
 
       {/* --- Top Bar --- */}
       <div className="absolute top-0 w-full p-4 md:p-6 flex justify-between items-center z-20">
@@ -196,14 +196,14 @@ const Focus: React.FC<FocusProps> = ({ initialTask, onExit }) => {
           <ChevronLeft size={18} /> Exit
         </button>
 
-        <div className="flex items-center gap-4 bg-white/5 p-1 rounded-lg border border-white/10">
+        <div className="flex items-center gap-4 bg-white/5 p-1 rounded-lg border border-app-border">
           <button
             onClick={() => { setMode('countdown'); setIsActive(false); setTimeLeft(initialSeconds); }}
-            className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${mode === 'countdown' ? 'bg-white/10 text-white' : 'text-white/40'}`}
+            className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${mode === 'countdown' ? 'bg-white/10 text-app-text' : 'text-app-text/40'}`}
           >Countdown</button>
           <button
             onClick={() => { setMode('stopwatch'); setIsActive(false); setTimeLeft(0); }}
-            className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${mode === 'stopwatch' ? 'bg-white/10 text-white' : 'text-white/40'}`}
+            className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${mode === 'stopwatch' ? 'bg-white/10 text-app-text' : 'text-app-text/40'}`}
           >Stopwatch</button>
         </div>
       </div>
@@ -216,7 +216,7 @@ const Focus: React.FC<FocusProps> = ({ initialTask, onExit }) => {
         />
 
         <div className="relative z-10 flex flex-col items-center">
-          <div className="mb-4 px-4 py-1 rounded-full border border-white/10 bg-white/5 flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold">
+          <div className="mb-4 px-4 py-1 rounded-full border border-app-border bg-white/5 flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold">
             <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: style.color }} />
             {style.text}
           </div>
@@ -227,7 +227,7 @@ const Focus: React.FC<FocusProps> = ({ initialTask, onExit }) => {
 
           <div className="flex items-center gap-4 md:gap-6">
             {mode === 'stopwatch' && (
-              <button onClick={() => { setTimeLeft(0); setIsActive(false); }} className="p-3 md:p-4 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-all">
+              <button onClick={() => { setTimeLeft(0); setIsActive(false); }} className="p-3 md:p-4 rounded-full bg-white/5 hover:bg-white/10 border border-app-border transition-all">
                 <RotateCcw size={24} />
               </button>
             )}
@@ -239,7 +239,7 @@ const Focus: React.FC<FocusProps> = ({ initialTask, onExit }) => {
               {isActive ? <Pause size={32} className="md:w-10 md:h-10" fill="currentColor" /> : <Play size={32} className="ml-1 md:ml-2 md:w-10 md:h-10" fill="currentColor" />}
             </button>
 
-            <button onClick={() => setShowSummary(true)} className="p-3 md:p-4 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-all">
+            <button onClick={() => setShowSummary(true)} className="p-3 md:p-4 rounded-full bg-white/5 hover:bg-white/10 border border-app-border transition-all">
               <Square size={24} />
             </button>
           </div>
@@ -250,7 +250,7 @@ const Focus: React.FC<FocusProps> = ({ initialTask, onExit }) => {
       {!isActive && !showSummary && (
         <div className="mt-8 md:mt-12 flex flex-col md:flex-row items-center gap-6 md:gap-8 animate-in fade-in slide-in-from-bottom-4 w-full px-4 md:px-0 md:w-auto">
           <div className="flex flex-col gap-2 items-center">
-            <span className="text-[10px] uppercase font-bold text-white/30 tracking-widest">Adjust Duration</span>
+            <span className="text-[10px] uppercase font-bold text-app-text/30 tracking-widest">Adjust Duration</span>
             <div className="flex flex-wrap justify-center gap-2">
               <input
                 type="number"
@@ -260,7 +260,7 @@ const Focus: React.FC<FocusProps> = ({ initialTask, onExit }) => {
                   setInitialSeconds(val * 60);
                   if (mode === 'countdown') setTimeLeft(val * 60);
                 }}
-                className="w-20 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-white/30"
+                className="w-20 bg-white/5 border border-app-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-white/30"
               />
               {PRESETS.map(p => (
                 <button key={p.label} onClick={() => { setInitialSeconds(p.focus * 60); setTimeLeft(p.focus * 60); }} className="px-3 py-2 bg-white/5 rounded-lg text-xs hover:bg-white/10">
@@ -271,13 +271,13 @@ const Focus: React.FC<FocusProps> = ({ initialTask, onExit }) => {
           </div>
 
           <div className="flex flex-col gap-2 items-center">
-            <span className="text-[10px] uppercase font-bold text-white/30 tracking-widest">Focus Sounds</span>
+            <span className="text-[10px] uppercase font-bold text-app-text/30 tracking-widest">Focus Sounds</span>
             <div className="flex flex-wrap justify-center gap-2">
               {(['none', 'brown-noise', 'heavy-rain', 'forest'] as SoundType[]).map(s => (
                 <button
                   key={s}
                   onClick={() => setSoundType(s)}
-                  className={`px-3 py-2 rounded-lg text-xs capitalize transition-all ${soundType === s ? 'bg-white/20 text-white' : 'bg-white/5 text-white/40'}`}
+                  className={`px-3 py-2 rounded-lg text-xs capitalize transition-all ${soundType === s ? 'bg-white/20 text-app-text' : 'bg-white/5 text-app-text/40'}`}
                 >
                   {s.replace('-', ' ')}
                 </button>
@@ -290,7 +290,7 @@ const Focus: React.FC<FocusProps> = ({ initialTask, onExit }) => {
       {/* --- Part 1: Session Summary Report --- */}
       {showSummary && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 md:p-6">
-          <div className="bg-[#1a1b1e] border border-white/10 p-6 md:p-8 rounded-3xl max-w-md w-full shadow-2xl">
+          <div className="bg-[#1a1b1e] border border-app-border p-6 md:p-8 rounded-3xl max-w-md w-full shadow-2xl">
             <div className="flex items-center gap-3 mb-6">
               <BarChart3 className="text-indigo-400" />
               <h2 className="text-2xl font-bold">Session Report</h2>
@@ -298,16 +298,16 @@ const Focus: React.FC<FocusProps> = ({ initialTask, onExit }) => {
 
             <div className="space-y-4 mb-8">
               <div className="flex justify-between p-4 bg-white/5 rounded-2xl">
-                <span className="text-white/50">Focused Time</span>
+                <span className="text-app-text/50">Focused Time</span>
                 <span className="font-mono font-bold text-xl">{formatTime(secondsSpent)}</span>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 bg-white/5 rounded-2xl">
-                  <span className="text-[10px] uppercase text-white/40 block mb-1">Pauses</span>
+                  <span className="text-[10px] uppercase text-app-text/40 block mb-1">Pauses</span>
                   <span className="text-xl font-bold">{pauseCount}</span>
                 </div>
                 <div className="p-4 bg-white/5 rounded-2xl">
-                  <span className="text-[10px] uppercase text-white/40 block mb-1">Distractions</span>
+                  <span className="text-[10px] uppercase text-app-text/40 block mb-1">Distractions</span>
                   <span className="text-xl font-bold text-orange-400">{distractionCount}</span>
                 </div>
               </div>
@@ -324,7 +324,7 @@ const Focus: React.FC<FocusProps> = ({ initialTask, onExit }) => {
       )}
 
       {/* --- Part 3: Distraction Block Indicator --- */}
-      <div className="absolute bottom-4 left-4 md:bottom-6 md:left-6 flex items-center gap-3 text-white/20 text-[10px] font-bold tracking-widest uppercase">
+      <div className="absolute bottom-4 left-4 md:bottom-6 md:left-6 flex items-center gap-3 text-app-text/20 text-[10px] font-bold tracking-widest uppercase">
         <ShieldAlert size={14} className={distractionCount > 0 ? 'text-orange-500' : ''} />
         Guard Active: {blockedUrls.length} Sites Restricted
       </div>
