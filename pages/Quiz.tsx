@@ -1,13 +1,17 @@
 import { ActionFunction, LoaderFunction, redirect } from "react-router-dom"; // Just minimal dummy if needed, but keeping original imports
 import React, { useState, useEffect } from 'react';
-import { Note, Quiz, UserPreferences, UserStats, QuizReport } from '../types';
-import { generateQuizFromNotes, generateTrueFalseQuiz, generateQuizReport } from '../services/geminiService';
+import { Note, Quiz, UserPreferences, UserStats, QuizReport, QuizModeType, AttemptedFillQuestion, AttemptedExplainQuestion } from '../types';
+import { generateQuizFromNotes, generateTrueFalseQuiz, generateQuizReport, generateFillInTheBlanksQuiz, generateExplainQuiz } from '../services/geminiService';
 import { StorageService } from '../services/storageService';
-import { Play, Trophy, CheckCircle, XCircle, Zap, Target, BookOpen, AlertCircle, RefreshCw, Layers, Clock, ArrowRight, BrainCircuit, TrendingUp, Users, Loader2 } from 'lucide-react';
+import { Play, Trophy, CheckCircle, XCircle, Zap, Target, BookOpen, AlertCircle, RefreshCw, Layers, Clock, ArrowRight, BrainCircuit, TrendingUp, Users, Loader2, MoreHorizontal } from 'lucide-react';
 import SwipeQuiz from '../components/SwipeQuiz';
+import FillInTheBlanksQuiz from '../components/FillInTheBlanksQuiz';
+import ExplainAnswerQuiz from '../components/ExplainAnswerQuiz';
+import ModeSelectionModal from '../components/ModeSelectionModal';
 import MultiplayerWaitingRoom from '../components/MultiplayerWaitingRoom';
 import MultiplayerLeaderboard from '../components/MultiplayerLeaderboard';
 import { motion, AnimatePresence } from 'framer-motion';
+import { DEFAULT_TIMER_CONFIG } from '../utils/quizUtils';
 
 const QUESTION_TIMER = 30;
 
@@ -20,10 +24,13 @@ interface QuizProps {
 
 const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
     const [view, setView] = useState<'setup' | 'playing' | 'results' | 'waiting' | 'leaderboard'>('setup');
-    const [mode, setMode] = useState<'standard' | 'swipe'>('standard');
+    const [mode, setMode] = useState<QuizModeType>('standard');
+    const [showModeModal, setShowModeModal] = useState(false);
     const [quizMode, setQuizMode] = useState<'singleplayer' | 'multiplayer'>('singleplayer');
     const [selectedNoteIds, setSelectedNoteIds] = useState<string[]>([]);
     const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
+    const [timerEnabled, setTimerEnabled] = useState(true);
+    const [timerDuration, setTimerDuration] = useState(30);
     const [loading, setLoading] = useState(false);
     const [continuing, setContinuing] = useState(false);
     const [quizReport, setQuizReport] = useState<QuizReport | null>(null);
@@ -62,6 +69,17 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
         explanation: string;
     }
     const [attemptedSwipeQuestions, setAttemptedSwipeQuestions] = useState<AttemptedSwipeQuestion[]>([]);
+    
+    // New modes attempted questions
+    const [attemptedFillQuestions, setAttemptedFillQuestions] = useState<AttemptedFillQuestion[]>([]);
+    const [attemptedExplainQuestions, setAttemptedExplainQuestions] = useState<AttemptedExplainQuestion[]>([]);
+
+    // Update timer config when mode changes
+    useEffect(() => {
+        const config = DEFAULT_TIMER_CONFIG[mode];
+        setTimerEnabled(config.enabled);
+        setTimerDuration(config.duration);
+    }, [mode]);
 
     // Timer Logic
     useEffect(() => {
@@ -111,6 +129,10 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
         let questions;
         if (mode === 'swipe') {
             questions = await generateTrueFalseQuiz(aggregatedText);
+        } else if (mode === 'fillBlanks') {
+            questions = await generateFillInTheBlanksQuiz(aggregatedText, difficulty);
+        } else if (mode === 'explain') {
+            questions = await generateExplainQuiz(aggregatedText, difficulty);
         } else {
             questions = await generateQuizFromNotes(aggregatedText, difficulty);
         }
@@ -507,15 +529,68 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
                                     Standard
                                 </button>
                                 <button
-                                    onClick={() => setMode('swipe')}
-                                    className={`py-2 rounded-lg text-sm font-bold transition-all ${mode === 'swipe' ? 'bg-[#5865F2] text-white shadow-sm' : 'text-discord-textMuted hover:text-white'}`}
+                                    onClick={() => setShowModeModal(true)}
+                                    className={`py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-1 ${mode !== 'standard' ? 'bg-[#5865F2] text-white shadow-sm' : 'text-discord-textMuted hover:text-white'}`}
                                 >
-                                    Swipe (T/F)
+                                    <MoreHorizontal size={16} />
+                                    More Modes
                                 </button>
+                            </div>
+                            {mode !== 'standard' && (
+                                <div className="mt-2 text-xs text-discord-textMuted text-center">
+                                    Selected: <span className="text-white font-bold">
+                                        {mode === 'swipe' && 'Swipe (T/F)'}
+                                        {mode === 'fillBlanks' && 'Fill in the Blanks'}
+                                        {mode === 'explain' && 'Explain Your Answer'}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Timer Configuration */}
+                        <div>
+                            <h3 className="text-sm font-bold text-discord-textMuted uppercase mb-3 flex items-center gap-2">
+                                <Clock size={16} /> Timer Settings
+                            </h3>
+                            <div className="bg-discord-panel p-4 rounded-xl border border-white/5 space-y-3">
+                                <label className="flex items-center justify-between cursor-pointer">
+                                    <span className="text-white font-medium">Enable Timer</span>
+                                    <div
+                                        onClick={() => setTimerEnabled(!timerEnabled)}
+                                        className={`relative w-12 h-6 rounded-full transition-colors ${
+                                            timerEnabled ? 'bg-discord-accent' : 'bg-gray-600'
+                                        }`}
+                                    >
+                                        <div
+                                            className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                                                timerEnabled ? 'transform translate-x-6' : ''
+                                            }`}
+                                        />
+                                    </div>
+                                </label>
+                                {timerEnabled && (
+                                    <div>
+                                        <label className="text-sm text-discord-textMuted mb-2 block">
+                                            Duration (seconds)
+                                        </label>
+                                        <select
+                                            value={timerDuration}
+                                            onChange={(e) => setTimerDuration(Number(e.target.value))}
+                                            className="w-full bg-[#1e1f22] border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-discord-accent"
+                                        >
+                                            <option value={15}>15 seconds</option>
+                                            <option value={30}>30 seconds</option>
+                                            <option value={45}>45 seconds</option>
+                                            <option value={60}>60 seconds</option>
+                                            <option value={90}>90 seconds</option>
+                                            <option value={120}>120 seconds</option>
+                                        </select>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
-                        {mode === 'standard' && (
+                        {(mode === 'standard' || mode === 'fillBlanks' || mode === 'explain') && (
                             <div>
                                 <h3 className="text-sm font-bold text-discord-textMuted uppercase mb-3 flex items-center gap-2">
                                     <Target size={16} /> Difficulty
@@ -558,6 +633,14 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
                         </div>
                     </div>
                 </div>
+                
+                {/* Mode Selection Modal */}
+                <ModeSelectionModal
+                    isOpen={showModeModal}
+                    onClose={() => setShowModeModal(false)}
+                    onSelectMode={(newMode) => setMode(newMode)}
+                    currentMode={mode}
+                />
             </motion.div>
         );
     }
@@ -626,6 +709,38 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
                     finishQuiz(finalScore * 100);
                 }}
                 onExit={() => setView('setup')}
+            />
+        );
+    }
+
+    // FILL IN THE BLANKS MODE
+    if (view === 'playing' && quiz && mode === 'fillBlanks') {
+        return (
+            <FillInTheBlanksQuiz
+                questions={quiz.questions as any}
+                onComplete={(finalScore, fillAttempted) => {
+                    setAttemptedFillQuestions(fillAttempted);
+                    finishQuiz(finalScore);
+                }}
+                onExit={() => setView('setup')}
+                timerEnabled={timerEnabled}
+                timerDuration={timerDuration}
+            />
+        );
+    }
+
+    // EXPLAIN YOUR ANSWER MODE
+    if (view === 'playing' && quiz && mode === 'explain') {
+        return (
+            <ExplainAnswerQuiz
+                questions={quiz.questions as any}
+                onComplete={(finalScore, explainAttempted) => {
+                    setAttemptedExplainQuestions(explainAttempted);
+                    finishQuiz(finalScore);
+                }}
+                onExit={() => setView('setup')}
+                timerEnabled={timerEnabled}
+                timerDuration={timerDuration}
             />
         );
     }
@@ -774,10 +889,26 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
     // RESULTS VIEW
     if (view === 'results' && quiz) {
         const isSwipeMode = mode === 'swipe';
-        const totalQuestions = isSwipeMode ? attemptedSwipeQuestions.length : attemptedQuestions.length;
-        const correctCount = isSwipeMode
-            ? attemptedSwipeQuestions.filter(q => q.isCorrect).length
-            : attemptedQuestions.filter(q => q.isCorrect).length;
+        const isFillMode = mode === 'fillBlanks';
+        const isExplainMode = mode === 'explain';
+        
+        let totalQuestions = 0;
+        let correctCount = 0;
+        
+        if (isSwipeMode) {
+            totalQuestions = attemptedSwipeQuestions.length;
+            correctCount = attemptedSwipeQuestions.filter(q => q.isCorrect).length;
+        } else if (isFillMode) {
+            totalQuestions = attemptedFillQuestions.length;
+            correctCount = attemptedFillQuestions.filter(q => q.overallCorrect).length;
+        } else if (isExplainMode) {
+            totalQuestions = attemptedExplainQuestions.length;
+            correctCount = attemptedExplainQuestions.filter(q => q.answerCorrect).length;
+        } else {
+            totalQuestions = attemptedQuestions.length;
+            correctCount = attemptedQuestions.filter(q => q.isCorrect).length;
+        }
+        
         const accuracy = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
 
         return (
@@ -938,6 +1069,91 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
                                                         {q.userAnsweredTrue ? 'TRUE' : 'FALSE'}
                                                     </span>
                                                 </div>
+                                            </div>
+                                            <p className="text-discord-textMuted text-sm leading-relaxed bg-discord-bg/50 p-3 rounded-lg">
+                                                {q.explanation}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            ))
+                        ) : isFillMode ? (
+                            // FILL IN THE BLANKS RESULTS
+                            attemptedFillQuestions.map((q, idx) => (
+                                <motion.div
+                                    key={idx}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.05 }}
+                                    className={`p-5 rounded-xl border ${q.overallCorrect ? 'bg-green-500/5 border-green-500/20' : 'bg-yellow-500/5 border-yellow-500/20'}`}
+                                >
+                                    <div className="flex items-start gap-3 mb-3">
+                                        <div className={`p-2 rounded-full shrink-0 ${q.overallCorrect ? 'bg-green-500' : 'bg-yellow-500'}`}>
+                                            {q.overallCorrect ? <CheckCircle size={18} className="text-white" /> : <XCircle size={18} className="text-black" />}
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-white font-bold text-lg mb-3">Q{idx + 1}. {q.question}</p>
+                                            <div className="space-y-2 mb-3">
+                                                {q.blanks.map((blank, bIdx) => (
+                                                    <div key={bIdx} className="flex items-center gap-2">
+                                                        <span className="text-discord-textMuted text-sm">Blank {bIdx + 1}:</span>
+                                                        <span className={`font-bold ${blank.isCorrect ? 'text-green-400' : 'text-red-400'}`}>
+                                                            {blank.userAnswer || '(empty)'}
+                                                        </span>
+                                                        {!blank.isCorrect && (
+                                                            <>
+                                                                <span className="text-discord-textMuted text-sm">→</span>
+                                                                <span className="font-bold text-green-400">{blank.correctAnswer}</span>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <p className="text-discord-textMuted text-sm leading-relaxed bg-discord-bg/50 p-3 rounded-lg">
+                                                {q.explanation}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            ))
+                        ) : isExplainMode ? (
+                            // EXPLAIN YOUR ANSWER RESULTS
+                            attemptedExplainQuestions.map((q, idx) => (
+                                <motion.div
+                                    key={idx}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.05 }}
+                                    className={`p-5 rounded-xl border ${q.answerCorrect ? 'bg-green-500/5 border-green-500/20' : 'bg-red-500/5 border-red-500/20'}`}
+                                >
+                                    <div className="flex items-start gap-3 mb-3">
+                                        <div className={`p-2 rounded-full shrink-0 ${q.answerCorrect ? 'bg-green-500' : 'bg-red-500'}`}>
+                                            {q.answerCorrect ? <CheckCircle size={18} className="text-white" /> : <XCircle size={18} className="text-white" />}
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-white font-bold text-lg mb-3">Q{idx + 1}. {q.question}</p>
+                                            <div className="mb-2">
+                                                <span className="text-discord-textMuted text-sm">Correct Answer: </span>
+                                                <span className="font-bold text-green-400">{q.options[q.correctAnswer]}</span>
+                                            </div>
+                                            {!q.answerCorrect && (
+                                                <div className="mb-2">
+                                                    <span className="text-discord-textMuted text-sm">Your Answer: </span>
+                                                    <span className="font-bold text-red-400">{q.options[q.userAnswer]}</span>
+                                                </div>
+                                            )}
+                                            <div className="mb-3 bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                                                <p className="text-blue-400 font-bold text-sm mb-2">Your Explanation:</p>
+                                                <p className="text-white text-sm italic mb-2">"{q.userExplanation}"</p>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-discord-textMuted text-sm">Reasoning Quality:</span>
+                                                    <div className="flex gap-1">
+                                                        {[1, 2, 3, 4, 5].map((star) => (
+                                                            <span key={star} className={star <= q.reasoningScore ? 'text-yellow-400' : 'text-gray-600'}>★</span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                <p className="text-discord-textMuted text-xs mt-2">{q.reasoningFeedback}</p>
                                             </div>
                                             <p className="text-discord-textMuted text-sm leading-relaxed bg-discord-bg/50 p-3 rounded-lg">
                                                 {q.explanation}

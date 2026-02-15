@@ -217,6 +217,9 @@ export interface RoutineTask {
   confidence?: "high" | "medium" | "low";
 }
 
+// Quiz Mode Types
+export type QuizModeType = "standard" | "swipe" | "fillBlanks" | "explain";
+
 export interface Question {
   id: string;
   text: string;
@@ -224,6 +227,57 @@ export interface Question {
   correctIndex: number;
   explanation: string;
   difficulty?: "easy" | "medium" | "hard";
+  mode?: QuizModeType; // Optional for backward compatibility
+}
+
+// Fill in the Blanks specific types
+export interface FillInTheBlanksQuestion extends Omit<Question, 'options' | 'correctIndex'> {
+  mode: "fillBlanks";
+  textWithBlanks: string;
+  blanks: {
+    id: string;
+    correctAnswers: string[];
+    userAnswer?: string;
+  }[];
+}
+
+// Explain Your Answer specific types
+export interface ExplainQuestion extends Question {
+  mode: "explain";
+  userExplanation?: string;
+  reasoningScore?: number;
+  reasoningFeedback?: string;
+}
+
+// Attempted question types for results
+export interface AttemptedFillQuestion {
+  question: string;
+  blanks: {
+    correctAnswer: string;
+    userAnswer: string;
+    isCorrect: boolean;
+  }[];
+  overallCorrect: boolean;
+  explanation: string;
+}
+
+export interface AttemptedExplainQuestion {
+  question: string;
+  options: string[];
+  userAnswer: number;
+  correctAnswer: number;
+  answerCorrect: boolean;
+  userExplanation: string;
+  reasoningScore: number;
+  reasoningFeedback: string;
+  explanation: string;
+  totalScore: number;
+}
+
+// Timer configuration
+export interface TimerConfig {
+  enabled: boolean;
+  duration: number;
 }
 
 export interface QuizReport {
@@ -253,7 +307,7 @@ export interface MultiplayerQuizSession {
   inviteCode: string;
   title: string;
   difficulty: "easy" | "medium" | "hard";
-  mode: "standard" | "swipe";
+  mode: QuizModeType;
   questions: Question[];
   participants: QuizParticipant[];
   status: "waiting" | "in_progress" | "completed";
