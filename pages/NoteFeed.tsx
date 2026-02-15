@@ -42,7 +42,7 @@ interface ReelItem {
 // --- REEL COMPONENTS ---
 
 const TextReel = ({ reel }: { reel: ReelItem }) => (
-  <div className="px-8 py-12">
+  <div className="px-2 pt-6 pb-16">
     <p className="text-3xl md:text-4xl font-bold text-white leading-tight text-center drop-shadow-2xl font-serif">
       {reel.content}
     </p>
@@ -332,17 +332,17 @@ const ReelCard = ({
       )}
 
       <div
-        className={`w-full h-full max-w-md relative flex flex-col justify-center z-10 transition-all duration-700 ${isActive ? "opacity-100 scale-100" : "opacity-40 scale-95 blur-sm"}`}
+        className={`w-full h-full max-w-md relative flex flex-col z-10 transition-all duration-700 ${isActive ? "opacity-100 scale-100" : "opacity-40 scale-95 blur-sm"}`}
       >
         {/* Minimal Header */}
-        <div className="absolute top-10 left-0 right-0 text-center px-6 z-20">
+        <div className="pt-6 text-center px-6 z-20">
           <span className="inline-block py-1 px-3 rounded-full bg-black/40 border border-white/10 text-xs font-bold text-gray-300 uppercase tracking-widest backdrop-blur-md">
             {reel.noteTitle} • {reel.index}/5
           </span>
         </div>
 
         {/* Content Body based on Type */}
-        <div className="flex-1 w-full h-full flex flex-col relative">
+        <div className="flex-1 w-full flex flex-col justify-center relative">
             {reel.type === 'text' && <TextReel reel={reel} />}
             {reel.type === 'image' && <ImageReel reel={reel} />}
             {reel.type === 'video' && <VideoReel reel={reel} isActive={isActive} />}
