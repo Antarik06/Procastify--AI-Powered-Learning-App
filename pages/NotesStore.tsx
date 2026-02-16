@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Note, UserPreferences, ViewState } from '../types';
-import { Search, Loader2, Heart, Download, ChevronLeft } from 'lucide-react';
+import { Search, Loader2, Heart, Download, ChevronLeft, BookOpen } from 'lucide-react';
 import { FirebaseService } from '../services/firebaseService';
 import { StorageService } from '../services/storageService';
 import CanvasBoard from '../components/CanvasBoard';
 import DocumentEditor from '../components/DocumentEditor';
+import StudyResourcesSection from './StudyResourcesSection';
 
 interface NotesStoreProps {
     user: UserPreferences | null;
@@ -12,7 +13,10 @@ interface NotesStoreProps {
     onNavigate?: (view: ViewState) => void;
 }
 
+type TabType = 'notes' | 'resources';
+
 const NotesStore: React.FC<NotesStoreProps> = ({ user, onImportNote, onNavigate }) => {
+    const [activeTab, setActiveTab] = useState<TabType>('notes');
     const [publicNotes, setPublicNotes] = useState<Note[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -98,9 +102,67 @@ const NotesStore: React.FC<NotesStoreProps> = ({ user, onImportNote, onNavigate 
 
     const filteredNotes = publicNotes.filter(n => n.title.toLowerCase().includes(search.toLowerCase()));
 
+    // Render Study Resources tab
+    if (activeTab === 'resources') {
+        return (
+            <div className="h-full bg-[#1e1f22]">
+                {/* Tab Navigation */}
+                <div className="border-b border-white/10 bg-[#2b2d31]">
+                    <div className="max-w-6xl mx-auto px-8">
+                        <div className="flex gap-1">
+                            <button
+                                onClick={() => setActiveTab('notes')}
+                                className="px-6 py-4 text-gray-400 hover:text-white transition-colors relative"
+                            >
+                                Community Notes
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('resources')}
+                                className="px-6 py-4 text-white transition-colors relative"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <BookOpen size={18} />
+                                    Study Resources
+                                </div>
+                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#5865F2]"></div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <StudyResourcesSection user={user} />
+            </div>
+        );
+    }
+
     return (
-        <div className="p-8 h-full overflow-y-auto bg-[#1e1f22] text-white">
-            <div className="max-w-6xl mx-auto">
+        <div className="h-full bg-[#1e1f22] text-white">
+            {/* Tab Navigation */}
+            <div className="border-b border-white/10 bg-[#2b2d31]">
+                <div className="max-w-6xl mx-auto px-8">
+                    <div className="flex gap-1">
+                        <button
+                            onClick={() => setActiveTab('notes')}
+                            className="px-6 py-4 text-white transition-colors relative"
+                        >
+                            Community Notes
+                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#5865F2]"></div>
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('resources')}
+                            className="px-6 py-4 text-gray-400 hover:text-white transition-colors relative"
+                        >
+                            <div className="flex items-center gap-2">
+                                <BookOpen size={18} />
+                                Study Resources
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Community Notes Content */}
+            <div className="p-8 overflow-y-auto">
+                <div className="max-w-6xl mx-auto">
                 <div className="flex justify-between items-center mb-8">
                     <div className="flex items-center gap-4">
                         {onNavigate && (
@@ -169,6 +231,7 @@ const NotesStore: React.FC<NotesStoreProps> = ({ user, onImportNote, onNavigate 
                         </p>
                     </div>
                 )}
+                </div>
             </div>
 
             {/* Note Preview Modal */}

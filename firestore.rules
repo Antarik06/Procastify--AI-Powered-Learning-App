@@ -159,6 +159,26 @@ service cloud.firestore {
         resource.data.teacherId == request.auth.uid;
     }
     
+    // Study Resources collection
+    match /studyResources/{resourceId} {
+      // Anyone can read study resources (public access)
+      allow read: if true;
+      
+      // Only authenticated users can create resources
+      allow create: if isAuthenticated() && 
+        request.resource.data.ownerId == request.auth.uid &&
+        request.resource.data.userId == request.auth.uid;
+      
+      // Only the owner can update their resources
+      allow update: if isAuthenticated() && 
+        resource.data.ownerId == request.auth.uid &&
+        request.resource.data.ownerId == request.auth.uid;
+      
+      // Only the owner can delete their resources
+      allow delete: if isAuthenticated() && 
+        resource.data.ownerId == request.auth.uid;
+    }
+    
     // Deny all other access by default
     match /{document=**} {
       allow read, write: if false;
