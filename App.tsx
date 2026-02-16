@@ -392,6 +392,7 @@ const App: React.FC = () => {
                 onNoteClick={(noteId) => {
                   setView("notes");
                 }}
+                onNavigate={(view) => handleNavigate(view as any)}
               />
             )}
           </>
