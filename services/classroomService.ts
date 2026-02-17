@@ -1,6 +1,6 @@
 import { db, auth, isFirebaseConfigured } from '../firebaseConfig';
 import { doc, getDoc, setDoc, collection, getDocs, query, where, updateDoc, deleteDoc, arrayUnion, arrayRemove, serverTimestamp, Timestamp } from 'firebase/firestore';
-import { Classroom, VirtualClassLink, Announcement, Resource } from '../types';
+import { Classroom, VirtualClassLink, Announcement, Resource, CalendarEvent } from '../types';
 
 export const ClassroomService = {
     // Generate a unique invite code
@@ -78,7 +78,8 @@ export const ClassroomService = {
                     updatedAt: data.updatedAt?.toMillis?.() || data.updatedAt || Date.now(),
                     virtualLinks: data.virtualLinks || [],
                     announcements: data.announcements || [],
-                    resources: data.resources || []
+                    resources: data.resources || [],
+                    calendarEvents: data.calendarEvents || []
                 } as Classroom;
             }
             return null;
@@ -312,6 +313,72 @@ export const ClassroomService = {
             return true;
         } catch (error) {
             console.error('Error deleting classroom:', error);
+            return false;
+        }
+    },
+
+    // Add calendar event (teacher only)
+    addCalendarEvent: async (classroomId: string, event: Omit<CalendarEvent, 'id' | 'createdAt'>): Promise<boolean> => {
+        try {
+            const classroom = await ClassroomService.getClassroom(classroomId);
+            if (!classroom) return false;
+
+            const newEvent: CalendarEvent = {
+                ...event,
+                id: `event_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+                createdAt: Date.now()
+            };
+
+            const updatedEvents = [...(classroom.calendarEvents || []), newEvent];
+            const classroomRef = doc(db, 'classrooms', classroomId);
+            await updateDoc(classroomRef, {
+                calendarEvents: updatedEvents,
+                updatedAt: serverTimestamp()
+            });
+            return true;
+        } catch (error) {
+            console.error('Error adding calendar event:', error);
+            return false;
+        }
+    },
+
+    // Update calendar event (teacher only)
+    updateCalendarEvent: async (classroomId: string, eventId: string, updates: Partial<CalendarEvent>): Promise<boolean> => {
+        try {
+            const classroom = await ClassroomService.getClassroom(classroomId);
+            if (!classroom) return false;
+
+            const updatedEvents = (classroom.calendarEvents || []).map(event =>
+                event.id === eventId ? { ...event, ...updates } : event
+            );
+
+            const classroomRef = doc(db, 'classrooms', classroomId);
+            await updateDoc(classroomRef, {
+                calendarEvents: updatedEvents,
+                updatedAt: serverTimestamp()
+            });
+            return true;
+        } catch (error) {
+            console.error('Error updating calendar event:', error);
+            return false;
+        }
+    },
+
+    // Delete calendar event (teacher only)
+    deleteCalendarEvent: async (classroomId: string, eventId: string): Promise<boolean> => {
+        try {
+            const classroom = await ClassroomService.getClassroom(classroomId);
+            if (!classroom) return false;
+
+            const updatedEvents = (classroom.calendarEvents || []).filter(event => event.id !== eventId);
+            const classroomRef = doc(db, 'classrooms', classroomId);
+            await updateDoc(classroomRef, {
+                calendarEvents: updatedEvents,
+                updatedAt: serverTimestamp()
+            });
+            return true;
+        } catch (error) {
+            console.error('Error deleting calendar event:', error);
             return false;
         }
     }

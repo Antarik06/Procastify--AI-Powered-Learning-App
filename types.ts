@@ -323,6 +323,20 @@ export interface Resource {
   classroomId: string;
 }
 
+// Calendar Event Types
+export type CalendarEventType = 'lecture' | 'assignment' | 'exam' | 'revision' | 'custom';
+
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  description?: string;
+  date: number;
+  time?: string; // optional time string e.g. "14:00"
+  eventType: CalendarEventType;
+  createdBy: string;
+  createdAt: number;
+}
+
 export interface Classroom {
   id: string;
   name: string;
@@ -333,6 +347,7 @@ export interface Classroom {
   virtualLinks: VirtualClassLink[];
   announcements: Announcement[];
   resources: Resource[];
+  calendarEvents?: CalendarEvent[];
   inviteCode: string;
   invitationCount?: number;
   announcementCount?: number;

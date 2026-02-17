@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { UserPreferences, Classroom, ViewState } from '../types';
 import { ClassroomService } from '../services/classroomService';
-import { GraduationCap, Plus, Users, Copy, X, ArrowRight, Video, Loader2, Trash2 } from 'lucide-react';
+import { GraduationCap, Plus, Users, Copy, X, ArrowRight, Video, Loader2, Trash2, Calendar } from 'lucide-react';
 import VirtualClassLinks from '../components/VirtualClassLinks';
+import ClassroomCalendar from '../components/ClassroomCalendar';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface ClassroomsProps {
@@ -16,7 +17,7 @@ const Classrooms: React.FC<ClassroomsProps> = ({ user, onNavigate }) => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [selectedClassroom, setSelectedClassroom] = useState<Classroom | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'links' | 'announcements' | 'resources'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'calendar' | 'links' | 'announcements' | 'resources'>('overview');
 
   // Create classroom form
   const [className, setClassName] = useState('');
@@ -272,15 +273,16 @@ const Classrooms: React.FC<ClassroomsProps> = ({ user, onNavigate }) => {
 
           {/* Tabs */}
           <div className="flex gap-2 mb-6 border-b border-white/10">
-            {(['overview', 'links', 'announcements', 'resources'] as const).map(tab => (
+            {(['overview', 'calendar', 'links', 'announcements', 'resources'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-6 py-3 font-medium transition-colors ${activeTab === tab
+                className={`px-6 py-3 font-medium transition-colors flex items-center gap-2 ${activeTab === tab
                     ? 'text-[#5865F2] border-b-2 border-[#5865F2]'
                     : 'text-gray-400 hover:text-white'
                   }`}
               >
+                {tab === 'calendar' && <Calendar size={16} />}
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
               </button>
             ))}
@@ -326,6 +328,17 @@ const Classrooms: React.FC<ClassroomsProps> = ({ user, onNavigate }) => {
 
           {activeTab === 'links' && (
             <VirtualClassLinks
+              classroom={selectedClassroom}
+              user={user}
+              onUpdate={async () => {
+                const updated = await ClassroomService.getClassroom(selectedClassroom.id);
+                if (updated) setSelectedClassroom(updated);
+              }}
+            />
+          )}
+
+          {activeTab === 'calendar' && (
+            <ClassroomCalendar
               classroom={selectedClassroom}
               user={user}
               onUpdate={async () => {
