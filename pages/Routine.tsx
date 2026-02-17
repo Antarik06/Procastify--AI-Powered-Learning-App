@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { UserPreferences, RoutineTask, Note, QueueItem } from '../types';
 import { analyzeNoteWorkload, generateAdaptiveRoutine, generatePanicDecomposition } from '../services/geminiService';
 import { StorageService } from '../services/storageService';
-import { Clock, CheckCircle, RefreshCw, CalendarCheck, PlayCircle, Plus, BrainCircuit, Settings, Coffee, Trash2, AlertTriangle, Zap } from 'lucide-react';
+import { Clock, CheckCircle, RefreshCw, CalendarCheck, PlayCircle, Plus, BrainCircuit, Settings, Coffee, Trash2, AlertTriangle, Zap, Kanban } from 'lucide-react';
+import { WorkflowBoard } from '../components/WorkflowBoard';
 
 interface RoutineProps {
     user: UserPreferences;
@@ -10,12 +11,14 @@ interface RoutineProps {
     notes: Note[];
     setNotes: (n: Note[]) => void;
     onStartTask: (task: RoutineTask) => void;
+    sidebarCollapsed?: boolean;
 }
 
-const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onStartTask }) => {
+const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onStartTask, sidebarCollapsed = false }) => {
     const [activeTab, setActiveTab] = useState<'plan' | 'schedule'>('plan');
     const [queue, setQueue] = useState<QueueItem[]>([]);
     const [tasks, setTasks] = useState<RoutineTask[]>([]);
+    const [showWorkflowBoard, setShowWorkflowBoard] = useState(false);
 
 
     const [loadingAnalysis, setLoadingAnalysis] = useState<string | null>(null); // Note ID being analyzed
@@ -430,12 +433,21 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
                         Optimized for <strong>{user.energyPeak}</strong> energy peak. {user.freeTimeHours}h free today.
                     </p>
                 </div>
-                <button
-                    onClick={() => setShowSettings(!showSettings)}
-                    className="p-3 bg-discord-panel hover:bg-discord-hover text-discord-text rounded-xl transition-colors border border-white/5"
-                >
-                    <Settings size={20} />
-                </button>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => setShowWorkflowBoard(true)}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-discord-accent hover:bg-discord-accentHover text-white rounded-xl transition-all font-bold text-sm shadow-lg shadow-discord-accent/20 hover:shadow-discord-accent/40 hover:-translate-y-0.5"
+                    >
+                        <Kanban size={18} />
+                        Workflow Board
+                    </button>
+                    <button
+                        onClick={() => setShowSettings(!showSettings)}
+                        className="p-3 bg-discord-panel hover:bg-discord-hover text-discord-text rounded-xl transition-colors border border-white/5"
+                    >
+                        <Settings size={20} />
+                    </button>
+                </div>
             </div>
 
 
@@ -505,6 +517,15 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
                 {activeTab === 'plan' && renderQueue()}
                 {activeTab === 'schedule' && renderSchedule()}
             </div>
+
+            {/* Workflow Board — full-screen overlay */}
+            {showWorkflowBoard && (
+                <WorkflowBoard
+                    userId={user.id}
+                    onClose={() => setShowWorkflowBoard(false)}
+                    sidebarCollapsed={sidebarCollapsed}
+                />
+            )}
         </div>
     );
 };

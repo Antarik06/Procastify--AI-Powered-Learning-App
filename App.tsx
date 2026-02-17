@@ -453,6 +453,7 @@ const App: React.FC = () => {
               StorageService.saveNotes(n);
             }}
             onStartTask={handleStartFocus}
+            sidebarCollapsed={sidebarCollapsed}
           />
         )}
 
