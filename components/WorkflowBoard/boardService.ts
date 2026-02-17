@@ -1,10 +1,3 @@
-// ============================================================
-// boardService.ts — Firestore operations for WorkflowBoard
-// Follows existing project service conventions
-// Structure: users/{userId}/boards/{boardId}
-//            users/{userId}/boards/{boardId}/columns/{columnId}
-//            users/{userId}/boards/{boardId}/tasks/{taskId}
-// ============================================================
 
 import {
   collection,
@@ -24,12 +17,9 @@ import {
 import { db as firebaseDb } from '../../firebaseConfig';
 import { Board, BoardColumn, BoardTask } from './types';
 
-// Use the project-level db instance, fall back to null if unconfigured
 const getDb = (): Firestore | null => firebaseDb as Firestore | null;
 
 const DB_AVAILABLE = () => !!getDb();
-
-// ── helpers ──────────────────────────────────────────────────
 
 const boardsCol = (userId: string) => `users/${userId}/boards`;
 const columnsCol = (userId: string, boardId: string) =>
@@ -37,9 +27,6 @@ const columnsCol = (userId: string, boardId: string) =>
 const tasksCol = (userId: string, boardId: string) =>
   `users/${userId}/boards/${boardId}/tasks`;
 
-// ── Board CRUD ───────────────────────────────────────────────
-
-/** Load (or create default) board for a user */
 export async function loadOrCreateBoard(userId: string): Promise<{
   board: Board;
   columns: BoardColumn[];
@@ -55,7 +42,6 @@ export async function loadOrCreateBoard(userId: string): Promise<{
     const boardDoc = snap.docs[0];
     const board = { id: boardDoc.id, ...boardDoc.data() } as Board;
 
-    // Load columns
     const colsSnap = await getDocs(
       query(collection(db, columnsCol(userId, board.id)), orderBy('order', 'asc'))
     );
@@ -64,7 +50,6 @@ export async function loadOrCreateBoard(userId: string): Promise<{
       ...(d.data() as Omit<BoardColumn, 'id'>),
     }));
 
-    // Load tasks
     const tasksSnap = await getDocs(collection(db, tasksCol(userId, board.id)));
     const tasks: BoardTask[] = tasksSnap.docs.map((d) => {
       const data = d.data() as any;
@@ -79,11 +64,9 @@ export async function loadOrCreateBoard(userId: string): Promise<{
     return { board, columns, tasks };
   }
 
-  // No board exists → create default
   return createDefaultBoard(userId);
 }
 
-/** Create the default board with 3 columns */
 export async function createDefaultBoard(userId: string): Promise<{
   board: Board;
   columns: BoardColumn[];
@@ -118,15 +101,12 @@ export async function createDefaultBoard(userId: string): Promise<{
     colIds.push(colRef.id);
   }
 
-  // Update columnOrder on board
   batch.update(boardRef, { columnOrder: colIds });
   await batch.commit();
 
   board.columnOrder = colIds;
   return { board, columns, tasks: [] };
 }
-
-// ── Column CRUD ──────────────────────────────────────────────
 
 export async function addColumn(
   userId: string,
@@ -139,7 +119,6 @@ export async function addColumn(
   const col: Omit<BoardColumn, 'id'> = { title, order, collapsed: false };
   await setDoc(colRef, col);
 
-  // append to board's columnOrder
   const boardRef = doc(db, boardsCol(userId), boardId);
   const boardSnap = await getDoc(boardRef);
   const existing: string[] = boardSnap.data()?.columnOrder ?? [];
@@ -167,15 +146,12 @@ export async function deleteColumn(
   const db = getDb()!;
   const batch = writeBatch(db);
 
-  // Delete all tasks in this column
   for (const tid of taskIds) {
     batch.delete(doc(db, tasksCol(userId, boardId), tid));
   }
 
-  // Delete the column itself
   batch.delete(doc(db, columnsCol(userId, boardId), columnId));
 
-  // Remove from board columnOrder
   const boardRef = doc(db, boardsCol(userId), boardId);
   const boardSnap = await getDoc(boardRef);
   const order: string[] = (boardSnap.data()?.columnOrder ?? []).filter((id: string) => id !== columnId);
@@ -194,7 +170,6 @@ export async function saveColumnOrder(
   const boardRef = doc(db, boardsCol(userId), boardId);
   batch.update(boardRef, { columnOrder });
 
-  // Also update 'order' field on each column
   columnOrder.forEach((colId, idx) => {
     batch.update(doc(db, columnsCol(userId, boardId), colId), { order: idx });
   });
@@ -211,8 +186,6 @@ export async function toggleColumnCollapse(
   const db = getDb()!;
   await updateDoc(doc(db, columnsCol(userId, boardId), columnId), { collapsed });
 }
-
-// ── Task CRUD ────────────────────────────────────────────────
 
 export async function addTask(
   userId: string,
@@ -249,10 +222,6 @@ export async function deleteTask(
   await deleteDoc(doc(db, tasksCol(userId, boardId), taskId));
 }
 
-/**
- * Persist reordering of tasks using a batched write.
- * Updates columnId and position for each task in affected columns.
- */
 export async function saveTaskPositions(
   userId: string,
   boardId: string,
@@ -270,8 +239,6 @@ export async function saveTaskPositions(
 
   await batch.commit();
 }
-
-// ── Local fallback (no Firebase) ────────────────────────────
 
 function buildLocalDefault(userId: string): { board: Board; columns: BoardColumn[]; tasks: BoardTask[] } {
   const boardId = `local-${userId}`;

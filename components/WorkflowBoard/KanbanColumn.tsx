@@ -1,9 +1,5 @@
-// ============================================================
-// KanbanColumn.tsx — Column UI with sticky header and drag support
-// Uses native HTML5 drag-and-drop to avoid new dependencies
-// ============================================================
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   ChevronDown,
   ChevronRight,
@@ -22,25 +18,20 @@ interface KanbanColumnProps {
   column: BoardColumn;
   tasks: BoardTask[];
   isColumnDragging?: boolean;
-  // Column actions
   onRename: (columnId: string, newTitle: string) => void;
   onDelete: (columnId: string) => void;
   onToggleCollapse: (columnId: string) => void;
-  // Task actions
   onAddTask: (columnId: string) => void;
   onEditTask: (task: BoardTask) => void;
   onDeleteTask: (taskId: string) => void;
   onToggleSubtask: (taskId: string, subtaskId: string) => void;
-  // Drag handlers (task DnD)
   onTaskDragStart: (taskId: string, fromColumnId: string, fromIndex: number) => void;
   onTaskDragOver: (e: React.DragEvent, toColumnId: string, toIndex: number) => void;
   onTaskDrop: (e: React.DragEvent, toColumnId: string, toIndex: number) => void;
-  // Column DnD
   onColumnDragStart: (e: React.DragEvent, columnId: string) => void;
   onColumnDragOver: (e: React.DragEvent, columnId: string) => void;
   onColumnDrop: (e: React.DragEvent, columnId: string) => void;
   onColumnDragEnd: () => void;
-  // Drop indicator
   dropIndicator: { columnId: string; index: number } | null;
 }
 
@@ -93,7 +84,6 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
     setShowMenu(false);
   };
 
-  // Color the column header accent based on column name
   const getHeaderAccent = () => {
     const name = column.title.toLowerCase();
     if (name.includes('done') || name.includes('complete')) return 'from-green-500/20';
@@ -119,15 +109,12 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
       onDrop={(e) => onColumnDrop(e, column.id)}
       onDragEnd={onColumnDragEnd}
     >
-      {/* ── Sticky Column Header ── */}
       <div className={`sticky top-0 z-10 px-4 py-3 rounded-t-2xl border-b border-white/5 bg-gradient-to-r ${getHeaderAccent()} to-transparent backdrop-blur-sm`}>
         <div className="flex items-center gap-2">
-          {/* Column drag handle */}
           <div className="text-discord-textMuted hover:text-white cursor-grab active:cursor-grabbing shrink-0 transition-colors">
             <GripVertical size={16} />
           </div>
 
-          {/* Collapse toggle */}
           <button
             onClick={() => onToggleCollapse(column.id)}
             className="text-discord-textMuted hover:text-white transition-colors shrink-0"
@@ -135,7 +122,6 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
             {column.collapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
           </button>
 
-          {/* Title (inline edit) */}
           {editing ? (
             <input
               ref={inputRef}
@@ -159,12 +145,10 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
             </h3>
           )}
 
-          {/* Task count badge */}
           <span className="text-xs font-bold bg-discord-bg text-discord-textMuted px-2 py-0.5 rounded-full border border-white/10 shrink-0">
             {tasks.length}
           </span>
 
-          {/* Column menu */}
           <div className="relative shrink-0">
             <button
               onClick={() => setShowMenu((v) => !v)}
@@ -203,7 +187,6 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
         </div>
       </div>
 
-      {/* ── Confirm delete with tasks ── */}
       {confirmDelete && (
         <div className="mx-3 mt-3 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
           <p className="text-xs text-red-300 mb-2 font-medium">
@@ -226,7 +209,6 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
         </div>
       )}
 
-      {/* ── Task list (hidden when collapsed) ── */}
       {!column.collapsed && (
         <div
           className="flex-1 overflow-y-auto p-3 space-y-2 min-h-[60px]" style={{ overscrollBehavior: "contain" }}
@@ -252,7 +234,6 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
 
           {tasks.map((task, idx) => (
             <React.Fragment key={task.id}>
-              {/* Drop indicator line */}
               {dropIndicator?.columnId === column.id && dropIndicator.index === idx && (
                 <div className="h-0.5 bg-discord-accent rounded-full mx-1 animate-pulse" />
               )}
@@ -287,14 +268,12 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
             </React.Fragment>
           ))}
 
-          {/* Drop indicator at bottom of list */}
           {dropIndicator?.columnId === column.id && dropIndicator.index === tasks.length && (
             <div className="h-0.5 bg-discord-accent rounded-full mx-1 animate-pulse" />
           )}
         </div>
       )}
 
-      {/* ── Add task button ── */}
       {!column.collapsed && (
         <div className="p-3 border-t border-white/5">
           <button

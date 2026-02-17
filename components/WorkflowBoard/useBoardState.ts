@@ -1,36 +1,27 @@
-// ============================================================
-// useBoardState.ts — All state logic for the Workflow Board
-// Separates UI state from Firestore operations
-// Implements optimistic updates for snappy UX
-// ============================================================
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Board, BoardColumn, BoardTask, TaskPriority, LabelColor, Subtask } from './types';
+import { Board, BoardColumn, BoardTask } from './types';
 import * as svc from './boardService';
 
 interface UseBoardStateReturn {
-  // Data
   board: Board | null;
   columns: BoardColumn[];
   tasks: BoardTask[];
   loading: boolean;
   error: string | null;
 
-  // Column actions
   addColumn: (title: string) => Promise<void>;
   renameColumn: (columnId: string, title: string) => Promise<void>;
   deleteColumn: (columnId: string) => Promise<void>;
   reorderColumns: (newOrder: string[]) => Promise<void>;
   toggleCollapse: (columnId: string) => void;
 
-  // Task actions
   addTask: (columnId: string, title: string) => Promise<BoardTask>;
   updateTask: (taskId: string, updates: Partial<BoardTask>) => Promise<void>;
   deleteTask: (taskId: string) => Promise<void>;
   moveTask: (taskId: string, toColumnId: string, toIndex: number) => Promise<void>;
   reorderTask: (columnId: string, fromIndex: number, toIndex: number) => Promise<void>;
 
-  // Computed
   getColumnTasks: (columnId: string) => BoardTask[];
   totalTasks: number;
   doneTasks: number;
@@ -43,31 +34,25 @@ export function useBoardState(userId: string): UseBoardStateReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Debounce timer for position persistence (avoids write storms during rapid dragging)
   const persistTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // ── Load board on mount ──────────────────────────────────────
   useEffect(() => {
     if (!userId) return;
     setLoading(true);
     svc.loadOrCreateBoard(userId)
       .then(({ board: b, columns: c, tasks: t }) => {
         setBoard(b);
-        // Sort columns by order field
         setColumns([...c].sort((a, b) => a.order - b.order));
-        // Sort tasks by position within each column
         setTasks([...t].sort((a, b) => a.position - b.position));
         setError(null);
       })
       .catch((err) => {
         console.error('[WorkflowBoard] Load error:', err);
         setError('Failed to load board. Using local state.');
-        // Fall back gracefully
       })
       .finally(() => setLoading(false));
   }, [userId]);
 
-  // ── Helper: persist task positions (debounced) ───────────────
   const schedulePersist = useCallback(
     (updatedTasks: BoardTask[]) => {
       if (!board) return;
@@ -79,17 +64,13 @@ export function useBoardState(userId: string): UseBoardStateReturn {
     [userId, board]
   );
 
-  // ── Column actions ───────────────────────────────────────────
-
   const addColumn = useCallback(
     async (title: string) => {
       if (!board) return;
-      // Prevent duplicate column names
       if (columns.some((c) => c.title.toLowerCase() === title.toLowerCase())) {
         throw new Error(`Column "${title}" already exists.`);
       }
       const order = columns.length;
-      // Optimistic update
       const tempId = `temp-${Date.now()}`;
       const optimistic: BoardColumn = { id: tempId, title, order, collapsed: false };
       setColumns((prev) => [...prev, optimistic]);
@@ -97,13 +78,11 @@ export function useBoardState(userId: string): UseBoardStateReturn {
 
       try {
         const created = await svc.addColumn(userId, board.id, title, order);
-        // Replace temp with real
         setColumns((prev) => prev.map((c) => (c.id === tempId ? created : c)));
         setBoard((prev) =>
           prev ? { ...prev, columnOrder: prev.columnOrder.map((id) => (id === tempId ? created.id : id)) } : prev
         );
       } catch (err) {
-        // Rollback on failure
         setColumns((prev) => prev.filter((c) => c.id !== tempId));
         setBoard((prev) => prev ? { ...prev, columnOrder: prev.columnOrder.filter((id) => id !== tempId) } : prev);
         throw err;
@@ -115,16 +94,13 @@ export function useBoardState(userId: string): UseBoardStateReturn {
   const renameColumn = useCallback(
     async (columnId: string, title: string) => {
       if (!board) return;
-      // Prevent duplicate names (excluding self)
       if (columns.some((c) => c.id !== columnId && c.title.toLowerCase() === title.toLowerCase())) {
         throw new Error(`Column "${title}" already exists.`);
       }
-      // Optimistic
       setColumns((prev) => prev.map((c) => (c.id === columnId ? { ...c, title } : c)));
       try {
         await svc.renameColumn(userId, board.id, columnId, title);
       } catch (err) {
-        // Rollback handled by re-fetching in practice — for now just log
         console.error('[WorkflowBoard] Rename failed:', err);
         throw err;
       }
@@ -136,7 +112,6 @@ export function useBoardState(userId: string): UseBoardStateReturn {
     async (columnId: string) => {
       if (!board) return;
       const columnTasks = tasks.filter((t) => t.columnId === columnId);
-      // Optimistic removal
       setColumns((prev) => prev.filter((c) => c.id !== columnId));
       setTasks((prev) => prev.filter((t) => t.columnId !== columnId));
       setBoard((prev) =>
@@ -156,7 +131,6 @@ export function useBoardState(userId: string): UseBoardStateReturn {
   const reorderColumns = useCallback(
     async (newOrder: string[]) => {
       if (!board) return;
-      // Optimistic reorder with updated 'order' field
       setBoard((prev) => (prev ? { ...prev, columnOrder: newOrder } : prev));
       setColumns((prev) => {
         const map = Object.fromEntries(prev.map((c) => [c.id, c]));
@@ -186,8 +160,6 @@ export function useBoardState(userId: string): UseBoardStateReturn {
     [userId, board, columns]
   );
 
-  // ── Task actions ─────────────────────────────────────────────
-
   const addTask = useCallback(
     async (columnId: string, title: string): Promise<BoardTask> => {
       if (!board) throw new Error('No board loaded');
@@ -207,7 +179,6 @@ export function useBoardState(userId: string): UseBoardStateReturn {
         createdAt: Date.now(),
       };
 
-      // Optimistic
       const tempId = `temp-task-${Date.now()}`;
       const optimistic = { ...newTask, id: tempId };
       setTasks((prev) => [...prev, optimistic]);
@@ -227,7 +198,6 @@ export function useBoardState(userId: string): UseBoardStateReturn {
   const updateTask = useCallback(
     async (taskId: string, updates: Partial<BoardTask>) => {
       if (!board) return;
-      // Optimistic
       setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, ...updates } : t)));
       try {
         await svc.updateTask(userId, board.id, taskId, updates);
@@ -253,36 +223,27 @@ export function useBoardState(userId: string): UseBoardStateReturn {
     [userId, board]
   );
 
-  /**
-   * Move a task to a different column at a specific index.
-   * Recalculates position for all tasks in affected columns.
-   */
   const moveTask = useCallback(
     async (taskId: string, toColumnId: string, toIndex: number) => {
       setTasks((prev) => {
         const task = prev.find((t) => t.id === taskId);
         if (!task) return prev;
 
-        // Remove from source column
         const without = prev.filter((t) => t.id !== taskId);
 
-        // Get destination column tasks (sorted), insert at toIndex
         const destTasks = without
           .filter((t) => t.columnId === toColumnId)
           .sort((a, b) => a.position - b.position);
 
         destTasks.splice(toIndex, 0, { ...task, columnId: toColumnId });
 
-        // Reassign positions in destination column
         const reassigned = destTasks.map((t, i) => ({ ...t, position: i }));
 
-        // Rebuild: tasks not in dest column + reassigned dest tasks
         const result = [
           ...without.filter((t) => t.columnId !== toColumnId),
           ...reassigned,
         ];
 
-        // Persist (debounced) — only send affected tasks
         schedulePersist(result.filter((t) => t.columnId === toColumnId || (task && t.columnId === task.columnId)));
         return result;
       });
@@ -290,9 +251,6 @@ export function useBoardState(userId: string): UseBoardStateReturn {
     [schedulePersist]
   );
 
-  /**
-   * Reorder tasks within the same column.
-   */
   const reorderTask = useCallback(
     async (columnId: string, fromIndex: number, toIndex: number) => {
       setTasks((prev) => {
@@ -300,11 +258,9 @@ export function useBoardState(userId: string): UseBoardStateReturn {
           .filter((t) => t.columnId === columnId)
           .sort((a, b) => a.position - b.position);
 
-        // Splice to reorder
         const [moved] = colTasks.splice(fromIndex, 1);
         colTasks.splice(toIndex, 0, moved);
 
-        // Reassign positions
         const reassigned = colTasks.map((t, i) => ({ ...t, position: i }));
         const result = [...prev.filter((t) => t.columnId !== columnId), ...reassigned];
         schedulePersist(reassigned);
@@ -313,8 +269,6 @@ export function useBoardState(userId: string): UseBoardStateReturn {
     },
     [schedulePersist]
   );
-
-  // ── Computed ─────────────────────────────────────────────────
 
   const getColumnTasks = useCallback(
     (columnId: string) =>

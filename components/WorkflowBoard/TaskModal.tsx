@@ -1,7 +1,3 @@
-// ============================================================
-// TaskModal.tsx — Full-featured create/edit modal for tasks
-// Matches discord dark theme; no new design language
-// ============================================================
 
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Plus, Trash2, Flag, Calendar, Clock, Tag } from 'lucide-react';
@@ -10,7 +6,7 @@ import { BoardTask, BoardColumn, TaskPriority, LabelColor, Subtask } from './typ
 interface TaskModalProps {
   open: boolean;
   columns: BoardColumn[];
-  initialTask?: BoardTask | null;          // null = new task
+  initialTask?: BoardTask | null;
   initialColumnId?: string;
   onClose: () => void;
   onSave: (data: Partial<BoardTask>, columnId: string) => void;
@@ -47,7 +43,6 @@ const TaskModal: React.FC<TaskModalProps> = ({
   const [titleError, setTitleError] = useState('');
   const titleRef = useRef<HTMLInputElement>(null);
 
-  // Populate form when editing
   useEffect(() => {
     if (open) {
       if (initialTask) {
@@ -60,7 +55,6 @@ const TaskModal: React.FC<TaskModalProps> = ({
         setLabels(initialTask.labels);
         setSubtasks(initialTask.subtasks);
       } else {
-        // Reset form for new task
         setTitle('');
         setDescription('');
         setColumnId(initialColumnId ?? columns[0]?.id ?? '');
@@ -75,7 +69,6 @@ const TaskModal: React.FC<TaskModalProps> = ({
     }
   }, [open, initialTask, initialColumnId, columns]);
 
-  // Keyboard: Escape to close
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && open) onClose();
@@ -124,15 +117,12 @@ const TaskModal: React.FC<TaskModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* Modal */}
       <div className="relative bg-discord-bg border border-white/10 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
           <h2 className="font-bold text-white text-lg">
             {initialTask ? 'Edit Task' : 'New Task'}
@@ -145,9 +135,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
           </button>
         </div>
 
-        {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-          {/* Title */}
           <div>
             <label className="text-xs font-bold uppercase tracking-wider text-discord-textMuted mb-1.5 block">
               Title *
@@ -164,7 +152,6 @@ const TaskModal: React.FC<TaskModalProps> = ({
             {titleError && <p className="text-red-400 text-xs mt-1">{titleError}</p>}
           </div>
 
-          {/* Description */}
           <div>
             <label className="text-xs font-bold uppercase tracking-wider text-discord-textMuted mb-1.5 block">
               Description
@@ -178,7 +165,6 @@ const TaskModal: React.FC<TaskModalProps> = ({
             />
           </div>
 
-          {/* Row: Column + Priority */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-bold uppercase tracking-wider text-discord-textMuted mb-1.5 block">
@@ -217,7 +203,6 @@ const TaskModal: React.FC<TaskModalProps> = ({
             </div>
           </div>
 
-          {/* Row: Due date + Time */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-bold uppercase tracking-wider text-discord-textMuted mb-1.5 block flex items-center gap-1">
@@ -247,7 +232,6 @@ const TaskModal: React.FC<TaskModalProps> = ({
             </div>
           </div>
 
-          {/* Color labels */}
           <div>
             <label className="text-xs font-bold uppercase tracking-wider text-discord-textMuted mb-2 block flex items-center gap-1">
               <Tag size={10} /> Labels
@@ -257,9 +241,8 @@ const TaskModal: React.FC<TaskModalProps> = ({
                 <button
                   key={color}
                   onClick={() => toggleLabel(color)}
-                  className={`w-7 h-7 rounded-lg transition-all border-2 ${
-                    labels.includes(color) ? 'scale-110 border-white/60' : 'border-transparent hover:scale-105'
-                  }`}
+                  className={`w-7 h-7 rounded-lg transition-all border-2 ${labels.includes(color) ? 'scale-110 border-white/60' : 'border-transparent hover:scale-105'
+                    }`}
                   style={{ backgroundColor: color }}
                   title={color}
                 />
@@ -267,7 +250,6 @@ const TaskModal: React.FC<TaskModalProps> = ({
             </div>
           </div>
 
-          {/* Subtasks */}
           <div>
             <label className="text-xs font-bold uppercase tracking-wider text-discord-textMuted mb-2 block">
               Subtasks
@@ -285,8 +267,8 @@ const TaskModal: React.FC<TaskModalProps> = ({
                   >
                     {sub.done
                       ? <div className="w-4 h-4 rounded bg-discord-accent flex items-center justify-center">
-                          <span className="text-white text-[10px]">✓</span>
-                        </div>
+                        <span className="text-white text-[10px]">✓</span>
+                      </div>
                       : <div className="w-4 h-4 rounded border border-white/20 hover:border-discord-accent/60 transition-colors" />
                     }
                   </button>
@@ -321,7 +303,6 @@ const TaskModal: React.FC<TaskModalProps> = ({
           </div>
         </div>
 
-        {/* Footer */}
         <div className="flex gap-3 px-6 py-4 border-t border-white/5">
           <button
             onClick={onClose}

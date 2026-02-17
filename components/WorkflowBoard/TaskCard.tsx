@@ -1,10 +1,6 @@
-// ============================================================
-// TaskCard.tsx — Individual task card (memoized)
-// Matches project's discord dark theme
-// ============================================================
 
 import React, { memo, useState } from 'react';
-import { Calendar, Clock, Flag, MoreVertical, CheckSquare, Square, GripVertical, Trash2, Edit2 } from 'lucide-react';
+import { Calendar, Clock, MoreVertical, CheckSquare, Square, GripVertical, Trash2, Edit2 } from 'lucide-react';
 import { BoardTask, TaskPriority } from './types';
 
 interface TaskCardProps {
@@ -64,7 +60,6 @@ const TaskCard: React.FC<TaskCardProps> = memo(
         `}
         style={{ willChange: 'transform' }}
       >
-        {/* Color labels strip at top */}
         {task.labels.length > 0 && (
           <div className="flex gap-1 px-3 pt-2">
             {task.labels.map((color) => (
@@ -78,9 +73,7 @@ const TaskCard: React.FC<TaskCardProps> = memo(
         )}
 
         <div className="p-3">
-          {/* Title row */}
           <div className="flex items-start gap-2">
-            {/* Drag handle */}
             <div
               {...dragHandleProps}
               className="mt-0.5 text-discord-textMuted opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing shrink-0"
@@ -92,7 +85,6 @@ const TaskCard: React.FC<TaskCardProps> = memo(
               {task.title}
             </h4>
 
-            {/* Menu button */}
             <div className="relative shrink-0">
               <button
                 onClick={(e) => { e.stopPropagation(); setShowMenu((v) => !v); }}
@@ -123,14 +115,12 @@ const TaskCard: React.FC<TaskCardProps> = memo(
             </div>
           </div>
 
-          {/* Description */}
           {task.description && (
             <p className="text-xs text-discord-textMuted mt-1.5 ml-5 line-clamp-2 leading-relaxed">
               {task.description}
             </p>
           )}
 
-          {/* Subtask progress bar */}
           {task.subtasks.length > 0 && (
             <div className="mt-2.5 ml-5">
               <div className="flex items-center justify-between mb-1">
@@ -144,7 +134,6 @@ const TaskCard: React.FC<TaskCardProps> = memo(
                   style={{ width: `${subtaskProgress}%` }}
                 />
               </div>
-              {/* Show first 2 subtasks */}
               <div className="mt-2 space-y-1">
                 {task.subtasks.slice(0, 2).map((sub) => (
                   <button
@@ -171,15 +160,12 @@ const TaskCard: React.FC<TaskCardProps> = memo(
             </div>
           )}
 
-          {/* Footer meta */}
           <div className="flex items-center gap-2 mt-3 ml-5 flex-wrap">
-            {/* Priority badge */}
             <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md border flex items-center gap-1 ${priority.bg} ${priority.color}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${priority.dot}`} />
               {priority.label}
             </span>
 
-            {/* Due date */}
             {task.dueDate && (
               <span className={`text-[10px] flex items-center gap-1 ${isOverdue ? 'text-red-400' : 'text-discord-textMuted'}`}>
                 <Calendar size={10} />
@@ -187,7 +173,6 @@ const TaskCard: React.FC<TaskCardProps> = memo(
               </span>
             )}
 
-            {/* Time allocation */}
             {task.timeAllocation && (
               <span className="text-[10px] text-discord-textMuted flex items-center gap-1">
                 <Clock size={10} />

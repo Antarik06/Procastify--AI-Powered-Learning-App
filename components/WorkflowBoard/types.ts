@@ -1,7 +1,3 @@
-// ============================================================
-// WorkflowBoard Types
-// Follows existing project types conventions
-// ============================================================
 
 export interface Subtask {
   id: string;
@@ -12,14 +8,14 @@ export interface Subtask {
 export type TaskPriority = 'low' | 'medium' | 'high';
 
 export type LabelColor =
-  | '#5865F2' // Discord accent (blue/purple)
-  | '#57F287' // Green
-  | '#FEE75C' // Yellow
-  | '#ED4245' // Red
-  | '#EB459E' // Pink
-  | '#3BA55D' // Teal-green
-  | '#FAA61A' // Orange
-  | '#9B59B6'; // Purple
+  | '#5865F2'
+  | '#57F287'
+  | '#FEE75C'
+  | '#ED4245'
+  | '#EB459E'
+  | '#3BA55D'
+  | '#FAA61A'
+  | '#9B59B6';
 
 export interface BoardTask {
   id: string;
@@ -27,12 +23,12 @@ export interface BoardTask {
   description: string;
   columnId: string;
   position: number;
-  dueDate: string | null;         // ISO string or null
+  dueDate: string | null;
   priority: TaskPriority;
   labels: LabelColor[];
   subtasks: Subtask[];
-  timeAllocation: number | null;  // minutes, optional
-  createdAt: number;              // timestamp
+  timeAllocation: number | null;
+  createdAt: number;
 }
 
 export interface BoardColumn {
@@ -49,7 +45,6 @@ export interface Board {
   columnOrder: string[];
 }
 
-// ---- UI drag state ----
 export interface DragItem {
   type: 'TASK' | 'COLUMN';
   id: string;

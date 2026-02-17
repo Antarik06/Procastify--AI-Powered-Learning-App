@@ -20,16 +20,13 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
     const [tasks, setTasks] = useState<RoutineTask[]>([]);
     const [showWorkflowBoard, setShowWorkflowBoard] = useState(false);
 
-
-    const [loadingAnalysis, setLoadingAnalysis] = useState<string | null>(null); // Note ID being analyzed
+    const [loadingAnalysis, setLoadingAnalysis] = useState<string | null>(null);
     const [generatingRoutine, setGeneratingRoutine] = useState(false);
     const [routineMeta, setRoutineMeta] = useState<{ projection: string, confidence: string } | null>(null);
     const [panicMode, setPanicMode] = useState(false);
     const [previousTasks, setPreviousTasks] = useState<RoutineTask[]>([]);
 
-
     const [showSettings, setShowSettings] = useState(false);
-
 
     useEffect(() => {
         const loadData = async () => {
@@ -38,30 +35,24 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
             setQueue(q);
             setTasks(t);
 
-
             const savedMeta = localStorage.getItem('procastify_routine_meta');
             if (savedMeta) setRoutineMeta(JSON.parse(savedMeta));
         };
         loadData();
     }, [user.id]);
 
-    // Clean up stale queue items that reference non-existent notes
     useEffect(() => {
         if (notes.length > 0 && queue.length > 0) {
             const noteIds = new Set(notes.map(n => n.id));
             const validQueue = queue.filter(item => noteIds.has(item.noteId));
 
-            // Only update if we found invalid items to avoid infinite loops
             if (validQueue.length !== queue.length) {
-                console.log('[Routine] Removing stale queue items:', queue.length - validQueue.length);
                 setQueue(validQueue);
             }
         }
     }, [notes, queue]);
 
-
     useEffect(() => {
-
         if (queue.length > 0 || tasks.length > 0) {
             StorageService.saveQueue(queue);
             StorageService.saveTasks(tasks);
@@ -69,51 +60,26 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
         if (routineMeta) localStorage.setItem('procastify_routine_meta', JSON.stringify(routineMeta));
     }, [queue, tasks, routineMeta]);
 
-
-
-
     const addToQueue = async (noteId: string) => {
-        // Already in queue?
         if (queue.find(q => q.noteId === noteId)) return;
 
-        // Analyze note if it doesn't have AI analysis
         setLoadingAnalysis(noteId);
         let note = notes.find(n => n.id === noteId);
 
         if (note) {
-            // Debug: Check what structure the note has
-            console.log('[Routine] Note structure:', {
-                id: note.id,
-                title: note.title,
-                hasDocument: !!note.document,
-                hasBlocks: !!note.document?.blocks,
-                blocksLength: note.document?.blocks?.length,
-                blocks: note.document?.blocks,
-                hasAiAnalysis: !!note.aiAnalysis
-            });
-
-            // Check if note has content in document.blocks
             const hasContent = note.document?.blocks && note.document.blocks.length > 0;
 
             if (!note.aiAnalysis && hasContent) {
-                // Extract text from document blocks
                 const textContent = note.document.blocks.map(block => block.content || "").join("\n");
-                console.log('[Routine] Analyzing note with content:', textContent.substring(0, 100));
-
                 const analysis = await analyzeNoteWorkload(textContent || "Empty Note");
-                console.log('[Routine] Analysis result:', analysis);
 
-                // Update the note with analysis
                 const updatedNote = { ...note, aiAnalysis: analysis };
                 const updatedNotes = notes.map(n => n.id === noteId ? updatedNote : n);
                 setNotes(updatedNotes);
-            } else {
-                console.log('[Routine] Skipping analysis - hasContent:', hasContent, 'hasAiAnalysis:', !!note.aiAnalysis);
             }
         }
         setLoadingAnalysis(null);
 
-        // Add to queue
         setQueue([...queue, { id: Date.now().toString(), userId: user.id, noteId, priority: 'medium', status: 'pending' }]);
     };
 
@@ -131,7 +97,6 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
         setGeneratingRoutine(false);
         setPanicMode(false);
 
-
         setActiveTab('schedule');
     };
 
@@ -143,7 +108,7 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
     const activatePanicMode = async () => {
         if (tasks.filter(t => !t.completed).length === 0) return;
 
-        setPreviousTasks(tasks); // Save state before panic
+        setPreviousTasks(tasks);
         setGeneratingRoutine(true);
         const panicTasks = await generatePanicDecomposition(tasks);
 
@@ -175,11 +140,8 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
         }
     };
 
-
-
     const renderQueue = () => (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
             <div className="lg:col-span-1 bg-discord-panel p-6 rounded-2xl border border-white/5 h-fit">
                 <h3 className="font-bold text-white mb-4 flex items-center gap-2">
                     <BrainCircuit size={18} className="text-discord-accent" /> Notes Library
@@ -218,7 +180,6 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
                 </div>
             </div>
 
-
             <div className="lg:col-span-2 space-y-6">
                 <div className="bg-discord-panel p-6 rounded-2xl border border-white/5 min-h-[400px]">
                     <div className="flex justify-between items-center mb-6">
@@ -244,7 +205,7 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
                     ) : (
                         <div className="space-y-4">
                             {queue
-                                .filter(item => notes.find(n => n.id === item.noteId)) // Validate items before rendering
+                                .filter(item => notes.find(n => n.id === item.noteId))
                                 .map((item, idx) => {
                                     const note = notes.find(n => n.id === item.noteId);
                                     return (
@@ -345,7 +306,6 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
             </div>
 
             <div className="space-y-6 relative">
-
                 <div className="absolute left-6 top-6 bottom-6 w-0.5 bg-white/5"></div>
 
                 {tasks.length === 0 && (
@@ -356,7 +316,6 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
 
                 {tasks.map((task, idx) => (
                     <div key={task.id} className={`relative flex items-start gap-6 group ${task.completed ? 'opacity-50 grayscale' : ''}`}>
-
                         <div className={`
                           w-12 h-12 rounded-full border-4 shrink-0 flex items-center justify-center z-10 transition-colors
                           ${task.completed ? 'bg-discord-bg border-discord-textMuted' :
@@ -371,7 +330,6 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
                                         <span className="font-bold text-white text-sm">{idx + 1}</span>
                             }
                         </div>
-
 
                         <div className={`
                           flex-1 p-5 rounded-2xl border transition-all relative overflow-hidden
@@ -423,7 +381,6 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
 
     return (
         <div className="p-8 max-w-6xl mx-auto h-full flex flex-col">
-
             <div className="flex justify-between items-center mb-8">
                 <div>
                     <h1 className="text-3xl font-bold text-white flex items-center gap-3">
@@ -449,7 +406,6 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
                     </button>
                 </div>
             </div>
-
 
             {showSettings && (
                 <div className="mb-8 bg-discord-panel p-6 rounded-2xl border border-white/5 animate-in slide-in-from-top-2">
@@ -492,7 +448,6 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
                 </div>
             )}
 
-
             <div className="flex gap-1 bg-discord-panel p-1 rounded-xl border border-white/5 w-fit mb-8">
                 {[
                     { id: 'plan', label: '1. Plan & Queue', icon: BrainCircuit },
@@ -512,13 +467,11 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
                 ))}
             </div>
 
-
             <div className="flex-1">
                 {activeTab === 'plan' && renderQueue()}
                 {activeTab === 'schedule' && renderSchedule()}
             </div>
 
-            {/* Workflow Board — full-screen overlay */}
             {showWorkflowBoard && (
                 <WorkflowBoard
                     userId={user.id}

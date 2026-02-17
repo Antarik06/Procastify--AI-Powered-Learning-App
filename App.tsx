@@ -3,7 +3,6 @@ import { ViewState, UserPreferences, Summary, Note, RoutineTask, UserStats, Flas
 import { StorageService } from './services/storageService';
 import { auth } from './firebaseConfig';
 import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
-import { ThemeProvider } from './contexts/ThemeContext';
 import Sidebar from './components/Sidebar';
 import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
@@ -38,7 +37,6 @@ const App: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [selectedClassroomId, setSelectedClassroomId] = useState<string | undefined>(undefined);
 
-  // Folder filtering state
   const [activeFolderId, setActiveFolderId] = useState<
     string | null | undefined
   >(undefined);
@@ -54,7 +52,6 @@ const App: React.FC = () => {
         let profile = await StorageService.getUserProfile(firebaseUser.uid);
 
         if (!profile) {
-          // Generate avatar URL from Firebase photoURL or create one
           const avatarUrl = firebaseUser.photoURL ||
             `https://api.dicebear.com/7.x/notionists/svg?seed=${firebaseUser.displayName || firebaseUser.email}`;
 
@@ -71,7 +68,6 @@ const App: React.FC = () => {
           };
           await StorageService.saveUserProfile(profile);
         } else {
-          // Always update email and avatar if missing or different (ensures existing profiles get them)
           let needsUpdate = false;
           if (!profile.email && firebaseUser.email) {
             profile.email = firebaseUser.email;
@@ -91,7 +87,6 @@ const App: React.FC = () => {
         setUser(profile);
         loadUserData();
 
-        // Check if user has selected a role
         if (!profile.role) {
           setView("roleSelection");
         } else {
@@ -150,8 +145,6 @@ const App: React.FC = () => {
     setView("dashboard");
   };
 
-
-
   const handleLogout = async () => {
     if (user?.isGuest) {
       localStorage.removeItem("procastify_session");
@@ -182,10 +175,8 @@ const App: React.FC = () => {
     if (newView === "notes") {
       setActiveFolderId(folderId);
     } else if (newView === "folders") {
-      // Folders view - accessible through Notes page button only
       setActiveFolderId(undefined);
     } else if (newView === "classroomDetail" || newView === "studentClassroomView") {
-      // Store classroom ID for detail views
       setSelectedClassroomId(folderId || undefined);
     } else {
       setActiveFolderId(undefined);
@@ -202,17 +193,14 @@ const App: React.FC = () => {
 
     const timestamp = Date.now();
 
-    // --- Generate Blocks for Document Section ---
     const newBlocks: any[] = [];
 
-    // 1. Summary Header
     newBlocks.push({
       id: `${timestamp}-h1`,
       type: "h1",
       content: `Summary: ${new Date().toLocaleDateString()}`,
     });
 
-    // 2. Summary Text
     const formattedSummary = summary.summaryText.replace(/\n/g, "<br />");
     newBlocks.push({
       id: `${timestamp}-text`,
@@ -220,7 +208,6 @@ const App: React.FC = () => {
       content: formattedSummary,
     });
 
-    // 3. Flashcards Section
     if (flashcards.length > 0) {
       newBlocks.push({
         id: `${timestamp}-fc-h2`,
@@ -252,7 +239,6 @@ const App: React.FC = () => {
     let noteToSave: Note | null = null;
 
     if (noteId === null) {
-      // --- Create New Note ---
       const newNote: Note = {
         id: timestamp.toString(),
         userId: user.id,
@@ -270,7 +256,6 @@ const App: React.FC = () => {
       noteToSave = newNote;
       noteWasCreated = true;
     } else {
-      // --- Update Existing Note ---
       updatedNotes = updatedNotes.map((n) => {
         if (n.id === noteId) {
           const existingBlocks = n.document?.blocks || [];
@@ -363,7 +348,6 @@ const App: React.FC = () => {
       <main
         className={`flex-1 ${sidebarCollapsed ? "ml-20" : "ml-64"} overflow-y-auto max-h-screen relative transition-all duration-300 ease-in-out`}
       >
-        {/* User Context Bar (Small) */}
         {user.isGuest && (
           <div className="bg-indigo-900/30 border-b border-indigo-500/20 px-4 py-1 text-xs text-indigo-200 flex justify-between items-center sticky top-0 z-50 backdrop-blur-md">
             <span>Guest Mode: Data saved to this device only.</span>
