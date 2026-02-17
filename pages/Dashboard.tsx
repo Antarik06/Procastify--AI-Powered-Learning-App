@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { UserPreferences, Summary, Note, UserStats } from '../types';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { Clock, BookOpen, FileText, Zap, Calendar, Flame, Trophy, ArrowRight, BrainCircuit } from 'lucide-react';
+import { Clock, BookOpen, FileText, Zap, Calendar, Flame, Trophy, ArrowRight, BrainCircuit, Sparkles, Target, PenLine } from 'lucide-react';
+import { generateDashboardInsight, generateDashboardInsightAsync, DashboardInsight, CTAAction } from '../services/insightService';
 
 interface DashboardProps {
   user: UserPreferences;
@@ -9,6 +10,7 @@ interface DashboardProps {
   notes: Note[];
   stats: UserStats | null;
   onNoteClick?: (noteId: string) => void;
+  onNavigate?: (view: string) => void;
 }
 
 interface StatCard {
@@ -20,7 +22,7 @@ interface StatCard {
   bg: string;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ user, summaries, notes, stats, onNoteClick }) => {
+const Dashboard: React.FC<DashboardProps> = ({ user, summaries, notes, stats, onNoteClick, onNavigate }) => {
 
   const safeStats = stats || {
     id: '',
@@ -79,9 +81,58 @@ const Dashboard: React.FC<DashboardProps> = ({ user, summaries, notes, stats, on
     { label: 'Summaries Made', value: String(actualSummariesCount ?? 0), icon: FileText, color: 'text-green-400', bg: 'bg-green-400/10' },
   ];
 
-  // Simple suggestion logic: Pick a random note for now
-  // In future this would use spaced repetition data
-  const suggestedNote = notes.length > 0 ? notes[Math.floor(Math.random() * notes.length)] : null;
+  // for immediate display
+  const syncInsight = useMemo<DashboardInsight>(() => {
+    return generateDashboardInsight(user, notes, safeStats);
+  }, [user.id, notes.length, safeStats.loginStreak, safeStats.quizzesTaken]);
+
+  const [insight, setInsight] = useState<DashboardInsight>(syncInsight);
+
+  // Fetch AI insight when data changes
+  useEffect(() => {
+    setInsight(syncInsight); // Show cached/fallback immediately
+    
+    let cancelled = false;
+    generateDashboardInsightAsync(user, notes, safeStats)
+      .then((aiInsight: DashboardInsight) => {
+        if (!cancelled) setInsight(aiInsight);
+      })
+      .catch(console.error);
+    
+    return () => { cancelled = true; };
+  }, [user.id, notes.length, safeStats.loginStreak, safeStats.quizzesTaken]);
+
+  const handleCTAClick = () => {
+    const action = insight.ctaAction;
+    switch (action.type) {
+      case 'note':
+        if (action.noteId) onNoteClick?.(action.noteId);
+        break;
+      case 'quiz':
+        onNavigate?.('quiz');
+        break;
+      case 'focus':
+        onNavigate?.('focus');
+        break;
+      case 'create-note':
+        onNavigate?.('notes');
+        break;
+      default:
+        break;
+    }
+  };
+
+  const getInsightIcon = () => {
+    switch (insight.insightType) {
+      case 'analysis': return Target;
+      case 'motivation': return Sparkles;
+      case 'revision': return BookOpen;
+      case 'action': return Zap;
+      case 'humor': return Sparkles;
+      default: return BrainCircuit;
+    }
+  };
+  const InsightIcon = getInsightIcon();
 
 
 
@@ -117,31 +168,41 @@ const Dashboard: React.FC<DashboardProps> = ({ user, summaries, notes, stats, on
         </div>
       </div>
 
-      {/* Focus Widget: What Should I Learn Now */}
-      {suggestedNote && (
-        <div className="bg-gradient-to-r from-discord-accent to-purple-600 p-1 rounded-2xl shadow-lg animate-in fade-in slide-in-from-top-4">
-          <div className="bg-discord-bg/90 backdrop-blur-sm p-6 rounded-xl flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <div className="w-16 h-16 bg-discord-accent/20 rounded-full flex items-center justify-center animate-pulse">
-                <BrainCircuit size={32} className="text-discord-accent" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-white mb-1">What Should I Learn Now?</h2>
-                <p className="text-gray-300">Based on your activity, we recommend reviewing:</p>
-                <p className="text-white font-bold text-lg mt-1 flex items-center gap-2">
-                  <BookOpen size={18} /> {suggestedNote.title}
-                </p>
-              </div>
+      {/* Intelligent Focus Widget */}
+      <div className="bg-gradient-to-r from-discord-accent to-purple-600 p-1 rounded-2xl shadow-lg animate-in fade-in slide-in-from-top-4">
+        <div className="bg-discord-bg/90 backdrop-blur-sm p-6 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-start md:items-center gap-4 md:gap-6 flex-1 min-w-0">
+            <div className="w-14 h-14 md:w-16 md:h-16 bg-discord-accent/20 rounded-full flex items-center justify-center flex-shrink-0">
+              <InsightIcon size={28} className="text-discord-accent" />
             </div>
-            <button
-              onClick={() => onNoteClick?.(suggestedNote.id)}
-              className="bg-white text-discord-accent px-6 py-3 rounded-xl font-bold hover:bg-gray-100 transition-colors flex items-center gap-2 shadow-lg"
-            >
-              Start Review <ArrowRight size={20} />
-            </button>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h2 className="text-lg md:text-xl font-bold text-white">{insight.welcomeMessage}</h2>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-discord-accent/20 text-discord-accent font-medium capitalize hidden sm:inline-block">
+                  {insight.insightType}
+                </span>
+              </div>
+              <p className="text-gray-300 text-sm md:text-base leading-relaxed">
+                {insight.mainMessage}
+              </p>
+              {insight.recommendedNote && (
+                <p className="text-white/70 text-xs mt-2 flex items-center gap-1.5 truncate">
+                  <BookOpen size={14} className="flex-shrink-0" />
+                  <span className="truncate">{insight.recommendedNote.title}</span>
+                </p>
+              )}
+            </div>
           </div>
+          {insight.ctaLabel && insight.ctaAction.type !== 'none' && (
+            <button
+              onClick={handleCTAClick}
+              className="bg-white text-discord-accent px-5 py-2.5 md:px-6 md:py-3 rounded-xl font-bold hover:bg-gray-100 transition-colors flex items-center gap-2 shadow-lg whitespace-nowrap flex-shrink-0"
+            >
+              {insight.ctaLabel} <ArrowRight size={18} />
+            </button>
+          )}
         </div>
-      )}
+      </div>
 
       {/* ... existing stat cards ... */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

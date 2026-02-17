@@ -1,14 +1,22 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
+import { UserPreferences, RoutineTask, Question, Flashcard, Note, QueueItem, Attachment } from '../types';
+import { apiRateLimiter, searchRateLimiter } from './rateLimiter';
+import { sanitizeContent, validateUserInput, validateJSON } from './validation';
+import { getSecureKey, initializeSecureKeys, hasSecureKey } from './secureKeyManager';
+import logger, { APIError, getClientErrorMessage } from './securityLogger';
+
+// Initialize secure keys on module load
+initializeSecureKeys();
 import { UserPreferences, RoutineTask, Question, Flashcard, Note, QueueItem, Attachment, QuizReport } from '../types';
 
 const getAI = () => {
-  const apiKey = (import.meta.env as any).VITE_GEMINI_API_KEY || (process.env as any).VITE_GEMINI_API_KEY;
+  const apiKey = getSecureKey('GEMINI_API_KEY');
   if (!apiKey) {
-    // API key missing - features will be limited
+    logger.logSecurityIncident('Gemini API key not configured', 'WARNING' as any);
+    throw new APIError('AI service not configured', 503);
   }
-  return new GoogleGenAI({ apiKey: apiKey || '' });
+  return new GoogleGenAI({ apiKey });
 };
-
 
 const MODEL_TEXT = 'gemini-3-flash-preview';
 const MODEL_MULTIMODAL = 'gemini-2.0-flash-exp';
@@ -56,46 +64,70 @@ export const summarizeContent = async (
   textContext: string,
   attachments: Attachment[],
   mode: string,
-  customPrompt?: string
+  customPrompt?: string,
+  userId?: string
 ): Promise<string> => {
-  const ai = getAI();
-
-  // 1. Normalize and extract content from all inputs
-  const preparation = await prepareTextForSummarization(textContext, attachments);
-
-  if (!preparation) {
-    return "Please enter text or add valid attachments to summarize.";
-  }
-
-  const finalContent = preparation.combinedText;
-
-  // Inform user about any failed extractions
-  let warningText = "";
-  if (preparation.failedExtractions.length > 0) {
-    console.warn("Some attachments failed to process:", preparation.failedExtractions);
-    warningText = `\n\n⚠️ Note: Some files could not be processed (${preparation.failedExtractions.join(', ')}). The summary includes only successfully processed content.`;
-  }
-
-  let systemPrompt = "";
-  
-  // If a custom prompt is provided, use it
-  if (customPrompt) {
-    systemPrompt = customPrompt;
-  } else {
-    // Use predefined modes
-    switch (mode) {
-      case 'eli5': systemPrompt = "Explain this content like I'm 5 years old. Use simple analogies."; break;
-      case 'exam': systemPrompt = "Summarize for exam prep. Focus on definitions, dates, formulas, and key concepts. Use structured bullet points."; break;
-      case 'detailed': systemPrompt = "Provide a comprehensive, detailed summary with examples."; break;
-      case 'short': default: systemPrompt = "Concise key points only. Bullet points."; break;
-    }
-  }
-
   try {
-    const parts: any[] = [];
-    parts.push({ text: `${systemPrompt}\n\nContent to summarize:\n${finalContent.substring(0, 30000)}` });
+    // Rate limiting
+    const identifier = userId || 'anonymous';
+    if (apiRateLimiter.isLimited(identifier)) {
+      logger.logRateLimitViolation(identifier, '/summarize');
+      throw new APIError('Rate limit exceeded. Please try again later.', 429);
+    }
 
-    const model = MODEL_TEXT;
+    // Input validation
+    const textValidation = validateUserInput(textContext, 'text');
+    if (!textValidation.valid) {
+      logger.logValidationError('textContext', textValidation.errors.join(', '));
+      throw new APIError('Invalid text input', 400);
+    }
+
+    // Sanitize inputs
+    const sanitizedText = sanitizeContent(textContext, 30000);
+    const sanitizedMode = validateUserInput(mode, 'text').sanitized;
+    const sanitizedPrompt = customPrompt ? sanitizeContent(customPrompt, 5000) : undefined;
+
+    if (!sanitizedText) {
+      throw new APIError('Text input cannot be empty', 400);
+    }
+
+    const ai = getAI();
+
+    // 1. Normalize and extract content from all inputs
+    const preparation = await prepareTextForSummarization(sanitizedText, attachments);
+
+    if (!preparation) {
+      return "Please enter text or add valid attachments to summarize.";
+    }
+
+    const finalContent = preparation.combinedText;
+
+    // Inform user about any failed extractions
+    let warningText = "";
+    if (preparation.failedExtractions.length > 0) {
+      logger.log(`Failed to process attachments: ${preparation.failedExtractions.join(', ')}`, 'EXTRACTION', 'WARNING' as any);
+      warningText = `\n\n⚠️ Note: Some files could not be processed (${preparation.failedExtractions.join(', ')}). The summary includes only successfully processed content.`;
+    }
+
+    let systemPrompt = "";
+    
+    // If a custom prompt is provided, validate and use it
+    if (sanitizedPrompt) {
+      systemPrompt = sanitizedPrompt;
+    } else {
+      // Use predefined modes
+      switch (sanitizedMode) {
+        case 'eli5': systemPrompt = "Explain this content like I'm 5 years old. Use simple analogies."; break;
+        case 'exam': systemPrompt = "Summarize for exam prep. Focus on definitions, dates, formulas, and key concepts. Use structured bullet points."; break;
+        case 'detailed': systemPrompt = "Provide a comprehensive, detailed summary with examples."; break;
+        case 'short': default: systemPrompt = "Concise key points only. Bullet points."; break;
+      }
+    }
+
+    const parts: any[] = [];
+    parts.push({ text: `${systemPrompt}\n\nContent to summarize:\n${finalContent}` });
+
+    const model = 'gemini-3-flash-preview';
 
     const response = await ai.models.generateContent({
       model: model,
@@ -106,30 +138,62 @@ export const summarizeContent = async (
     });
 
     if (!response || !response.text) {
-      return "Failed to generate summary. Please try again." + warningText;
+      throw new APIError('Failed to generate summary', 500);
     }
 
+    logger.log(`Summarize completed`, 'API', 'INFO' as any, { userId, mode: sanitizedMode });
     return response.text + warningText;
   } catch (error: any) {
-    console.error("Summary error:", error);
+    const clientMessage = getClientErrorMessage(error);
+    logger.logAPIError('/summarize', error, userId);
 
-    if (error.status === 'RESOURCE_EXHAUSTED' || error.code === 429) {
-      return "Rate limited. Please try again in a moment." + warningText;
+    if (error instanceof APIError) {
+      return error.message;
     }
 
-    return `Error: ${error.message || "Unknown error"}. Please try again.` + warningText;
+    if (error.status === 'RESOURCE_EXHAUSTED' || error.code === 429) {
+      return "Rate limited. Please try again in a moment.";
+    }
+
+    return clientMessage;
   }
 };
 
 
 
-export const analyzeNoteWorkload = async (noteContent: string): Promise<Note['aiAnalysis']> => {
-  const ai = getAI();
+export const analyzeNoteWorkload = async (noteContent: string, userId?: string): Promise<Note['aiAnalysis']> => {
   try {
+    // Rate limiting
+    const identifier = userId || 'anonymous';
+    if (apiRateLimiter.isLimited(identifier)) {
+      logger.logRateLimitViolation(identifier, '/analyzeNoteWorkload');
+      return {
+        difficulty: 'medium',
+        estimatedMinutes: 30,
+        cognitiveLoad: 'medium',
+        summary: 'Rate limited. Please try again later.'
+      };
+    }
+
+    // Input validation and sanitization
+    const validation = validateUserInput(noteContent, 'text');
+    if (!validation.valid) {
+      logger.logValidationError('noteContent', validation.errors.join(', '));
+      return {
+        difficulty: 'medium',
+        estimatedMinutes: 30,
+        cognitiveLoad: 'medium',
+        summary: 'Invalid input format.'
+      };
+    }
+
+    const sanitizedContent = sanitizeContent(noteContent, 10000);
+
+    const ai = getAI();
     const response = await ai.models.generateContent({
-      model: MODEL_TEXT,
+      model: 'gemini-3-flash-preview',
       contents: `Analyze this study material. Estimate the difficulty, time required to study it effectively, and cognitive load. Return JSON.
-      Material: ${noteContent.substring(0, 10000)}`, // Truncate to prevent token overflow
+      Material: ${sanitizedContent}`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -144,24 +208,25 @@ export const analyzeNoteWorkload = async (noteContent: string): Promise<Note['ai
       }
     });
 
+    if (!response || !response.text) throw new APIError('No response from AI', 500);
 
-    if (!response || !response.text) throw new Error("No response text");
-
-    return safeJSONParse(response.text, {
+    const result = safeJSONParse(response.text, {
       difficulty: 'medium',
       estimatedMinutes: 30,
       cognitiveLoad: 'medium',
-      summary: 'Analysis failed (JSON Parse Error).'
+      summary: 'Analysis completed'
     });
 
-  } catch (error) {
-    console.error("Note Analysis Error", error);
+    logger.log(`Note analysis completed`, 'API', 'INFO' as any, { userId });
+    return result;
+  } catch (error: any) {
+    logger.logAPIError('/analyzeNoteWorkload', error, userId);
 
     return {
       difficulty: 'medium',
       estimatedMinutes: 30,
       cognitiveLoad: 'medium',
-      summary: 'Analysis failed.'
+      summary: 'Analysis failed. Please try again.'
     };
   }
 };
@@ -263,15 +328,30 @@ export const generateAdaptiveRoutine = async (
 
 
 
-export const generateFlashcards = async (content: string): Promise<Flashcard[]> => {
-  const ai = getAI();
+export const generateFlashcards = async (content: string, userId?: string): Promise<Flashcard[]> => {
   try {
+    // Rate limiting
+    const identifier = userId || 'anonymous';
+    if (apiRateLimiter.isLimited(identifier)) {
+      logger.logRateLimitViolation(identifier, '/generateFlashcards');
+      return [];
+    }
+
+    // Input validation
+    const validation = validateUserInput(content, 'text');
+    if (!validation.valid) {
+      logger.logValidationError('content', validation.errors.join(', '));
+      return [];
+    }
+
+    const sanitizedContent = sanitizeContent(content, 15000);
+    const ai = getAI();
 
     const response = await ai.models.generateContent({
       model: MODEL_TEXT,
       contents: [
         { text: "Extract 5-8 key learning chunks, definitions, or core concepts from the content below.\nReturn JSON array with 'front' (The Concept/Term) and 'back' (The Definition/Explanation/Detail).\nDo NOT create questions. Create knowledge pairings that directly reflect the summary.\n\nCONTENT TO PROCESS:" },
-        { text: content.substring(0, 15000) } // Truncate
+        { text: sanitizedContent }
       ],
       config: {
         responseMimeType: "application/json",
@@ -295,9 +375,10 @@ export const generateFlashcards = async (content: string): Promise<Flashcard[]> 
     const cards = safeJSONParse(response.text, []);
     if (!Array.isArray(cards)) return [];
 
+    logger.log(`Generated ${cards.length} flashcards`, 'API', 'INFO' as any, { userId });
     return cards.map((c: any) => ({ ...c, id: Math.random().toString(36).substr(2, 9), status: 'new' }));
   } catch (error) {
-    console.error("Flashcard error:", error);
+    logger.logAPIError('/generateFlashcards', error, userId);
     return [];
   }
 };

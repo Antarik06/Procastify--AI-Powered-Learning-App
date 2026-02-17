@@ -1,0 +1,21 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Study Resources storage
+    match /studyResources/{userId}/{resourceId}/{fileName} {
+      // Anyone can read (public access for viewing resources)
+      allow read: if true;
+      
+      // Only authenticated users can write to their own folder
+      allow write: if request.auth != null && request.auth.uid == userId;
+      
+      // Only the owner can delete their files
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Deny all other access by default
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "emulators": "firebase emulators:start",
+    "dev:emulators": "firebase emulators:start & vite"
   },
   "dependencies": {
     "@google/genai": "^1.34.0",

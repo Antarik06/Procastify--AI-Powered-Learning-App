@@ -73,6 +73,63 @@ let currentUserId: string | null = null;
 let isGuestMode: boolean = true;
 
 export const StorageService = {
+
+
+
+    setSession: (user: UserPreferences) => {
+        currentUserId = user.id;
+        isGuestMode = user.isGuest;
+        if (user.isGuest) {
+            localStorage.setItem(LOCAL_KEYS.USER_SESSION, user.id);
+
+            const users = JSON.parse(localStorage.getItem(LOCAL_KEYS.USERS_DB) || '{}');
+            users[user.id] = user;
+            localStorage.setItem(LOCAL_KEYS.USERS_DB, JSON.stringify(users));
+        } else {
+            localStorage.removeItem(LOCAL_KEYS.USER_SESSION);
+        }
+    },
+
+    getGuestSession: (): UserPreferences | null => {
+        const sessionId = localStorage.getItem(LOCAL_KEYS.USER_SESSION);
+        if (sessionId) {
+            const users = JSON.parse(localStorage.getItem(LOCAL_KEYS.USERS_DB) || '{}');
+            return users[sessionId] || null;
+        }
+        return null;
+    },
+
+    createGuestUser: (): UserPreferences => {
+        const timestamp = Date.now();
+        const shortId = timestamp.toString().slice(-4);
+        const guestId = `guest_${timestamp}_${Math.random().toString(36).substr(2, 9)}`;
+
+        return {
+            id: guestId,
+            isGuest: true,
+            name: `Guest #${shortId}`,
+            role: 'student', // Guest users default to student role
+            freeTimeHours: 2,
+            energyPeak: 'morning',
+            goal: 'Productivity',
+            distractionLevel: 'medium'
+        };
+    },
+
+
+
+    getUserProfile: async (userId: string): Promise<UserPreferences | null> => {
+
+        try {
+            const docRef = doc(db, 'users', userId);
+            const snap = await getDoc(docRef);
+            if (snap.exists()) {
+                return snap.data() as UserPreferences;
+            }
+            return null;
+        } catch (e) {
+            console.error("Error fetching profile", e);
+            return null;
   get currentUserId() {
     return currentUserId;
   },

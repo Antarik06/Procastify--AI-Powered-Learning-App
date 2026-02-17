@@ -1,4 +1,6 @@
 import React from 'react';
+import { ViewState } from '../types';
+import { LayoutDashboard, FileText, BookOpen, Clock, BrainCircuit, Gamepad2, LogOut, Flame, Globe, PanelLeftClose, PanelLeftOpen, GraduationCap } from 'lucide-react';
 import { ViewState, UserRole } from '../types';
 import { LayoutDashboard, FileText, BookOpen, Clock, BrainCircuit, Gamepad2, LogOut, Flame, Globe, PanelLeftClose, PanelLeftOpen, GraduationCap, Users } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
@@ -129,6 +131,13 @@ const Sidebar: React.FC<SidebarProps> = ({
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 flex flex-col justify-evenly gap-1 overflow-y-auto no-scrollbar">
         <NavItem view="dashboard" icon={LayoutDashboard} label="Dashboard" />
+        <NavItem view="classrooms" icon={GraduationCap} label="Classrooms" />
+        <NavItem view="summarizer" icon={FileText} label="Summarizer" />
+        <NavItem view="notes" icon={BookOpen} label="My Notes" />
+        <NavItem view="feed" icon={Flame} label="Learning Feed" />
+        <NavItem view="quiz" icon={Gamepad2} label="Quiz Arena" />
+        <NavItem view="routine" icon={Clock} label="Routine" />
+        <NavItem view="focus" icon={BrainCircuit} label="Focus Mode" />
         
         {userRole === "teacher" ? (
           <>

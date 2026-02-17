@@ -79,6 +79,27 @@ service cloud.firestore {
     match /notes/{noteId} {
       allow read: if resource.data.isPublic == true;
     }
+    
+    // Classrooms collection
+    match /classrooms/{classroomId} {
+      // Teachers can create and manage their own classrooms
+      allow create: if request.auth != null && 
+        request.resource.data.teacherId == request.auth.uid;
+      
+      // Teachers can read and write their own classrooms
+      allow read, write: if request.auth != null && 
+        resource.data.teacherId == request.auth.uid;
+      
+      // Students can read classrooms they are enrolled in
+      allow read: if request.auth != null && 
+        request.auth.uid in resource.data.studentIds;
+      
+      // Students can join classrooms by adding themselves to studentIds
+      // Only allow if: student is not already in the array, and they're adding themselves
+      allow update: if request.auth != null && 
+        request.auth.uid in request.resource.data.studentIds &&
+        !(request.auth.uid in resource.data.studentIds);
+    }
   }
 }
 ```

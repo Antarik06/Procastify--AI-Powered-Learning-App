@@ -1,3 +1,6 @@
+export type ViewState = 'landing' | 'onboarding' | 'dashboard' | 'summarizer' | 'notes' | 'routine' | 'focus' | 'quiz' | 'feed' | 'store' | 'classrooms';
+
+export type UserRole = 'student' | 'teacher';
 export type ViewState =
   | "landing"
   | "onboarding"
@@ -21,6 +24,11 @@ export interface UserPreferences {
   id: string;
   isGuest: boolean;
   name: string;
+  role?: UserRole; // Added role field - undefined means not set yet
+  freeTimeHours: number;
+  energyPeak: 'morning' | 'afternoon' | 'night';
+  goal: string;
+  distractionLevel: 'low' | 'medium' | 'high';
   email?: string; // NEW: Store user email
   avatarUrl?: string; // NEW: Store user avatar URL
   role?: UserRole;
@@ -297,6 +305,50 @@ export interface Quiz {
   lastPlayed?: number;
 }
 
+// Classroom Types
+export interface VirtualClassLink {
+  id: string;
+  title: string;
+  url: string;
+  description?: string;
+  scheduledDate?: number; // timestamp
+  createdAt: number;
+  createdBy: string; // userId
+}
+
+export interface Announcement {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: number;
+  createdBy: string; // userId
+  classroomId: string;
+}
+
+export interface Resource {
+  id: string;
+  title: string;
+  type: 'link' | 'file' | 'note';
+  url?: string;
+  fileUrl?: string;
+  noteId?: string;
+  description?: string;
+  createdAt: number;
+  createdBy: string; // userId
+  classroomId: string;
+}
+
+export interface Classroom {
+  id: string;
+  name: string;
+  description?: string;
+  teacherId: string;
+  teacherName: string;
+  studentIds: string[]; // Array of enrolled student IDs
+  virtualLinks: VirtualClassLink[];
+  announcements: Announcement[];
+  resources: Resource[];
+  inviteCode: string; // Unique code for students to join
 // Multiplayer Quiz Types
 export type QuizMode = "singleplayer" | "multiplayer";
 
@@ -434,5 +486,112 @@ export interface Activity {
   targetName?: string;
   timestamp: number;
   metadata?: any;
+}
+
+// Study Resources Community Types
+export type ExamType = 
+  | "JEE"
+  | "NEET"
+  | "GATE"
+  | "ICSE"
+  | "CBSE"
+  | "University"
+  | "Other";
+
+export type Level = 
+  | "10"
+  | "12"
+  | "UG"
+  | "PG"
+  | "Other";
+
+export type PaperType = 
+  | "PYQ"
+  | "Mock"
+  | "Sample"
+  | "Practice";
+
+export type FileType = 
+  | "pdf"
+  | "image";
+
+export interface StudyResource {
+  id: string;
+  userId: string;
+  ownerId: string; // Firebase user ID
+  
+  // Metadata
+  title: string;
+  examType: ExamType;
+  level: Level;
+  subject: string;
+  year: number;
+  board: string; // Board or University name
+  paperType: PaperType;
+  description?: string;
+  
+  // File information
+  fileUrl: string;
+  fileName: string;
+  fileSize: number;
+  fileType: FileType;
+  
+  // Timestamps
+  createdAt: number | any;
+  updatedAt: number | any;
+  
+  // Engagement metrics (future enhancement)
+  viewCount?: number;
+  downloadCount?: number;
+}
+
+export interface ResourceMetadata {
+  title: string;
+  examType: ExamType;
+  level: Level;
+  subject: string;
+  year: number;
+  board: string;
+  paperType: PaperType;
+  description?: string;
+}
+
+export interface ResourceFilters {
+  examType?: ExamType[];
+  level?: Level[];
+  subject?: string[];
+  year?: number[];
+  board?: string[];
+  paperType?: PaperType[];
+}
+
+export interface PaginatedResources {
+  resources: StudyResource[];
+  totalCount: number;
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+export interface UploadResult {
+  fileUrl: string;
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+}
+
+export interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+}
+
+export interface SearchResult {
+  resources: StudyResource[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
 }
 
