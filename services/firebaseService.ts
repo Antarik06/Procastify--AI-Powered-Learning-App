@@ -1,42 +1,4 @@
 import { db } from '../firebaseConfig';
-import { doc, deleteDoc, setDoc, getDoc, collection, getDocs, writeBatch, serverTimestamp, query, where, orderBy, Firestore } from 'firebase/firestore';
-import { Note } from '../types';
-import { apiRateLimiter } from './rateLimiter';
-import { sanitizeContent } from './validation';
-import logger from './securityLogger';
-
-export const FirebaseService = {
-    // --- Notes ---
-    saveNote: async (userId: string, note: Note) => {
-        // Rate Limiting
-        if (apiRateLimiter.isLimited(userId)) {
-            logger.logRateLimitViolation(userId, 'saveNote');
-            throw new Error('Rate limit exceeded. Please try again later.');
-        }
-
-        const ref = doc(db, 'notes', note.id);
-
-        // Ensure strictly managed fields
-        const payload = {
-            ...note,
-            ownerId: userId,
-            updatedAt: serverTimestamp(),
-            // Ensure these defaults if missing
-            isPublic: note.isPublic || false,
-            publishedAt: note.isPublic ? (note.publishedAt || serverTimestamp()) : null,
-            document: note.document || { blocks: [] },
-            canvas: note.canvas || { elements: [], strokes: [] }
-        };
-
-        // If it's a new note (basic check), add createdAt. 
-        // Ideally we pass this in, but 'merge: true' with setDoc handles it well if we don't overwrite.
-        // But to be safe for existing notes being saved:
-        if (!note.createdAt) {
-            // We can't easily know if it exists without reading, but 'merge' is safe.
-            // We simply won't set createdAt here if it's missing in the object, assume it allows serverTimestamp if new?
-            // Better: App creates `createdAt` in local state for new notes.
-        }
-import { db } from "../firebaseConfig";
 import {
   doc,
   deleteDoc,
@@ -52,10 +14,20 @@ import {
   Firestore,
 } from "firebase/firestore";
 import { Note, Folder, Classroom, Invitation, Announcement, ClassroomResource, Activity } from "../types";
+import { apiRateLimiter } from './rateLimiter';
+import { sanitizeContent, sanitizePayload } from './validation';
+import logger from './securityLogger';
+import { mapFirestoreDataToNote } from './utils/mappers'; // Assuming this helper exists or needs to be defined if used
 
 export const FirebaseService = {
   // --- Notes ---
   saveNote: async (userId: string, note: Note) => {
+    // Rate Limiting
+    if (apiRateLimiter.isLimited(userId)) {
+      logger.logRateLimitViolation(userId, 'saveNote');
+      throw new Error('Rate limit exceeded. Please try again later.');
+    }
+
     const ref = doc(db, "notes", note.id);
 
     // Ensure strictly managed fields
@@ -65,85 +37,10 @@ export const FirebaseService = {
       updatedAt: serverTimestamp(),
       // Ensure these defaults if missing
       isPublic: note.isPublic || false,
-      publishedAt: note.isPublic ? note.publishedAt || serverTimestamp() : null,
+      publishedAt: note.isPublic ? (note.publishedAt || serverTimestamp()) : null,
       document: note.document || { blocks: [] },
       canvas: note.canvas || { elements: [], strokes: [] },
     };
-
-        // Additional Content Sanitization (XSS Prevention) for text fields
-        if (sanitizedPayload.title) {
-            sanitizedPayload.title = sanitizeContent(sanitizedPayload.title, 200);
-        }
-
-        await setDoc(ref, sanitizedPayload, { merge: true });
-    },
-
-    deleteNote: async (userId: string, noteId: string) => {
-        const ref = doc(db, 'notes', noteId);
-        await deleteDoc(ref);
-    },
-
-    saveNotesBatch: async (userId: string, notes: Note[]) => {
-        // Rate Limiting for Batch
-        if (apiRateLimiter.isLimited(userId)) {
-            logger.logRateLimitViolation(userId, 'saveNotesBatch');
-            throw new Error('Rate limit exceeded. Please try again later.');
-        }
-
-        const batch = writeBatch(db);
-        notes.forEach(note => {
-            const ref = doc(db, 'notes', note.id);
-            const payload = {
-                ...note,
-                ownerId: userId,
-                updatedAt: serverTimestamp(),
-                isPublic: note.isPublic || false
-            };
-            // Sanitize batch payload as well
-            batch.set(ref, sanitizePayload(payload), { merge: true });
-        });
-        await batch.commit();
-    },
-
-    // --- Public Store ---
-    publishNote: async (userId: string, note: Note) => {
-        if (apiRateLimiter.isLimited(userId)) {
-            throw new Error('Rate limit exceeded.');
-        }
-        // Single source of truth update
-        const ref = doc(db, 'notes', note.id);
-        await setDoc(ref, {
-            isPublic: true,
-            publishedAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
-        }, { merge: true });
-    },
-
-    unpublishNote: async (userId: string, noteId: string) => {
-        const ref = doc(db, 'notes', noteId);
-        await setDoc(ref, {
-            isPublic: false,
-            publishedAt: null,
-            updatedAt: serverTimestamp()
-        }, { merge: true });
-    },
-
-    getPublicNotes: async (): Promise<Note[]> => {
-        try {
-            const q = query(
-                collection(db, 'notes'),
-                where('isPublic', '==', true),
-                orderBy('publishedAt', 'desc')
-            );
-            const snap = await getDocs(q);
-            return snap.docs.map(d => {
-                const data = d.data();
-                // Normalize timestamps
-                return mapFirestoreDataToNote(data);
-            });
-        } catch (e) {
-            console.error("Error fetching public notes:", e);
-            return [];
     // If it's a new note (basic check), add createdAt.
     // Ideally we pass this in, but 'merge: true' with setDoc handles it well if we don't overwrite.
     // But to be safe for existing notes being saved:
@@ -293,18 +190,18 @@ export const FirebaseService = {
     userId: string,
     dateKey: string,
     minutes: number,
-  ) => {},
+  ) => { },
 
   // --- Classrooms ---
   saveClassroom: async (classroom: Classroom) => {
     const ref = doc(db, "classrooms", classroom.id);
-    
+
     // Generate classroom code if not present
     if (!classroom.code) {
       classroom.code = FirebaseService.generateClassroomCode(classroom.name);
       classroom.codeEnabled = true;
     }
-    
+
     const payload = {
       ...classroom,
       createdAt: classroom.createdAt || serverTimestamp(),
@@ -366,7 +263,7 @@ export const FirebaseService = {
 
   deleteClassroom: async (classroomId: string) => {
     const ref = doc(db, "classrooms", classroomId);
-    
+
     // Delete announcements subcollection
     const announcementsRef = collection(db, "classrooms", classroomId, "announcements");
     const announcementsSnap = await getDocs(announcementsRef);
@@ -374,16 +271,16 @@ export const FirebaseService = {
     announcementsSnap.docs.forEach((doc) => {
       batch.delete(doc.ref);
     });
-    
+
     // Delete resources subcollection
     const resourcesRef = collection(db, "classrooms", classroomId, "resources");
     const resourcesSnap = await getDocs(resourcesRef);
     resourcesSnap.docs.forEach((doc) => {
       batch.delete(doc.ref);
     });
-    
+
     await batch.commit();
-    
+
     // Delete classroom document
     await deleteDoc(ref);
   },
@@ -552,17 +449,17 @@ export const FirebaseService = {
         where("teacherId", "==", teacherId)
       );
       const classroomsSnapshot = await getDocs(classroomsQuery);
-      
+
       // Fetch activities from all classrooms
       const allActivities: import("../types").Activity[] = [];
-      
+
       for (const classroomDoc of classroomsSnapshot.docs) {
         const activitiesQuery = query(
           collection(db, "classrooms", classroomDoc.id, "activities"),
           orderBy("timestamp", "desc")
         );
         const activitiesSnapshot = await getDocs(activitiesQuery);
-        
+
         activitiesSnapshot.docs.forEach((doc) => {
           const data = doc.data();
           allActivities.push({
@@ -571,7 +468,7 @@ export const FirebaseService = {
           } as import("../types").Activity);
         });
       }
-      
+
       // Sort by timestamp and limit
       return allActivities
         .sort((a, b) => b.timestamp - a.timestamp)
@@ -598,19 +495,19 @@ export const FirebaseService = {
         where("codeEnabled", "==", true)
       );
       const snapshot = await getDocs(classroomsQuery);
-      
+
       if (snapshot.empty) {
         throw new Error("Invalid or disabled classroom code");
       }
-      
+
       const classroomDoc = snapshot.docs[0];
       const classroom = classroomDoc.data() as import("../types").Classroom;
-      
+
       // Check if student already in classroom
       if (classroom.studentIds.includes(studentId)) {
         throw new Error("You are already in this classroom");
       }
-      
+
       // Add student to classroom
       const updatedStudentIds = [...classroom.studentIds, studentId];
       await setDoc(
@@ -618,7 +515,7 @@ export const FirebaseService = {
         { studentIds: updatedStudentIds, updatedAt: serverTimestamp() },
         { merge: true }
       );
-      
+
       // Log activity
       await FirebaseService.logActivity({
         classroomId: classroomDoc.id,
@@ -628,7 +525,7 @@ export const FirebaseService = {
         actorName: studentName,
         timestamp: Date.now(),
       });
-      
+
       return { ...classroom, id: classroomDoc.id };
     } catch (e: any) {
       console.error("Error joining classroom by code:", e);
@@ -729,7 +626,7 @@ export const FirebaseService = {
     try {
       const session = await FirebaseService.getQuizSession(sessionId);
       if (!session) throw new Error("Session not found");
-      
+
       if (session.status !== "waiting") {
         throw new Error("Cannot join - quiz already started");
       }
@@ -750,7 +647,7 @@ export const FirebaseService = {
       if (!session) throw new Error("Session not found");
 
       const updatedParticipants = session.participants.filter(p => p.userId !== userId);
-      
+
       // If no participants left, delete the session
       if (updatedParticipants.length === 0) {
         const ref = doc(db, "quizSessions", sessionId);

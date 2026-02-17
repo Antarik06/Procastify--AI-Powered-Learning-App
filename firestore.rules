@@ -59,10 +59,10 @@ service cloud.firestore {
     match /classrooms/{classroomId} {
       // Teachers can read their own classrooms
       // Students can read classrooms they're enrolled in
-      allow read: if isAuthenticated() && (
-        resource.data.teacherId == request.auth.uid ||
-        request.auth.uid in resource.data.studentIds
-      );
+      // Teachers can read their own classrooms
+      // Students can read classrooms they're enrolled in
+      // AND authenticated users can query for classrooms by invite code
+      allow read: if isAuthenticated();
       
       // Only teachers can create their own classrooms
       allow create: if isAuthenticated() && 

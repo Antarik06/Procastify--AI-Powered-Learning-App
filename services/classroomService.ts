@@ -1,4 +1,4 @@
-import { db, isFirebaseConfigured } from '../firebaseConfig';
+import { db, auth, isFirebaseConfigured } from '../firebaseConfig';
 import { doc, getDoc, setDoc, collection, getDocs, query, where, updateDoc, deleteDoc, arrayUnion, arrayRemove, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { Classroom, VirtualClassLink, Announcement, Resource } from '../types';
 
@@ -13,14 +13,24 @@ export const ClassroomService = {
         if (!isFirebaseConfigured() || !db) {
             throw new Error('Firebase is not configured. Please set up your .env.local file with Firebase credentials.');
         }
-        
+
+        const currentUser = auth.currentUser;
+        if (!currentUser) {
+            throw new Error('User must be authenticated to create a classroom.');
+        }
+
+        if (currentUser.uid !== teacherId) {
+            console.error(`Permission denied: teacherId ${teacherId} does not match auth.uid ${currentUser.uid}`);
+            throw new Error('Permission denied: You can only create classrooms for yourself.');
+        }
+
         const classroomId = `classroom_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
         const inviteCode = ClassroomService.generateInviteCode();
-        
-        const classroom: Classroom = {
+
+        // Remove undefined fields to prevent Firestore errors
+        const classroomData: any = {
             id: classroomId,
             name,
-            description,
             teacherId,
             teacherName,
             studentIds: [],
@@ -28,19 +38,28 @@ export const ClassroomService = {
             announcements: [],
             resources: [],
             inviteCode,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+        };
+
+        if (description) {
+            classroomData.description = description;
+        }
+
+        const classroom: Classroom = {
+            ...classroomData,
             createdAt: Date.now(),
             updatedAt: Date.now()
         };
 
         try {
-            await setDoc(doc(db, 'classrooms', classroomId), {
-                ...classroom,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp()
-            });
+            await setDoc(doc(db, 'classrooms', classroomId), classroomData);
             return classroom;
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error creating classroom:', error);
+            if (error.code === 'permission-denied') {
+                throw new Error('Permission denied: You do not have permission to create this classroom. Please check your Firestore Rules or ensure your role is "teacher".');
+            }
             throw error;
         }
     },
@@ -75,7 +94,7 @@ export const ClassroomService = {
             console.warn('Firebase is not configured. Cannot fetch classrooms.');
             return [];
         }
-        
+
         try {
             const q = query(collection(db, 'classrooms'), where('teacherId', '==', teacherId));
             const snap = await getDocs(q);
@@ -103,7 +122,7 @@ export const ClassroomService = {
             console.warn('Firebase is not configured. Cannot fetch classrooms.');
             return [];
         }
-        
+
         try {
             const q = query(collection(db, 'classrooms'), where('studentIds', 'array-contains', studentId));
             const snap = await getDocs(q);
@@ -145,14 +164,14 @@ export const ClassroomService = {
         try {
             const q = query(collection(db, 'classrooms'), where('inviteCode', '==', inviteCode));
             const snap = await getDocs(q);
-            
+
             if (snap.empty) {
                 return null;
             }
 
             const classroomDoc = snap.docs[0];
             const classroomId = classroomDoc.id;
-            
+
             // Check if already enrolled
             const data = classroomDoc.data();
             if (data.studentIds?.includes(studentId)) {

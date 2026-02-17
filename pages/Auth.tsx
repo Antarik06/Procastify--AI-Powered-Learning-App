@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { auth } from '../firebaseConfig';
-import { 
-    signInWithEmailAndPassword, 
-    createUserWithEmailAndPassword, 
-    signInWithPopup, 
-    GoogleAuthProvider, 
-    updateProfile 
+import {
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signInWithPopup,
+    GoogleAuthProvider,
+    updateProfile
 } from 'firebase/auth';
 import { StorageService } from '../services/storageService';
-import { 
-    Mail, Lock, User, ArrowRight, Loader2, 
-    Sparkles, Brain, Rocket, Globe, ChevronLeft 
+import {
+    Mail, Lock, User, ArrowRight, Loader2,
+    Sparkles, Brain, Rocket, Globe, ChevronLeft
 } from 'lucide-react';
 
 interface AuthPageProps {
@@ -30,7 +30,7 @@ const Auth: React.FC<AuthPageProps> = ({ onLoginSuccess, onGuestAccess, onBack }
     const [isSignUp, setIsSignUp] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    
+
     // Form State
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
@@ -60,7 +60,7 @@ const Auth: React.FC<AuthPageProps> = ({ onLoginSuccess, onGuestAccess, onBack }
         e.preventDefault();
         if (!email || !password) return;
         if (isSignUp && (!firstName || !lastName)) return;
-        
+
         const fullName = `${firstName} ${lastName}`.trim();
 
         setLoading(true);
@@ -70,13 +70,13 @@ const Auth: React.FC<AuthPageProps> = ({ onLoginSuccess, onGuestAccess, onBack }
             if (isSignUp) {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const avatarUrl = `https://api.dicebear.com/7.x/notionists/svg?seed=${fullName}`;
-                
+
                 // Explicitly update profile with Name and Avatar
                 await updateProfile(userCredential.user, {
                     displayName: fullName,
                     photoURL: avatarUrl
                 });
-                
+
                 // Pre-create profile in Firestore to ensure data consistency
                 await StorageService.saveUserProfile({
                     id: userCredential.user.uid,
@@ -91,8 +91,8 @@ const Auth: React.FC<AuthPageProps> = ({ onLoginSuccess, onGuestAccess, onBack }
                 });
             } else {
                 await signInWithEmailAndPassword(auth, email, password);
+                onLoginSuccess();
             }
-            onLoginSuccess();
         } catch (err: any) {
             console.error(err);
             if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
@@ -117,18 +117,18 @@ const Auth: React.FC<AuthPageProps> = ({ onLoginSuccess, onGuestAccess, onBack }
             {/* Left Panel - Visual & Interactive */}
             <div className="hidden lg:flex w-1/2 relative flex-col justify-center items-center p-12 overflow-hidden">
                 {/* Background Underlay */}
-                <img 
-                    src="https://meridianit.com.au/wp-content/uploads/2023/09/Meridian-SecurityServices-Governance-Banner.jpeg" 
-                    alt="Background" 
+                <img
+                    src="https://meridianit.com.au/wp-content/uploads/2023/09/Meridian-SecurityServices-Governance-Banner.jpeg"
+                    alt="Background"
                     className="absolute inset-0 w-full h-full object-cover z-0 opacity-40 mix-blend-overlay"
                 />
-                
+
                 <div className="absolute inset-0 bg-[#5865F2]/5 z-0" />
                 <div className="absolute top-0 -left-20 w-96 h-96 bg-[#5865F2]/20 rounded-full blur-[100px]" />
                 <div className="absolute bottom-0 -right-20 w-96 h-96 bg-purple-500/20 rounded-full blur-[100px]" />
 
                 <div className="relative z-10 max-w-md text-center">
-                    <motion.div 
+                    <motion.div
                         key={isSignUp ? 'signup-art' : 'signin-art'}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -137,11 +137,11 @@ const Auth: React.FC<AuthPageProps> = ({ onLoginSuccess, onGuestAccess, onBack }
                     >
                         {/* Unique Interaction: Dynamic Avatar Preview */}
                         <div className="w-48 h-48 mx-auto bg-white/5 rounded-full border border-white/10 flex items-center justify-center relative overflow-hidden group hover:border-[#5865F2]/50 transition-all cursor-pointer"
-                             onClick={() => setAvatarSeed(Math.random().toString())}
+                            onClick={() => setAvatarSeed(Math.random().toString())}
                         >
-                            <img 
-                                src={`https://api.dicebear.com/7.x/notionists/svg?seed=${isSignUp ? ((firstName || lastName) || avatarSeed) : 'procastify'}`} 
-                                alt="Avatar Preview" 
+                            <img
+                                src={`https://api.dicebear.com/7.x/notionists/svg?seed=${isSignUp ? ((firstName || lastName) || avatarSeed) : 'procastify'}`}
+                                alt="Avatar Preview"
                                 className="w-full h-full object-cover"
                             />
                             <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -156,8 +156,8 @@ const Auth: React.FC<AuthPageProps> = ({ onLoginSuccess, onGuestAccess, onBack }
                         {isSignUp ? "Join the Learning Revolution" : "Welcome Back, Learner"}
                     </h2>
                     <p className="text-gray-400 text-lg">
-                        {isSignUp 
-                            ? "Create your unique profile and start conquering your study queues today." 
+                        {isSignUp
+                            ? "Create your unique profile and start conquering your study queues today."
                             : "Your personalized dashboard is ready. Let's get things done."}
                     </p>
 
@@ -198,7 +198,7 @@ const Auth: React.FC<AuthPageProps> = ({ onLoginSuccess, onGuestAccess, onBack }
                     </div>
 
                     {error && (
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
                             className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm"
@@ -210,7 +210,7 @@ const Auth: React.FC<AuthPageProps> = ({ onLoginSuccess, onGuestAccess, onBack }
                     <form onSubmit={handleEmailAuth} className="space-y-4">
                         <AnimatePresence mode='wait'>
                             {isSignUp && (
-                                <motion.div 
+                                <motion.div
                                     initial={{ opacity: 0, height: 0, overflow: 'hidden' }}
                                     animate={{ opacity: 1, height: 'auto', overflow: 'visible' }}
                                     exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
@@ -298,17 +298,17 @@ const Auth: React.FC<AuthPageProps> = ({ onLoginSuccess, onGuestAccess, onBack }
 
                     <p className="text-center mt-8 text-gray-400">
                         {isSignUp ? "Already have an account?" : "Don't have an account?"}
-                        <button 
+                        <button
                             onClick={() => setIsSignUp(!isSignUp)}
                             className="ml-2 text-[#5865F2] hover:text-white font-bold transition-colors"
                         >
                             {isSignUp ? "Sign In" : "Sign Up"}
                         </button>
                     </p>
-                    
+
                     {!onBack && (
                         <div className="mt-8 text-center">
-                            <button 
+                            <button
                                 onClick={onGuestAccess}
                                 className="text-xs text-gray-500 hover:text-gray-300 underline transition-colors"
                             >

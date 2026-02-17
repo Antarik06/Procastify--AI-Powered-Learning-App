@@ -1,6 +1,5 @@
-export type ViewState = 'landing' | 'onboarding' | 'dashboard' | 'summarizer' | 'notes' | 'routine' | 'focus' | 'quiz' | 'feed' | 'store' | 'classrooms';
-
 export type UserRole = 'student' | 'teacher';
+
 export type ViewState =
   | "landing"
   | "onboarding"
@@ -24,18 +23,13 @@ export interface UserPreferences {
   id: string;
   isGuest: boolean;
   name: string;
-  role?: UserRole; // Added role field - undefined means not set yet
+  role?: UserRole;
   freeTimeHours: number;
   energyPeak: 'morning' | 'afternoon' | 'night';
   goal: string;
   distractionLevel: 'low' | 'medium' | 'high';
-  email?: string; // NEW: Store user email
-  avatarUrl?: string; // NEW: Store user avatar URL
-  role?: UserRole;
-  freeTimeHours?: number;
-  energyPeak?: "morning" | "afternoon" | "night";
-  goal?: string;
-  distractionLevel?: "low" | "medium" | "high";
+  email?: string;
+  avatarUrl?: string;
   classroomIds?: string[];
   teacherPreferences?: {
     notificationsEnabled: boolean;
@@ -209,8 +203,8 @@ export type SummarySession = Required<Pick<Summary, 'originalText' | 'attachment
 
 // Type guard to check if a summary has complete session data
 export function isSummarySession(summary: Summary): summary is SummarySession {
-  return 'originalText' in summary && 'attachments' in summary && 
-         summary.originalText !== undefined && summary.attachments !== undefined;
+  return 'originalText' in summary && 'attachments' in summary &&
+    summary.originalText !== undefined && summary.attachments !== undefined;
 }
 
 export interface RoutineTask {
@@ -316,15 +310,6 @@ export interface VirtualClassLink {
   createdBy: string; // userId
 }
 
-export interface Announcement {
-  id: string;
-  title: string;
-  content: string;
-  createdAt: number;
-  createdBy: string; // userId
-  classroomId: string;
-}
-
 export interface Resource {
   id: string;
   title: string;
@@ -344,81 +329,29 @@ export interface Classroom {
   description?: string;
   teacherId: string;
   teacherName: string;
-  studentIds: string[]; // Array of enrolled student IDs
+  studentIds: string[];
   virtualLinks: VirtualClassLink[];
   announcements: Announcement[];
   resources: Resource[];
-  inviteCode: string; // Unique code for students to join
-// Multiplayer Quiz Types
-export type QuizMode = "singleplayer" | "multiplayer";
-
-export interface MultiplayerQuizSession {
-  id: string;
-  hostId: string;
-  hostName: string;
   inviteCode: string;
-  title: string;
-  difficulty: "easy" | "medium" | "hard";
-  mode: QuizModeType;
-  questions: Question[];
-  participants: QuizParticipant[];
-  status: "waiting" | "in_progress" | "completed";
-  createdAt: number;
-  startedAt?: number;
-  completedAt?: number;
-  currentQuestionIndex?: number;
-}
-
-export interface QuizParticipant {
-  id: string;
-  userId: string;
-  userName: string;
-  score: number;
-  answers: QuizAnswer[];
-  joinedAt: number;
-  isReady: boolean;
-}
-
-export interface QuizAnswer {
-  questionIndex: number;
-  selectedOption: number;
-  isCorrect: boolean;
-  timeSpent: number;
-  timestamp: number;
-}
-
-export interface QuizLeaderboard {
-  sessionId: string;
-  rankings: QuizRanking[];
-  generatedAt: number;
-}
-
-export interface QuizRanking {
-  userId: string;
-  userName: string;
-  score: number;
-  correctAnswers: number;
-  totalQuestions: number;
-  averageTime: number;
-  rank: number;
-}
-
-// Teacher Role Types
-export type UserRole = "student" | "teacher";
-
-export interface Classroom {
-  id: string;
-  teacherId: string;
-  teacherName: string;
-  name: string;
-  description: string;
-  createdAt: number;
-  updatedAt: number;
-  studentIds: string[];
   invitationCount?: number;
   announcementCount?: number;
-  code?: string; // NEW: Unique classroom code for joining
-  codeEnabled?: boolean; // NEW: Toggle code joining
+  code?: string;
+  codeEnabled?: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface Announcement {
+  id: string;
+  title?: string;
+  content: string;
+  createdAt: number;
+  createdBy?: string;
+  teacherId?: string;
+  teacherName?: string;
+  classroomId: string; // Ensure this is present
+  updatedAt?: number;
 }
 
 export interface Invitation {
@@ -432,16 +365,6 @@ export interface Invitation {
   status: "pending" | "accepted" | "declined";
   createdAt: number;
   respondedAt?: number;
-}
-
-export interface Announcement {
-  id: string;
-  classroomId: string;
-  teacherId: string;
-  teacherName: string;
-  content: string;
-  createdAt: number;
-  updatedAt: number;
 }
 
 export interface ClassroomResource {
@@ -468,11 +391,11 @@ export interface TeacherStats {
 }
 
 // Activity Tracking
-export type ActivityType = 
-  | "student_joined" 
+export type ActivityType =
+  | "student_joined"
   | "student_accepted_invitation"
-  | "announcement_posted" 
-  | "resource_shared" 
+  | "announcement_posted"
+  | "resource_shared"
   | "resource_copied";
 
 export interface Activity {
@@ -489,7 +412,7 @@ export interface Activity {
 }
 
 // Study Resources Community Types
-export type ExamType = 
+export type ExamType =
   | "JEE"
   | "NEET"
   | "GATE"
@@ -498,20 +421,20 @@ export type ExamType =
   | "University"
   | "Other";
 
-export type Level = 
+export type Level =
   | "10"
   | "12"
   | "UG"
   | "PG"
   | "Other";
 
-export type PaperType = 
+export type PaperType =
   | "PYQ"
   | "Mock"
   | "Sample"
   | "Practice";
 
-export type FileType = 
+export type FileType =
   | "pdf"
   | "image";
 
@@ -519,7 +442,7 @@ export interface StudyResource {
   id: string;
   userId: string;
   ownerId: string; // Firebase user ID
-  
+
   // Metadata
   title: string;
   examType: ExamType;
@@ -529,17 +452,17 @@ export interface StudyResource {
   board: string; // Board or University name
   paperType: PaperType;
   description?: string;
-  
+
   // File information
   fileUrl: string;
   fileName: string;
   fileSize: number;
   fileType: FileType;
-  
+
   // Timestamps
   createdAt: number | any;
   updatedAt: number | any;
-  
+
   // Engagement metrics (future enhancement)
   viewCount?: number;
   downloadCount?: number;

@@ -1,9 +1,7 @@
 import React from 'react';
-import { ViewState } from '../types';
-import { LayoutDashboard, FileText, BookOpen, Clock, BrainCircuit, Gamepad2, LogOut, Flame, Globe, PanelLeftClose, PanelLeftOpen, GraduationCap } from 'lucide-react';
 import { ViewState, UserRole } from '../types';
 import { LayoutDashboard, FileText, BookOpen, Clock, BrainCircuit, Gamepad2, LogOut, Flame, Globe, PanelLeftClose, PanelLeftOpen, GraduationCap, Users } from 'lucide-react';
-import { ThemeToggle } from './ThemeToggle';
+
 
 interface SidebarProps {
   currentView: ViewState;
@@ -38,10 +36,9 @@ const Sidebar: React.FC<SidebarProps> = ({
       <button
         onClick={() => onNavigate(view)}
         className={`w-full flex items-center ${collapsed ? "justify-center px-2" : "gap-3 px-4"} py-3 rounded-xl transition-all duration-300 font-medium group relative overflow-hidden flex-1 max-h-16
-          ${
-            active
-              ? "bg-gradient-to-r from-discord-panel to-discord-panel/80 text-white shadow-lg shadow-discord-accent/20 border border-discord-accent/30"
-              : "text-discord-textMuted hover:bg-gradient-to-r hover:from-discord-hover hover:to-discord-hover/80 hover:text-white hover:scale-105"
+          ${active
+            ? "bg-gradient-to-r from-discord-panel to-discord-panel/80 text-white shadow-lg shadow-discord-accent/20 border border-discord-accent/30"
+            : "text-discord-textMuted hover:bg-gradient-to-r hover:from-discord-hover hover:to-discord-hover/80 hover:text-white hover:scale-105"
           }`}
         title={collapsed ? label : undefined}
       >
@@ -50,11 +47,10 @@ const Sidebar: React.FC<SidebarProps> = ({
         )}
         <Icon
           size={20}
-          className={`transition-all duration-300 relative z-10 ${collapsed ? "flex-shrink-0" : ""} ${
-            active
-              ? "text-discord-accent drop-shadow-sm"
-              : "text-discord-textMuted group-hover:text-white group-hover:scale-110"
-          }`}
+          className={`transition-all duration-300 relative z-10 ${collapsed ? "flex-shrink-0" : ""} ${active
+            ? "text-discord-accent drop-shadow-sm"
+            : "text-discord-textMuted group-hover:text-white group-hover:scale-110"
+            }`}
         />
         {!collapsed && (
           <>
@@ -128,8 +124,9 @@ const Sidebar: React.FC<SidebarProps> = ({
         </div>
       )}
 
-      {/* Navigation */}
+
       <nav className="flex-1 px-3 py-4 flex flex-col justify-evenly gap-1 overflow-y-auto no-scrollbar">
+        {/* Navigation 
         <NavItem view="dashboard" icon={LayoutDashboard} label="Dashboard" />
         <NavItem view="classrooms" icon={GraduationCap} label="Classrooms" />
         <NavItem view="summarizer" icon={FileText} label="Summarizer" />
@@ -138,7 +135,8 @@ const Sidebar: React.FC<SidebarProps> = ({
         <NavItem view="quiz" icon={Gamepad2} label="Quiz Arena" />
         <NavItem view="routine" icon={Clock} label="Routine" />
         <NavItem view="focus" icon={BrainCircuit} label="Focus Mode" />
-        
+         <NavItem view="studentClassrooms" icon={Users} label="Classrooms" /> */}
+
         {userRole === "teacher" ? (
           <>
             <NavItem view="classrooms" icon={GraduationCap} label="My Classrooms" />
@@ -146,9 +144,10 @@ const Sidebar: React.FC<SidebarProps> = ({
           </>
         ) : (
           <>
+            <NavItem view="dashboard" icon={LayoutDashboard} label="Dashboard" />
             <NavItem view="summarizer" icon={FileText} label="Summarizer" />
             <NavItem view="notes" icon={BookOpen} label="My Notes" />
-            <NavItem view="studentClassrooms" icon={Users} label="Classrooms" />
+            <NavItem view="classrooms" icon={GraduationCap} label="My Classrooms" />
             <NavItem view="feed" icon={Flame} label="Learning Feed" />
             <NavItem view="quiz" icon={Gamepad2} label="Quiz Arena" />
             <NavItem view="routine" icon={Clock} label="Routine" />
@@ -166,8 +165,8 @@ const Sidebar: React.FC<SidebarProps> = ({
           <div className={`flex items-center ${collapsed ? "justify-center mb-3" : "gap-3 mb-3 px-2"}`}>
             {user.avatarUrl && (
               <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-discord-accent/30 flex-shrink-0">
-                <img 
-                  src={user.avatarUrl} 
+                <img
+                  src={user.avatarUrl}
                   alt={`${user.name}'s avatar`}
                   className="w-full h-full object-cover"
                 />
@@ -181,7 +180,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             )}
           </div>
         )}
-        
+
         <button
           onClick={onLogout}
           className={`w-full flex items-center ${collapsed ? "justify-center px-2" : "gap-3 px-4"} py-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-all duration-300 font-medium group hover:scale-105 border border-transparent hover:border-red-500/20`}
@@ -198,7 +197,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           )}
         </button>
       </div>
-    </div>
+    </div >
   );
 };
 
