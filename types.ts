@@ -16,7 +16,8 @@ export type ViewState =
   | "classrooms"
   | "classroomDetail"
   | "studentClassrooms"
-  | "studentClassroomView";
+  | "studentClassroomView"
+  | "workflow";
 
 
 export interface UserPreferences {

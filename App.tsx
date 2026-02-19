@@ -26,6 +26,7 @@ import Folders from './pages/Folders';
 import ClassroomDetail from './pages/ClassroomDetail';
 import StudentClassrooms from './pages/StudentClassrooms';
 import StudentClassroomView from './pages/StudentClassroomView';
+import { WorkflowBoard } from './components/WorkflowBoard';
 import { AlertCircle, LogIn, X, Loader2 } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -515,6 +516,14 @@ const App: React.FC = () => {
             user={user}
             classroomId={selectedClassroomId}
             onNavigate={handleNavigate}
+          />
+        )}
+
+        {view === "workflow" && (
+          <WorkflowBoard
+            userId={user.id}
+            onClose={() => setView("dashboard")}
+            sidebarCollapsed={sidebarCollapsed}
           />
         )}
       </main>
