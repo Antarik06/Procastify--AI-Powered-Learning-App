@@ -1,68 +1,188 @@
-// View State Types
+export type UserRole = 'student' | 'teacher';
+
 export type ViewState =
   | "landing"
-  | "auth"
+  | "onboarding"
   | "roleSelection"
   | "dashboard"
   | "summarizer"
   | "notes"
-  | "folders"
   | "routine"
+  | "focus"
   | "quiz"
   | "feed"
   | "store"
+  | "auth"
   | "classrooms"
   | "classroomDetail"
   | "studentClassrooms"
   | "studentClassroomView"
-  | "focus";
+  | "workflow";
 
-// User Types
-export type UserRole = "student" | "teacher";
 
 export interface UserPreferences {
   id: string;
-  name: string;
-  email?: string;
   isGuest: boolean;
-  freeTimeHours: number;
-  energyPeak: "morning" | "afternoon" | "evening";
-  goal: string;
-  distractionLevel: "low" | "medium" | "high";
+  name: string;
   role?: UserRole;
+  freeTimeHours: number;
+  energyPeak: 'morning' | 'afternoon' | 'night';
+  goal: string;
+  distractionLevel: 'low' | 'medium' | 'high';
+  email?: string;
   avatarUrl?: string;
+  classroomIds?: string[];
+  teacherPreferences?: {
+    notificationsEnabled: boolean;
+    autoApproveInvitations: boolean;
+  };
 }
 
 export interface UserStats {
-  notesCreated?: number;
-  summariesCreated?: number;
-  studyMinutes?: number;
-  loginStreak?: number;
-  lastLoginDate?: number;
-  [key: string]: any;
-}
-
-// Routine Types
-export interface RoutineTask {
   id: string;
-  title: string;
-  durationMinutes: number;
-  type: "focus" | "break" | "procastify" | "buffer";
-  completed: boolean;
-  noteId: string | null;
-  confidence?: "high" | "medium" | "low";
+  userId: string;
+  totalTimeStudiedMinutes: number;
+  notesCreated: number;
+  quizzesTaken: number;
+  loginStreak: number;
+  lastLoginDate: string;
+  dailyActivity: Record<string, number>;
+  highScore: number;
 }
 
-// Summary Types
-export type SummaryType = "text" | "url" | "article" | "video" | "pdf" | "audio" | "mixed";
+export type NoteElementType =
+  | "text"
+  | "sticky"
+  | "arrow"
+  | "image"
+  | "flashcard_deck"
+  | "summary_card";
+
+export interface NoteElement {
+  id: string;
+  type: NoteElementType;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  content?: string;
+  src?: string;
+  color?: string;
+  fontSize?: "small" | "medium" | "large";
+
+  startId?: string;
+  endId?: string;
+
+  zIndex: number;
+}
+
+export type BlockType =
+  | "text"
+  | "h1"
+  | "h2"
+  | "h3"
+  | "bullet"
+  | "todo"
+  | "quote"
+  | "code"
+  | "image"
+  | "link";
+
+export interface Block {
+  id: string;
+  type: BlockType;
+  content: string;
+  isChecked?: boolean;
+  // Rich content fields (optional for backward compatibility)
+  imageUrl?: string; // Base64 data URL for image blocks
+  linkUrl?: string; // URL for link blocks
+  language?: string; // Programming language for code blocks
+}
+
+export interface NoteDocument {
+  blocks: Block[]; // Updated to use Block interface
+}
+
+export interface NoteCanvas {
+  elements: NoteElement[]; // Replaces top-level elements
+  strokes?: any[]; // For future drawing support
+}
+
+// New Folder interface
+export interface Folder {
+  id: string;
+  userId: string;
+  name: string;
+  color?: string;
+  createdAt: number;
+  updatedAt: number;
+  noteCount?: number; // Computed field, not stored
+}
+
+export interface Note {
+  id: string;
+  userId: string;
+  ownerId?: string; // Firebase owner
+  title: string;
+
+  // Dual-section architecture
+  document?: NoteDocument;
+  canvas?: NoteCanvas;
+
+  // Legacy support (to be migrated)
+  elements?: NoteElement[];
+
+  tags: string[];
+  folder: string;
+  folderId?: string | null; // New: References Folder.id
+  lastModified: number;
+
+  // Persistence
+  createdAt?: number | any;
+  updatedAt?: number | any;
+
+  isPublic?: boolean; // For community store
+  publishedAt?: number | any;
+  likes?: number;
+
+  aiAnalysis?: {
+    difficulty: "easy" | "medium" | "hard";
+    estimatedMinutes: number;
+    cognitiveLoad: "light" | "medium" | "heavy";
+    summary: string;
+  };
+}
+
+export interface QueueItem {
+  id: string;
+  userId: string;
+  noteId: string;
+  priority: "high" | "medium" | "low";
+  deadline?: number;
+  status: "pending" | "in_progress" | "completed";
+}
+
+export interface Flashcard {
+  id: string;
+  front: string;
+  back: string;
+  status: "new" | "learning" | "mastered";
+}
 
 export interface Attachment {
-  id?: string;
+  id: string;
+  type: "image" | "audio" | "pdf" | "url";
+  content: string;
+  mimeType?: string;
   name?: string;
-  type: string;
-  url?: string;
-  content?: string;
-  [key: string]: any;
+}
+
+export interface CustomMode {
+  id: string;
+  userId: string;
+  name: string;
+  systemPrompt: string;
+  createdAt: number;
 }
 
 export interface Summary {
@@ -70,223 +190,347 @@ export interface Summary {
   userId: string;
   originalSource: string;
   summaryText: string;
-  type: SummaryType;
-  mode: string;
+  type: "text" | "video" | "article" | "pdf" | "audio" | "mixed";
+  mode: string; // Now supports any string (preset modes or custom mode names)
   createdAt: number;
-  originalText?: string;
-  attachments?: Attachment[];
-  [key: string]: any;
+  flashcards?: Flashcard[];
+  // Extended fields for history feature
+  originalText?: string;        // Full original text input
+  attachments?: Attachment[];   // All attachments from session
 }
 
-export interface SummarySession extends Summary {
-  sessionData?: any;
-}
+// Type alias for summaries with complete session data
+export type SummarySession = Required<Pick<Summary, 'originalText' | 'attachments'>> & Summary;
 
+// Type guard to check if a summary has complete session data
 export function isSummarySession(summary: Summary): summary is SummarySession {
-  return "sessionData" in summary;
+  return 'originalText' in summary && 'attachments' in summary &&
+    summary.originalText !== undefined && summary.attachments !== undefined;
 }
 
-// Note Types
-export interface NoteElement {
+export interface RoutineTask {
   id: string;
-  type: string;
-  content: string;
-  [key: string]: any;
-}
-
-export interface Note {
-  id: string;
+  userId: string;
   title: string;
-  userId?: string;
-  ownerId?: string;
-  document?: {
-    blocks: NoteElement[];
-  };
-  canvas?: {
-    elements: any[];
-    strokes?: any[];
-  };
-  createdAt?: number;
-  updatedAt?: number;
-  isPublic?: boolean;
-  publishedAt?: number | null;
-  aiAnalysis?: {
-    estimatedMinutes?: number;
-    difficulty?: "easy" | "medium" | "hard";
-    [key: string]: any;
-  };
-  [key: string]: any;
+  durationMinutes: number;
+  type: "focus" | "break" | "buffer" | "procastify";
+  completed: boolean;
+  timeSlot?: string;
+  noteId?: string;
+  confidence?: "high" | "medium" | "low";
 }
 
-// Folder Types
-export interface Folder {
-  id: string;
-  name: string;
-  userId: string;
-  createdAt?: number;
-  updatedAt?: number;
-  [key: string]: any;
-}
-
-// Flashcard Types
-export interface Flashcard {
-  id: string;
-  front: string;
-  back: string;
-  userId?: string;
-  [key: string]: any;
-}
-
-// Queue Types
-export interface QueueItem {
-  id: string;
-  userId: string;
-  noteId: string;
-  priority: "low" | "medium" | "high";
-  status: "pending" | "in-progress" | "completed";
-  [key: string]: any;
-}
-
-// Quiz Types
-export interface Quiz {
-  id: string;
-  questions: Question[];
-  [key: string]: any;
-}
+// Quiz Mode Types
+export type QuizModeType = "standard" | "swipe" | "fillBlanks" | "explain";
 
 export interface Question {
-  question: string;
+  id: string;
+  text: string;
   options: string[];
-  correctAnswer: number;
-  explanation?: string;
-  [key: string]: any;
+  correctIndex: number;
+  explanation: string;
+  difficulty?: "easy" | "medium" | "hard";
+  mode?: QuizModeType; // Optional for backward compatibility
 }
 
-// Custom Mode Types
-export interface CustomMode {
+// Fill in the Blanks specific types
+export interface FillInTheBlanksQuestion extends Omit<Question, 'options' | 'correctIndex'> {
+  mode: "fillBlanks";
+  textWithBlanks: string;
+  blanks: {
+    id: string;
+    correctAnswers: string[];
+    userAnswer?: string;
+  }[];
+}
+
+// Explain Your Answer specific types
+export interface ExplainQuestion extends Question {
+  mode: "explain";
+  userExplanation?: string;
+  reasoningScore?: number;
+  reasoningFeedback?: string;
+}
+
+// Attempted question types for results
+export interface AttemptedFillQuestion {
+  question: string;
+  blanks: {
+    correctAnswer: string;
+    userAnswer: string;
+    isCorrect: boolean;
+  }[];
+  overallCorrect: boolean;
+  explanation: string;
+}
+
+export interface AttemptedExplainQuestion {
+  question: string;
+  options: string[];
+  userAnswer: number;
+  correctAnswer: number;
+  answerCorrect: boolean;
+  userExplanation: string;
+  reasoningScore: number;
+  reasoningFeedback: string;
+  explanation: string;
+  totalScore: number;
+}
+
+// Timer configuration
+export interface TimerConfig {
+  enabled: boolean;
+  duration: number;
+}
+
+export interface QuizReport {
+  overallAccuracy: number;
+  difficultyProgression: ("easy" | "medium" | "hard")[];
+  strengths: string[];
+  weaknesses: string[];
+  suggestions: string[];
+}
+
+export interface Quiz {
   id: string;
-  name: string;
-  prompt: string;
-  userId?: string;
-  [key: string]: any;
+  userId: string;
+  title: string;
+  questions: Question[];
+  highScore: number;
+  lastPlayed?: number;
 }
 
 // Classroom Types
+export interface VirtualClassLink {
+  id: string;
+  title: string;
+  url: string;
+  description?: string;
+  scheduledDate?: number; // timestamp
+  createdAt: number;
+  createdBy: string; // userId
+}
+
+export interface Resource {
+  id: string;
+  title: string;
+  type: 'link' | 'file' | 'note';
+  url?: string;
+  fileUrl?: string;
+  noteId?: string;
+  description?: string;
+  createdAt: number;
+  createdBy: string; // userId
+  classroomId: string;
+}
+
+// Calendar Event Types
+export type CalendarEventType = 'lecture' | 'assignment' | 'exam' | 'revision' | 'custom';
+
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  description?: string;
+  date: number;
+  time?: string; // optional time string e.g. "14:00"
+  eventType: CalendarEventType;
+  createdBy: string;
+  createdAt: number;
+}
+
 export interface Classroom {
   id: string;
   name: string;
   description?: string;
   teacherId: string;
-  teacherName?: string;
+  teacherName: string;
   studentIds: string[];
+  virtualLinks: VirtualClassLink[];
+  announcements: Announcement[];
+  resources: Resource[];
+  calendarEvents?: CalendarEvent[];
+  inviteCode: string;
+  invitationCount?: number;
+  announcementCount?: number;
   code?: string;
   codeEnabled?: boolean;
-  inviteCode?: string;
-  virtualLinks?: any[];
-  createdAt?: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface Announcement {
+  id: string;
+  title?: string;
+  content: string;
+  createdAt: number;
+  createdBy?: string;
+  teacherId?: string;
+  teacherName?: string;
+  classroomId: string; // Ensure this is present
   updatedAt?: number;
-  [key: string]: any;
 }
 
 export interface Invitation {
   id: string;
   classroomId: string;
+  classroomName: string;
   teacherId: string;
+  teacherName: string;
   studentEmail: string;
-  status: "pending" | "accepted" | "rejected";
-  createdAt?: number;
+  studentId?: string;
+  status: "pending" | "accepted" | "declined";
+  createdAt: number;
   respondedAt?: number;
-  [key: string]: any;
-}
-
-export interface Announcement {
-  id: string;
-  classroomId: string;
-  title: string;
-  content: string;
-  authorId: string;
-  createdAt?: number;
-  updatedAt?: number;
-  [key: string]: any;
 }
 
 export interface ClassroomResource {
   id: string;
   classroomId: string;
-  name: string;
-  type: string;
-  url?: string;
-  sharedAt?: number;
-  [key: string]: any;
+  resourceType: "note" | "quiz";
+  resourceId: string;
+  resourceTitle: string;
+  resourceDescription?: string;
+  sharedBy: string;
+  sharedByName: string;
+  sharedAt: number;
 }
+
+export interface TeacherStats {
+  id: string;
+  userId: string;
+  totalClassrooms: number;
+  totalStudents: number;
+  totalAnnouncements: number;
+  totalResourcesShared: number;
+  pendingInvitations?: number;
+  lastActivityDate: string;
+}
+
+// Activity Tracking
+export type ActivityType =
+  | "student_joined"
+  | "student_accepted_invitation"
+  | "announcement_posted"
+  | "resource_shared"
+  | "resource_copied";
 
 export interface Activity {
   id: string;
   classroomId: string;
   classroomName: string;
-  type: string;
+  type: ActivityType;
   actorId: string;
   actorName: string;
+  targetId?: string;
+  targetName?: string;
   timestamp: number;
-  [key: string]: any;
+  metadata?: any;
 }
 
-export interface TeacherStats {
-  classroomsCreated?: number;
-  studentsTaught?: number;
-  [key: string]: any;
-}
+// Study Resources Community Types
+export type ExamType =
+  | "JEE"
+  | "NEET"
+  | "GATE"
+  | "ICSE"
+  | "CBSE"
+  | "University"
+  | "Other";
 
-// Multiplayer Quiz Types
-export interface MultiplayerQuizSession {
+export type Level =
+  | "10"
+  | "12"
+  | "UG"
+  | "PG"
+  | "Other";
+
+export type PaperType =
+  | "PYQ"
+  | "Mock"
+  | "Sample"
+  | "Practice";
+
+export type FileType =
+  | "pdf"
+  | "image";
+
+export interface StudyResource {
   id: string;
-  inviteCode: string;
-  status: "waiting" | "in_progress" | "completed";
-  participants: QuizParticipant[];
-  createdAt?: number;
-  startedAt?: number;
-  completedAt?: number;
-  [key: string]: any;
-}
-
-export interface QuizParticipant {
   userId: string;
-  userName: string;
-  answers: QuizAnswer[];
-  score: number;
-  [key: string]: any;
+  ownerId: string; // Firebase user ID
+
+  // Metadata
+  title: string;
+  examType: ExamType;
+  level: Level;
+  subject: string;
+  year: number;
+  board: string; // Board or University name
+  paperType: PaperType;
+  description?: string;
+
+  // File information
+  fileUrl: string;
+  fileName: string;
+  fileSize: number;
+  fileType: FileType;
+
+  // Timestamps
+  createdAt: number | any;
+  updatedAt: number | any;
+
+  // Engagement metrics (future enhancement)
+  viewCount?: number;
+  downloadCount?: number;
 }
 
-export interface QuizAnswer {
-  questionIndex: number;
-  answer: number;
-  isCorrect: boolean;
-  timeSpent: number;
-  [key: string]: any;
+export interface ResourceMetadata {
+  title: string;
+  examType: ExamType;
+  level: Level;
+  subject: string;
+  year: number;
+  board: string;
+  paperType: PaperType;
+  description?: string;
 }
 
-export interface QuizLeaderboard {
-  sessionId: string;
-  rankings: QuizRanking[];
-  generatedAt: number;
-  [key: string]: any;
+export interface ResourceFilters {
+  examType?: ExamType[];
+  level?: Level[];
+  subject?: string[];
+  year?: number[];
+  board?: string[];
+  paperType?: PaperType[];
 }
 
-export interface QuizRanking {
-  userId: string;
-  userName: string;
-  score: number;
-  correctAnswers: number;
-  totalQuestions: number;
-  averageTime: number;
-  rank: number;
-  [key: string]: any;
+export interface PaginatedResources {
+  resources: StudyResource[];
+  totalCount: number;
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
 }
 
-export interface QuizReport {
-  totalQuestions: number;
-  correctAnswers: number;
-  score: number;
-  timeSpent: number;
-  [key: string]: any;
+export interface UploadResult {
+  fileUrl: string;
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
 }
+
+export interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+}
+
+export interface SearchResult {
+  resources: StudyResource[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+}
+
