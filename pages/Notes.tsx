@@ -258,44 +258,60 @@ const Notes: React.FC<NotesProps> = ({
   const handleGenerateDiagram = async (selectedText: string, selectedBlockIds: string[]) => {
     if (!activeNote || !canvasBoardRef.current) return;
 
+    if (!selectedText.trim()) {
+      setDiagramError("Please select text first");
+      return;
+    }
+
     setIsGeneratingDiagram(true);
     setDiagramError(null);
 
     try {
-      console.log("[Notes.tsx] Generating diagram from selected text:", selectedText.substring(0, 100) + "...");
+      console.log("[Notes.tsx] Generating diagram from selected text:", selectedText.substring(0, 50) + "...");
+      console.log("[Notes.tsx] Selected block IDs:", selectedBlockIds);
 
       const diagramSpec = await generateDiagramFromText(selectedText);
 
       if (!diagramSpec) {
-        setDiagramError("Failed to generate diagram. Please try again.");
+        setDiagramError("Failed to generate diagram. Please try again with different text.");
         return;
       }
 
       console.log("[Notes.tsx] Diagram spec generated:", diagramSpec);
 
-      const shapes = convertSpecToShapes(diagramSpec);
-
-      if (shapes.length === 0) {
-        setDiagramError("No diagram elements generated from the text.");
+      if (!diagramSpec.nodes || diagramSpec.nodes.length === 0) {
+        setDiagramError("No diagram elements could be generated. Try selecting more specific text.");
         return;
       }
 
+      const shapes = convertSpecToShapes(diagramSpec);
+
+      if (shapes.length === 0) {
+        setDiagramError("No shapes generated from the specified text.");
+        return;
+      }
+
+      // Add shapes to canvas
       canvasBoardRef.current.addShapes(shapes);
 
-      // Switch to canvas view if not already visible
+      // Switch to split or canvas view if in document-only mode
       if (viewMode === "document") {
         setViewMode("split");
       }
 
       console.log("[Notes.tsx] Successfully added", shapes.length, "shapes to canvas");
 
+      // Show success message
       setTimeout(() => {
-        alert(`Generated ${shapes.length} diagram elements!`);
-      }, 100);
+        setDiagramError(null); // Clear any previous errors
+        // Brief success feedback (can be replaced with toast notification)
+        console.log(`[Notes.tsx] Successfully generated diagram with ${shapes.length} elements!`);
+      }, 300);
 
     } catch (error) {
       console.error("[Notes.tsx] Diagram generation error:", error);
-      setDiagramError("An error occurred while generating the diagram.");
+      const errorMessage = error instanceof Error ? error.message : "An error occurred while generating the diagram.";
+      setDiagramError(errorMessage);
     } finally {
       setIsGeneratingDiagram(false);
     }
