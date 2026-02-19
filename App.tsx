@@ -457,6 +457,7 @@ const App: React.FC = () => {
               StorageService.saveNotes(n);
             }}
             onStartTask={handleStartFocus}
+            onNavigate={(view) => handleNavigate(view as any)}
           />
         )}
 
