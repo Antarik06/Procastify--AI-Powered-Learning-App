@@ -20,6 +20,15 @@ export type ViewState =
   | "workflow";
 
 
+export type CanvasLayoutMode = 'topbar' | 'sidebar-left' | 'sidebar-right' | 'minimal';
+
+export interface CanvasPreferences {
+  layoutMode: CanvasLayoutMode;
+  sidebarWidth?: number;
+  showGridLines?: boolean;
+  snapToGrid?: boolean;
+}
+
 export interface UserPreferences {
   id: string;
   isGuest: boolean;
@@ -32,6 +41,7 @@ export interface UserPreferences {
   email?: string;
   avatarUrl?: string;
   classroomIds?: string[];
+  canvasPreferences?: CanvasPreferences;
   teacherPreferences?: {
     notificationsEnabled: boolean;
     autoApproveInvitations: boolean;

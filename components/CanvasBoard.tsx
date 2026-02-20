@@ -4,7 +4,11 @@
 import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
 import { CanvasEngine } from "./canvas/CanvasEngine";
 import { ToolType, Shape, StrokeWidth, StrokeStyle, RoughStyle, FillStyle, FontSize } from "./canvas/types";
-import { MousePointer, Hand, Square, Circle, Minus, Pencil, Eraser, Type, Diamond, MoveRight, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
+import { CanvasLayoutMode } from "../types";
+import { CanvasLayoutService } from "../services/canvasLayoutService";
+import { TopNavBar, SidebarToolBar } from "./CanvasToolbars";
+import { LayoutSwitcher, LayoutSwitcherFAB } from "./LayoutSwitcher";
+import styles from "./canvas.module.css";
 
 interface CanvasBoardProps {
     canvasId?: string;
@@ -25,6 +29,10 @@ const CanvasBoard = forwardRef<CanvasBoardRef, CanvasBoardProps>(({ canvasId, re
     const [activeTool, setActiveTool] = useState<ToolType>("selection");
     const [color, setColor] = useState("#ffffff");
     const [loading, setLoading] = useState(true);
+
+    // Layout state
+    const [layoutMode, setLayoutMode] = useState<CanvasLayoutMode>("topbar");
+    const [sidebarWidth, setSidebarWidth] = useState(280);
 
     // New style states
     const [strokeWidth, setStrokeWidth] = useState<StrokeWidth>(2);
@@ -47,6 +55,13 @@ const CanvasBoard = forwardRef<CanvasBoardRef, CanvasBoardProps>(({ canvasId, re
 
         // Loading State
         setLoading(true);
+
+        // Load layout preferences
+        const preferences = CanvasLayoutService.getLocalPreferences();
+        setLayoutMode(preferences.layoutMode);
+        if (preferences.sidebarWidth) {
+            setSidebarWidth(preferences.sidebarWidth);
+        }
 
         const canvas = canvasRef.current;
         const parent = canvas.parentElement;
@@ -171,121 +186,116 @@ const CanvasBoard = forwardRef<CanvasBoardRef, CanvasBoardProps>(({ canvasId, re
         if (engine && !readOnly) engine.clear();
     };
 
+    const handleLayoutChange = (newLayout: CanvasLayoutMode) => {
+        setLayoutMode(newLayout);
+        CanvasLayoutService.setLayoutMode(newLayout);
+    };
+
+    // Compute container class
+    let containerClass = `${styles.canvasContainer}`;
+    if (layoutMode === 'topbar' && !readOnly) {
+        containerClass += ` ${styles.canvasContainerWithTopBar}`;
+    } else if (layoutMode === 'sidebar-left' && !readOnly) {
+        containerClass += ` ${styles.canvasContainerWithLeftSidebar}`;
+    } else if (layoutMode === 'sidebar-right' && !readOnly) {
+        containerClass += ` ${styles.canvasContainerWithRightSidebar}`;
+    }
+
     return (
-        <div className="relative w-full h-full overflow-hidden bg-zinc-950 flex flex-col">
-            {/* Main Toolbar */}
+        <div className={containerClass}>
+            {/* Layout Switcher - Always visible in non-readonly mode */}
             {!readOnly && (
-                <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-zinc-900 shadow-xl rounded-lg p-3 flex gap-2 z-10 border border-zinc-800 max-w-5xl">
-                    <div className="flex gap-2 items-center">
-                        {/* Selection Tools */}
-                        <ToolButton icon={<MousePointer size={18} />} active={activeTool === "selection"} onClick={() => selectTool("selection")} title="Select (V)" />
-                        <ToolButton icon={<Hand size={18} />} active={activeTool === "grab"} onClick={() => selectTool("grab")} title="Pan (Space)" />
-                        
-                        <div className="w-px bg-zinc-700 mx-1 h-6"></div>
-                        
-                        {/* Shape Tools */}
-                        <ToolButton icon={<Square size={18} />} active={activeTool === "rectangle"} onClick={() => selectTool("rectangle")} title="Rectangle (R)" />
-                        <ToolButton icon={<Diamond size={18} />} active={activeTool === "diamond"} onClick={() => selectTool("diamond")} title="Diamond (D)" />
-                        <ToolButton icon={<Circle size={18} />} active={activeTool === "ellipse"} onClick={() => selectTool("ellipse")} title="Ellipse (E)" />
-                        <ToolButton icon={<Minus size={18} />} active={activeTool === "line"} onClick={() => selectTool("line")} title="Line (L)" />
-                        <ToolButton icon={<MoveRight size={18} />} active={activeTool === "arrow"} onClick={() => selectTool("arrow")} title="Arrow (A)" />
-                        
-                        <div className="w-px bg-zinc-700 mx-1 h-6"></div>
-                        
-                        {/* Draw Tools */}
-                        <ToolButton icon={<Pencil size={18} />} active={activeTool === "free-draw"} onClick={() => selectTool("free-draw")} title="Free Draw (F)" />
-                        <ToolButton icon={<Type size={18} />} active={activeTool === "text"} onClick={() => selectTool("text")} title="Text (T)" />
-                        <ToolButton icon={<Eraser size={18} />} active={activeTool === "eraser"} onClick={() => selectTool("eraser")} title="Eraser (X)" />
-                        
-                        <div className="w-px bg-zinc-700 mx-1 h-6"></div>
-                        
-                        {/* Color */}
-                        <input
-                            type="color"
-                            value={color}
-                            onChange={changeColor}
-                            className="w-8 h-8 cursor-pointer rounded border border-zinc-600 bg-transparent"
-                            title="Color"
-                        />
-                        
-                        <div className="w-px bg-zinc-700 mx-1 h-6"></div>
-                        
-                        {/* Stroke Width */}
-                        <div className="flex gap-1">
-                            {([1, 2, 3, 4, 5] as StrokeWidth[]).map(width => (
-                                <StrokeWidthButton
-                                    key={width}
-                                    width={width}
-                                    active={strokeWidth === width}
-                                    onClick={() => changeStrokeWidth(width)}
-                                />
-                            ))}
-                        </div>
-                        
-                        <div className="w-px bg-zinc-700 mx-1 h-6"></div>
-                        
-                        {/* Stroke Style */}
-                        <div className="flex gap-1">
-                            <StyleButton style="solid" active={strokeStyle === "solid"} onClick={() => changeStrokeStyle("solid")} />
-                            <StyleButton style="dashed" active={strokeStyle === "dashed"} onClick={() => changeStrokeStyle("dashed")} />
-                            <StyleButton style="dotted" active={strokeStyle === "dotted"} onClick={() => changeStrokeStyle("dotted")} />
-                        </div>
-                        
-                        {/* Font Size (for text tool) */}
-                        {activeTool === "text" && (
-                            <>
-                                <div className="w-px bg-zinc-700 mx-1 h-6"></div>
-                                <select
-                                    value={fontSize}
-                                    onChange={(e) => changeFontSize(e.target.value as FontSize)}
-                                    className="bg-zinc-800 text-zinc-200 text-xs px-2 py-1 rounded border border-zinc-600"
-                                >
-                                    <option value="Small">Small</option>
-                                    <option value="Medium">Medium</option>
-                                    <option value="Large">Large</option>
-                                    <option value="Extra Large">XL</option>
-                                </select>
-                            </>
-                        )}
-                        
-                        <div className="w-px bg-zinc-700 mx-1 h-6"></div>
-                        
-                        {/* Zoom Controls */}
-                        <div className="flex gap-1">
-                            <ToolButton 
-                                icon={<ZoomOut size={18} />} 
-                                active={false} 
-                                onClick={zoomOut} 
-                                title="Zoom Out (-)"
-                                disabled={!zoomInfo.canZoomOut}
-                            />
-                            <button 
-                                onClick={resetZoom}
-                                className="text-xs px-2 py-1 text-zinc-400 hover:text-zinc-200 rounded"
-                                title="Reset Zoom (0)"
-                            >
-                                {Math.round(zoomInfo.scale * 100)}%
-                            </button>
-                            <ToolButton 
-                                icon={<ZoomIn size={18} />} 
-                                active={false} 
-                                onClick={zoomIn} 
-                                title="Zoom In (+)"
-                                disabled={!zoomInfo.canZoomIn}
-                            />
-                        </div>
-                        
-                        <div className="w-px bg-zinc-700 mx-1 h-6"></div>
-                        
-                        {/* Clear */}
-                        <button 
-                            onClick={clearCanvas} 
-                            className="text-xs text-red-400 hover:text-red-300 px-2 py-1 rounded font-medium"
-                        >
-                            Clear
-                        </button>
-                    </div>
+                <div className="absolute top-4 right-4 z-10">
+                    <LayoutSwitcher 
+                        currentLayout={layoutMode} 
+                        onLayoutChange={handleLayoutChange}
+                    />
                 </div>
+            )}
+
+            {/* Top Navigation Bar */}
+            {!readOnly && layoutMode === 'topbar' && (
+                <TopNavBar
+                    activeTool={activeTool}
+                    color={color}
+                    strokeWidth={strokeWidth}
+                    strokeStyle={strokeStyle}
+                    fontSize={fontSize}
+                    zoomScale={zoomInfo.scale}
+                    canZoomIn={zoomInfo.canZoomIn}
+                    canZoomOut={zoomInfo.canZoomOut}
+                    onSelectTool={selectTool}
+                    onColorChange={changeColor}
+                    onStrokeWidthChange={changeStrokeWidth}
+                    onStrokeStyleChange={changeStrokeStyle}
+                    onFontSizeChange={changeFontSize}
+                    onZoomIn={zoomIn}
+                    onZoomOut={zoomOut}
+                    onResetZoom={resetZoom}
+                    onClear={clearCanvas}
+                />
+            )}
+
+            {/* Left Sidebar */}
+            {!readOnly && layoutMode === 'sidebar-left' && (
+                <div className={`${styles.sidebarToolbar} ${styles.sidebarToolbarLeft}`}>
+                    <SidebarToolBar
+                        side="left"
+                        width={sidebarWidth}
+                        activeTool={activeTool}
+                        color={color}
+                        strokeWidth={strokeWidth}
+                        strokeStyle={strokeStyle}
+                        fontSize={fontSize}
+                        zoomScale={zoomInfo.scale}
+                        canZoomIn={zoomInfo.canZoomIn}
+                        canZoomOut={zoomInfo.canZoomOut}
+                        onSelectTool={selectTool}
+                        onColorChange={changeColor}
+                        onStrokeWidthChange={changeStrokeWidth}
+                        onStrokeStyleChange={changeStrokeStyle}
+                        onFontSizeChange={changeFontSize}
+                        onZoomIn={zoomIn}
+                        onZoomOut={zoomOut}
+                        onResetZoom={resetZoom}
+                        onClear={clearCanvas}
+                    />
+                </div>
+            )}
+
+            {/* Right Sidebar */}
+            {!readOnly && layoutMode === 'sidebar-right' && (
+                <div className={`${styles.sidebarToolbar} ${styles.sidebarToolbarRight}`}>
+                    <SidebarToolBar
+                        side="right"
+                        width={sidebarWidth}
+                        activeTool={activeTool}
+                        color={color}
+                        strokeWidth={strokeWidth}
+                        strokeStyle={strokeStyle}
+                        fontSize={fontSize}
+                        zoomScale={zoomInfo.scale}
+                        canZoomIn={zoomInfo.canZoomIn}
+                        canZoomOut={zoomInfo.canZoomOut}
+                        onSelectTool={selectTool}
+                        onColorChange={changeColor}
+                        onStrokeWidthChange={changeStrokeWidth}
+                        onStrokeStyleChange={changeStrokeStyle}
+                        onFontSizeChange={changeFontSize}
+                        onZoomIn={zoomIn}
+                        onZoomOut={zoomOut}
+                        onResetZoom={resetZoom}
+                        onClear={clearCanvas}
+                    />
+                </div>
+            )}
+
+            {/* Minimal Mode FAB */}
+            {!readOnly && layoutMode === 'minimal' && (
+                <LayoutSwitcherFAB
+                    currentLayout={layoutMode}
+                    onLayoutChange={handleLayoutChange}
+                />
             )}
 
             {loading && (
@@ -300,100 +310,5 @@ const CanvasBoard = forwardRef<CanvasBoardRef, CanvasBoardProps>(({ canvasId, re
         </div>
     );
 });
-
-// Helper Components
-function ToolButton({ 
-    icon, 
-    active, 
-    onClick, 
-    title, 
-    disabled = false 
-}: { 
-    icon: React.ReactNode, 
-    active: boolean, 
-    onClick: () => void, 
-    title?: string,
-    disabled?: boolean
-}) {
-    return (
-        <button
-            onClick={onClick}
-            title={title}
-            disabled={disabled}
-            className={`p-2 rounded-md transition-all ${
-                active
-                    ? "bg-indigo-600 text-white"
-                    : disabled 
-                    ? "text-zinc-600 cursor-not-allowed"
-                    : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
-            }`}
-        >
-            {icon}
-        </button>
-    )
-}
-
-function StrokeWidthButton({ 
-    width, 
-    active, 
-    onClick 
-}: { 
-    width: StrokeWidth, 
-    active: boolean, 
-    onClick: () => void 
-}) {
-    return (
-        <button
-            onClick={onClick}
-            title={`Stroke Width: ${width}px`}
-            className={`p-2 rounded-md transition-all flex items-center justify-center ${
-                active
-                    ? "bg-indigo-600 text-white"
-                    : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
-            }`}
-        >
-            <div
-                className="bg-current rounded-full"
-                style={{
-                    width: `${Math.min(width * 2, 8)}px`,
-                    height: `${Math.min(width * 2, 8)}px`
-                }}
-            />
-        </button>
-    )
-}
-
-function StyleButton({ 
-    style, 
-    active, 
-    onClick 
-}: { 
-    style: StrokeStyle, 
-    active: boolean, 
-    onClick: () => void 
-}) {
-    const getLinePattern = () => {
-        switch (style) {
-            case "solid": return "────";
-            case "dashed": return "- - -";
-            case "dotted": return "· · ·";
-            default: return "────";
-        }
-    };
-
-    return (
-        <button
-            onClick={onClick}
-            title={`Stroke Style: ${style}`}
-            className={`px-2 py-1 rounded-md transition-all text-xs font-mono ${
-                active
-                    ? "bg-indigo-600 text-white"
-                    : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
-            }`}
-        >
-            {getLinePattern()}
-        </button>
-    )
-}
 
 export default CanvasBoard;
