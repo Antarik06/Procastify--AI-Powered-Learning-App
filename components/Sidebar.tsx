@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ViewState, UserRole } from '../types';
-import { LayoutDashboard, FileText, BookOpen, Clock, BrainCircuit, Gamepad2, LogOut, Flame, Globe, PanelLeftClose, PanelLeftOpen, GraduationCap, Users, KanbanSquare, BookMarked } from 'lucide-react';
+import { LayoutDashboard, FileText, BookOpen, Clock, BrainCircuit, Gamepad2, LogOut, Flame, Globe, PanelLeftClose, PanelLeftOpen, GraduationCap, Users, KanbanSquare, BookMarked, Menu, X } from 'lucide-react';
 
 
 interface SidebarProps {
@@ -22,6 +22,12 @@ const Sidebar: React.FC<SidebarProps> = ({
   userRole = "student",
   user,
 }) => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const handleNavigate = (view: ViewState) => {
+    onNavigate(view);
+    setMobileMenuOpen(false); // Close mobile menu after navigation
+  };
   const NavItem = ({
     view,
     icon: Icon,
@@ -34,7 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     const active = currentView === view;
     return (
       <button
-        onClick={() => onNavigate(view)}
+        onClick={() => handleNavigate(view)}
         className={`w-full flex items-center ${collapsed ? "justify-center px-2" : "gap-3 px-4"} py-3 rounded-xl transition-all duration-300 font-medium group relative overflow-hidden flex-1 max-h-16
           ${active
             ? "bg-gradient-to-r from-discord-panel to-discord-panel/80 text-white shadow-lg shadow-discord-accent/20 border border-discord-accent/30"
@@ -67,9 +73,30 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <div
-      className={`${collapsed ? "w-20" : "w-64"} bg-gradient-to-b from-[#111214] to-[#0a0b0c] flex flex-col h-screen fixed left-0 top-0 border-r border-white/10 z-50 backdrop-blur-sm transition-all duration-300 ease-in-out`}
-    >
+    <>
+      {/* Mobile Menu Button - Floating FAB */}
+      <button
+        onClick={() => setMobileMenuOpen(true)}
+        className="lg:hidden fixed top-4 left-4 z-40 p-3 bg-discord-accent/20 backdrop-blur-md border border-discord-accent/30 text-white rounded-full shadow-lg shadow-discord-accent/20 hover:bg-discord-accent/40 hover:shadow-discord-accent/40 transition-all duration-300 hover:scale-110"
+        aria-label="Open menu"
+      >
+        <Menu size={22} />
+      </button>
+
+      {/* Backdrop for mobile */}
+      {mobileMenuOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Sidebar - Hidden on mobile by default, shown as modal when mobileMenuOpen is true */}
+      <div
+        className={`${collapsed ? "w-20" : "w-64"} bg-gradient-to-b from-[#111214] to-[#0a0b0c] flex flex-col h-screen fixed left-0 top-0 border-r border-white/10 backdrop-blur-sm transition-all duration-300 ease-in-out
+          ${mobileMenuOpen ? 'z-50 translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          lg:z-50`}
+      >
       {/* Header */}
       <div
         className={`flex items-center border-b border-white/5 bg-[#111214]/50 transition-all duration-300 ${collapsed ? "p-4 justify-center" : "px-5 py-5 justify-between"}`}
@@ -87,16 +114,30 @@ const Sidebar: React.FC<SidebarProps> = ({
                 Procastify
               </h1>
             </div>
-            <button
-              onClick={onToggleCollapse}
-              className="flex items-center justify-center w-8 h-8 text-discord-textMuted hover:text-white hover:bg-discord-hover rounded-lg transition-all duration-300 group"
-              title="Collapse sidebar"
-            >
-              <PanelLeftClose
-                size={18}
-                className="group-hover:scale-110 transition-transform"
-              />
-            </button>
+            <div className="flex items-center gap-2">
+              {/* Close button for mobile */}
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="lg:hidden flex items-center justify-center w-8 h-8 text-discord-textMuted hover:text-white hover:bg-discord-hover rounded-lg transition-all duration-300 group"
+                title="Close menu"
+              >
+                <X
+                  size={18}
+                  className="group-hover:scale-110 transition-transform"
+                />
+              </button>
+              {/* Collapse button for desktop */}
+              <button
+                onClick={onToggleCollapse}
+                className="hidden lg:flex items-center justify-center w-8 h-8 text-discord-textMuted hover:text-white hover:bg-discord-hover rounded-lg transition-all duration-300 group"
+                title="Collapse sidebar"
+              >
+                <PanelLeftClose
+                  size={18}
+                  className="group-hover:scale-110 transition-transform"
+                />
+              </button>
+            </div>
           </>
         ) : (
           <div className="w-10 h-10 bg-gradient-to-br from-discord-accent to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-discord-accent/30 hover:shadow-discord-accent/50 transition-all duration-300 hover:scale-110 group">
@@ -186,7 +227,10 @@ const Sidebar: React.FC<SidebarProps> = ({
         )}
 
         <button
-          onClick={onLogout}
+          onClick={() => {
+            onLogout();
+            setMobileMenuOpen(false);
+          }}
           className={`w-full flex items-center ${collapsed ? "justify-center px-2" : "gap-3 px-4"} py-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-all duration-300 font-medium group hover:scale-105 border border-transparent hover:border-red-500/20`}
           title={collapsed ? "Log Out" : undefined}
         >
@@ -202,6 +246,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         </button>
       </div>
     </div >
+    </>
   );
 };
 
