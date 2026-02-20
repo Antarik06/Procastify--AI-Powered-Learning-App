@@ -1,6 +1,6 @@
 import React from 'react';
 import { ViewState, UserRole } from '../types';
-import { LayoutDashboard, FileText, BookOpen, Clock, BrainCircuit, Gamepad2, LogOut, Flame, Globe, PanelLeftClose, PanelLeftOpen, GraduationCap, Users, KanbanSquare } from 'lucide-react';
+import { LayoutDashboard, FileText, BookOpen, Clock, BrainCircuit, Gamepad2, LogOut, Flame, Globe, PanelLeftClose, PanelLeftOpen, GraduationCap, Users, KanbanSquare, BookMarked } from 'lucide-react';
 
 
 interface SidebarProps {
@@ -141,6 +141,8 @@ const Sidebar: React.FC<SidebarProps> = ({
           <>
             <NavItem view="classrooms" icon={GraduationCap} label="My Classrooms" />
             <NavItem view="notes" icon={BookOpen} label="My Notes" />
+            <NavItem view="workflow" icon={KanbanSquare} label="Workflow Board" />
+            <NavItem view="examTracker" icon={BookMarked} label="Exam Tracker" />
           </>
         ) : (
           <>
@@ -151,6 +153,8 @@ const Sidebar: React.FC<SidebarProps> = ({
             <NavItem view="feed" icon={Flame} label="Learning Feed" />
             <NavItem view="quiz" icon={Gamepad2} label="Quiz Arena" />
             <NavItem view="routine" icon={Clock} label="Routine" />
+            <NavItem view="workflow" icon={KanbanSquare} label="Workflow Board" />
+            <NavItem view="examTracker" icon={BookMarked} label="Exam Tracker" />
             <NavItem view="focus" icon={BrainCircuit} label="Focus Mode" />
           </>
         )}
