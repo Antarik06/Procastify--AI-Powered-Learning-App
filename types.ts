@@ -17,7 +17,8 @@ export type ViewState =
   | "classroomDetail"
   | "studentClassrooms"
   | "studentClassroomView"
-  | "workflow";
+  | "workflow"
+  | "examTracker";
 
 
 export interface UserPreferences {

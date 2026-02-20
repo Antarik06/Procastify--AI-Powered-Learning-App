@@ -28,6 +28,8 @@ import StudentClassrooms from './pages/StudentClassrooms';
 import StudentClassroomView from './pages/StudentClassroomView';
 import { WorkflowBoard } from './components/WorkflowBoard';
 import { AlertCircle, LogIn, X, Loader2 } from 'lucide-react';
+import { ExamTracker } from './pages/ExamTracker';
+
 
 const App: React.FC = () => {
   const [view, setView] = useState<ViewState | "folders">("landing");
@@ -526,6 +528,11 @@ const App: React.FC = () => {
             sidebarCollapsed={sidebarCollapsed}
           />
         )}
+        
+        {view === "examTracker" && (
+          <ExamTracker userId={user.id} />
+        )}
+
       </main>
     </div>
   );
