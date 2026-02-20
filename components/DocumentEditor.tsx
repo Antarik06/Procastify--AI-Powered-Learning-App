@@ -473,6 +473,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ content, onUpdate, read
 
     // Store selection when user selects text
     const storedSelectionRef = useRef<{ text: string; blockIds: string[] } | null>(null);
+    
+    // Track current selection for visual feedback
+    const [selectedText, setSelectedText] = useState<string>('');
+    const [selectedBlockIds, setSelectedBlockIds] = useState<string[]>([]);
 
     // Sync internal state if props change drastically (optional, but good for note switching)
     useEffect(() => {
@@ -489,6 +493,61 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ content, onUpdate, read
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [content]);
+
+    // Monitor selection changes in real-time
+    useEffect(() => {
+        const handleSelectionChange = () => {
+            const selection = window.getSelection();
+            if (selection && !selection.isCollapsed) {
+                const text = selection.toString().trim();
+                setSelectedText(text);
+
+                // Find which blocks contain the selection
+                const editorContainer = document.querySelector('.document-editor-container');
+                const blockIds: string[] = [];
+
+                if (editorContainer && text.length > 0) {
+                    const blockWrappers = editorContainer.querySelectorAll('[data-block-id]');
+                    blockWrappers.forEach((wrapper) => {
+                        const blockId = wrapper.getAttribute('data-block-id');
+                        if (blockId) {
+                            try {
+                                // Check if this block is in the selection using multiple range checks
+                                let blockIsSelected = false;
+                                for (let i = 0; i < selection.rangeCount; i++) {
+                                    const range = selection.getRangeAt(i);
+                                    // Check if range intersects with this block
+                                    const nodeContains = 
+                                        wrapper.contains(range.commonAncestorContainer as Node) ||
+                                        range.commonAncestorContainer === wrapper ||
+                                        (range.commonAncestorContainer.parentNode === wrapper);
+                                    
+                                    if (nodeContains) {
+                                        blockIsSelected = true;
+                                        break;
+                                    }
+                                }
+                                
+                                if (blockIsSelected && !blockIds.includes(blockId)) {
+                                    blockIds.push(blockId);
+                                }
+                            } catch (e) {
+                                console.warn("Error checking selection:", e);
+                            }
+                        }
+                    });
+                }
+
+                setSelectedBlockIds(blockIds);
+            } else {
+                setSelectedText('');
+                setSelectedBlockIds([]);
+            }
+        };
+
+        document.addEventListener('selectionchange', handleSelectionChange);
+        return () => document.removeEventListener('selectionchange', handleSelectionChange);
+    }, []);
 
     // Propagate updates to parent
     useEffect(() => {
@@ -737,73 +796,45 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ content, onUpdate, read
 
                         {onGenerateDiagram && (
                             <div className="flex items-center gap-1 ml-4 pl-4 border-l border-gray-700">
-                                <button
-                                    onMouseDown={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
+                                <div className="flex items-center gap-2 px-2 py-1 bg-black/30 rounded-md">
+                                    {/* Selection indicator */}
+                                    {selectedText.length > 0 && (
+                                        <div className="flex items-center gap-2">
+                                            <div className="flex items-center gap-1 px-2 py-0.5 bg-blue-500/30 rounded text-xs text-blue-300 max-w-xs">
+                                                <span className="truncate">{selectedText.substring(0, 20)}{selectedText.length > 20 ? '...' : ''}</span>
+                                                <span className="text-blue-400">({selectedBlockIds.length})</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                    <button
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
 
-                                        // Capture selection immediately
-                                        const selection = window.getSelection();
-                                        if (selection && !selection.isCollapsed) {
-                                            const selectedText = selection.toString().trim();
-                                            console.log("[DocumentEditor] Captured on mousedown:", selectedText.substring(0, 30) + "...");
+                                            if (selectedText.trim() && selectedBlockIds.length > 0) {
+                                                console.log("[DocumentEditor] Generating diagram from selection:", selectedText.substring(0, 30) + "...");
+                                                console.log("[DocumentEditor] Selected blocks:", selectedBlockIds);
 
-                                            // Find selected blocks
-                                            const editorContainer = document.querySelector('.document-editor-container');
-                                            const selectedBlockIds: string[] = [];
-
-                                            if (editorContainer) {
-                                                const blockWrappers = editorContainer.querySelectorAll('[data-block-id]');
-                                                blockWrappers.forEach((wrapper) => {
-                                                    const blockId = wrapper.getAttribute('data-block-id');
-                                                    const contentElement = wrapper.querySelector('[contenteditable]');
-                                                    if (blockId && contentElement) {
-                                                        try {
-                                                            if (selection.containsNode(contentElement, true)) {
-                                                                selectedBlockIds.push(blockId);
-                                                            }
-                                                        } catch (e) {
-                                                            console.warn("Error checking node:", e);
-                                                        }
-                                                    }
-                                                });
+                                                // Call the callback with tracked selection
+                                                if (onGenerateDiagram) {
+                                                    onGenerateDiagram(selectedText, selectedBlockIds);
+                                                }
+                                            } else {
+                                                alert("Please select text first to generate a diagram");
                                             }
-
-                                            // Store both text and block IDs
-                                            (e.currentTarget as any).__selection = {
-                                                text: selectedText,
-                                                blockIds: selectedBlockIds
-                                            };
-                                        }
-                                    }}
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-
-                                        // Get stored selection
-                                        const stored = (e.currentTarget as any).__selection;
-
-                                        if (stored && stored.text && stored.text.trim()) {
-                                            console.log("[DocumentEditor] Using stored selection:", stored.text.substring(0, 30) + "...");
-                                            console.log("[DocumentEditor] Block IDs:", stored.blockIds);
-
-                                            // ✅ CALL THE CALLBACK!
-                                            if (onGenerateDiagram) {
-                                                onGenerateDiagram(stored.text, stored.blockIds);
-                                            }
-                                        } else {
-                                            alert("Please select text first");
-                                        }
-
-                                        // Clear stored selection after use
-                                        delete (e.currentTarget as any).__selection;
-                                    }}
-                                    className="p-2 rounded hover:bg-white/10 transition-colors text-gray-400 hover:text-white"
-                                    title="Generate Diagram from Selection"
-                                >
-                                    <Wand2 size={18} />
-
-                                </button>
+                                        }}
+                                        disabled={selectedText.length === 0}
+                                        className={`p-2 rounded transition-colors flex items-center gap-2 ${
+                                            selectedText.length > 0
+                                                ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                                                : 'text-gray-500 cursor-not-allowed'
+                                        }`}
+                                        title={selectedText.length > 0 ? 'Generate Diagram from Selection' : 'Select text to enable'}
+                                    >
+                                        <Wand2 size={18} />
+                                        <span className="text-sm hidden sm:inline">Generate</span>
+                                    </button>
+                                </div>
                             </div>
                         )}
 
@@ -824,7 +855,15 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ content, onUpdate, read
                 <div className="flex flex-col gap-1 max-w-[720px] mx-auto w-full">
 
                     {blocks.map((block, index) => (
-                        <div key={block.id} data-block-id={block.id} className="document-editor-block">
+                        <div 
+                            key={block.id} 
+                            data-block-id={block.id} 
+                            className={`document-editor-block transition-colors rounded-lg px-1 ${
+                                selectedBlockIds.includes(block.id)
+                                    ? 'bg-blue-500/15 border-l-2 border-blue-500'
+                                    : ''
+                            }`}
+                        >
                             <BlockComponent
                                 index={index}
                                 block={block}

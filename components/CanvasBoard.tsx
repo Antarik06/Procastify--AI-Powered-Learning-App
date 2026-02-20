@@ -191,6 +191,18 @@ const CanvasBoard = forwardRef<CanvasBoardRef, CanvasBoardProps>(({ canvasId, re
         CanvasLayoutService.setLayoutMode(newLayout);
     };
 
+    // Expose methods via ref
+    useImperativeHandle(ref, () => ({
+        addShapes: (shapes: Shape[]) => {
+            if (engine) {
+                engine.addShapes(shapes);
+            }
+        },
+        clear: () => {
+            clearCanvas();
+        }
+    }), [engine, readOnly]);
+
     // Compute container class
     let containerClass = `${styles.canvasContainer}`;
     if (layoutMode === 'topbar' && !readOnly) {

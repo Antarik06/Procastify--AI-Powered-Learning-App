@@ -55,6 +55,11 @@ const safeJSONParse = <T>(text: string, fallback: T): T => {
 export const generateDiagramFromText = async (selectedText: string): Promise<DiagramSpec | null> => {
   const ai = getAI();
 
+  if (!selectedText || selectedText.trim().length === 0) {
+    console.error("[diagramService] Empty text provided");
+    return null;
+  }
+
   const prompt = `
 You are an expert diagram generator. Convert the following text into a structured diagram specification.
 
@@ -62,7 +67,7 @@ Text to convert:
 ${selectedText}
 
 Guidelines:
-1. Identify key concepts, entities, or steps
+1. Identify key concepts, entities, or steps (minimum 2, maximum 8)
 2. For each concept, determine the best shape type:
    - "rectangle" = standard process step, entity, or concept
    - "diamond" = decision point, conditional, or branching logic
@@ -86,21 +91,25 @@ Guidelines:
 Return a JSON object with:
 - nodes: array of objects with {id, text, type, x, y, width, height}
   - x and y are relative positions (0-1000 range)
-  - width and height are approximate dimensions
+  - width and height are approximate dimensions (80-150 for width, 50-100 for height)
+  - Ensure nodes are spaced apart
 - connections: array of objects with {id, fromNode, toNode, label?}
+  - Only include meaningful connections
 
-Example format:
+Example for a simple process:
 {
   "nodes": [
-    {"id": "1", "text": "Start", "type": "ellipse", "x": 50, "y": 50, "width": 80, "height": 40},
-    {"id": "2", "text": "Process", "type": "rectangle", "x": 50, "y": 150, "width": 100, "height": 50}
+    {"id": "1", "text": "Start", "type": "ellipse", "x": 100, "y": 50, "width": 100, "height": 50},
+    {"id": "2", "text": "Process Step", "type": "rectangle", "x": 50, "y": 200, "width": 120, "height": 60},
+    {"id": "3", "text": "End", "type": "ellipse", "x": 100, "y": 350, "width": 100, "height": 50}
   ],
   "connections": [
-    {"id": "c1", "fromNode": "1", "toNode": "2"}
+    {"id": "c1", "fromNode": "1", "toNode": "2"},
+    {"id": "c2", "fromNode": "2", "toNode": "3"}
   ]
 }
 
-Keep text concise (under 30 characters per node if possible).
+Keep text concise (under 20 characters per node).
 Return only valid JSON, no markdown formatting.
 `;
 
@@ -146,31 +155,128 @@ Return only valid JSON, no markdown formatting.
     });
 
     if (!response || !response.text) {
-      console.error("Empty response from AI");
+      console.error("[diagramService] Empty response from AI");
       return null;
     }
 
     const spec = safeJSONParse<DiagramSpec>(response.text, null);
-    return spec;
+    
+    if (!spec) {
+      console.error("[diagramService] Failed to parse diagram spec");
+      return null;
+    }
+
+    // Validate the spec
+    if (!spec.nodes || spec.nodes.length === 0) {
+      console.error("[diagramService] No nodes in generated spec");
+      return null;
+    }
+
+    // Ensure all nodes have required fields
+    const validNodes = spec.nodes.filter(node => 
+      node.id && node.text && node.type && 
+      typeof node.x === 'number' && 
+      typeof node.y === 'number' && 
+      typeof node.width === 'number' && 
+      typeof node.height === 'number'
+    );
+
+    if (validNodes.length === 0) {
+      console.error("[diagramService] No valid nodes in spec");
+      return null;
+    }
+
+    // Validate connections reference existing nodes
+    const validConnections = (spec.connections || []).filter(conn => 
+      conn.id && 
+      conn.fromNode && 
+      conn.toNode &&
+      validNodes.some(n => n.id === conn.fromNode) &&
+      validNodes.some(n => n.id === conn.toNode)
+    );
+
+    const validatedSpec: DiagramSpec = {
+      nodes: validNodes,
+      connections: validConnections
+    };
+
+    console.log("[diagramService] Generated and validated spec with", validNodes.length, "nodes and", validConnections.length, "connections");
+    return validatedSpec;
 
   } catch (error) {
-    console.error("Diagram generation error:", error);
+    console.error("[diagramService] Diagram generation error:", error);
     return null;
   }
 };
 
 export const convertSpecToShapes = (spec: DiagramSpec, offsetX: number = 100, offsetY: number = 100): Shape[] => {
-  const shapes: Shape[] = [];
-  const nodeIdMap: Record<string, string> = {};
+  // First pass: Validate and adjust layout to prevent overlaps
+  const nodeMap = new Map<string, { x: number; y: number; width: number; height: number; originalIndex: number }>();
+  const MIN_SPACING_X = 200;
+  const MIN_SPACING_Y = 150;
+
+  // Track occupied regions
+  const occupiedRegions: Array<{ x: number; y: number; width: number; height: number }> = [];
 
   spec.nodes.forEach((node, index) => {
+    let finalX = node.x;
+    let finalY = node.y;
+    const nodeWidth = Math.max(node.width, 80);
+    const nodeHeight = Math.max(node.height, 50);
+
+    // Check for overlaps with existing nodes
+    let hasOverlap = true;
+    let attemptCount = 0;
+    const maxAttempts = 5;
+
+    while (hasOverlap && attemptCount < maxAttempts) {
+      hasOverlap = false;
+
+      for (const region of occupiedRegions) {
+        // Check if current position overlaps
+        if (
+          finalX < region.x + region.width + MIN_SPACING_X &&
+          finalX + nodeWidth + MIN_SPACING_X > region.x &&
+          finalY < region.y + region.height + MIN_SPACING_Y &&
+          finalY + nodeHeight + MIN_SPACING_Y > region.y
+        ) {
+          hasOverlap = true;
+          // Move right or down
+          if (attemptCount < 3) {
+            finalX += MIN_SPACING_X + 50;
+          } else {
+            finalY += MIN_SPACING_Y + 50;
+          }
+          break;
+        }
+      }
+      attemptCount++;
+    }
+
+    occupiedRegions.push({ x: finalX, y: finalY, width: nodeWidth, height: nodeHeight });
+    nodeMap.set(node.id, { x: finalX, y: finalY, width: nodeWidth, height: nodeHeight, originalIndex: index });
+  });
+
+  const shapes: Shape[] = [];
+  const nodeIdToShapeId: Record<string, string> = {};
+
+  // Create shapes from validated nodes
+  spec.nodes.forEach((node) => {
     const shapeId = uuidv4();
-    nodeIdMap[node.id] = shapeId;
+    nodeIdToShapeId[node.id] = shapeId;
+
+    const nodeLayout = nodeMap.get(node.id);
+    if (!nodeLayout) return;
+
+    const x = nodeLayout.x + offsetX;
+    const y = nodeLayout.y + offsetY;
+    const width = nodeLayout.width;
+    const height = nodeLayout.height;
 
     const base = {
       id: shapeId,
-      x: node.x + offsetX,
-      y: node.y + offsetY,
+      x,
+      y,
       strokeWidth: 2 as const,
       strokeFill: "#ffffff",
       strokeEdge: "round" as const,
@@ -185,8 +291,8 @@ export const convertSpecToShapes = (spec: DiagramSpec, offsetX: number = 100, of
         shape = {
           ...base,
           type: 'rectangle',
-          width: node.width,
-          height: node.height,
+          width,
+          height,
           bgFill: '#3b82f6',
           rounded: 'sharp',
           fillStyle: 'hachure'
@@ -196,8 +302,8 @@ export const convertSpecToShapes = (spec: DiagramSpec, offsetX: number = 100, of
         shape = {
           ...base,
           type: 'diamond',
-          width: node.width,
-          height: node.height,
+          width,
+          height,
           bgFill: '#8b5cf6',
           rounded: 'sharp',
           fillStyle: 'hachure'
@@ -207,8 +313,8 @@ export const convertSpecToShapes = (spec: DiagramSpec, offsetX: number = 100, of
         shape = {
           ...base,
           type: 'ellipse',
-          radX: node.width / 2,
-          radY: node.height / 2,
+          radX: width / 2,
+          radY: height / 2,
           bgFill: '#10b981',
           fillStyle: 'hachure'
         };
@@ -218,28 +324,29 @@ export const convertSpecToShapes = (spec: DiagramSpec, offsetX: number = 100, of
         shape = {
           id: shapeId,
           type: 'text',
-          x: node.x + offsetX,
-          y: node.y + offsetY,
-          width: node.width,
-          height: node.height,
+          x,
+          y,
+          width,
+          height,
           text: node.text,
           fontSize: 'Medium' as const,
           fontFamily: 'normal' as const,
           textAlign: 'center' as const,
           strokeFill: "#ffffff",
-          strokeWidth: 2,
+          strokeWidth: 1,
         };
         break;
     }
 
     shapes.push(shape);
 
-    if (node.type !== 'text' && node.text) {
+    // Add text label inside shapes (except for text shapes)
+    if (node.type !== 'text' && node.text && node.text.length > 0) {
       const textShape: Shape = {
         id: uuidv4(),
         type: 'text',
-        x: node.x + offsetX + node.width / 2,
-        y: node.y + offsetY + node.height / 2 - 10,
+        x: x + width / 2,
+        y: y + height / 2 - 10,
         width: 0,
         height: 0,
         text: node.text,
@@ -253,9 +360,10 @@ export const convertSpecToShapes = (spec: DiagramSpec, offsetX: number = 100, of
     }
   });
 
+  // Create arrows between shapes
   spec.connections.forEach((conn) => {
-    const fromShapeId = nodeIdMap[conn.fromNode];
-    const toShapeId = nodeIdMap[conn.toNode];
+    const fromShapeId = nodeIdToShapeId[conn.fromNode];
+    const toShapeId = nodeIdToShapeId[conn.toNode];
 
     if (!fromShapeId || !toShapeId) return;
 
@@ -264,63 +372,58 @@ export const convertSpecToShapes = (spec: DiagramSpec, offsetX: number = 100, of
 
     if (!fromShape || !toShape) return;
 
-    let toX: number, toY: number;
-    let fromX: number, fromY: number;
-
-    const getShapeCenter = (shape: Shape): { x: number; y: number } | null => {
+    // Calculate connection points
+    const getConnectionPoint = (shape: Shape, isSource: boolean): { x: number; y: number } => {
       if (shape.type === 'rectangle' || shape.type === 'diamond') {
-        return { x: shape.x + shape.width / 2, y: shape.y + shape.height / 2 };
+        return {
+          x: shape.x + shape.width / 2,
+          y: isSource ? shape.y + shape.height : shape.y
+        };
       } else if (shape.type === 'ellipse') {
-        return { x: shape.x, y: shape.y };
-      } else if (shape.type === 'text') {
-        return { x: shape.x, y: shape.y };
-      } else if (shape.type === 'line' || shape.type === 'arrow') {
+        return {
+          x: shape.x + (shape.radX || 0),
+          y: shape.y + (shape.radY || 0)
+        };
+      } else {
         return { x: shape.x, y: shape.y };
       }
-      return null;
     };
 
-    const fromCenter = getShapeCenter(fromShape);
-    const toCenter = getShapeCenter(toShape);
-
-    if (!fromCenter || !toCenter) return;
-
-    fromX = fromCenter.x;
-    fromY = fromCenter.y;
-    toX = toCenter.x;
-    toY = toCenter.y;
+    const fromPoint = getConnectionPoint(fromShape, true);
+    const toPoint = getConnectionPoint(toShape, false);
 
     const arrowShape: Shape = {
       id: uuidv4(),
       type: 'arrow',
-      x: fromX,
-      y: fromY,
-      toX,
-      toY,
+      x: fromPoint.x,
+      y: fromPoint.y,
+      toX: toPoint.x,
+      toY: toPoint.y,
       strokeWidth: 2,
-      strokeFill: "#ffffff",
+      strokeFill: "#a0aec0",
       strokeStyle: "solid",
       roughStyle: 0,
     };
 
     shapes.push(arrowShape);
 
-    if (conn.label) {
-      const midX = (fromX + toX) / 2;
-      const midY = (fromY + toY) / 2;
+    // Add connection label if present
+    if (conn.label && conn.label.length > 0) {
+      const midX = (fromPoint.x + toPoint.x) / 2;
+      const midY = (fromPoint.y + toPoint.y) / 2;
 
       const labelShape: Shape = {
         id: uuidv4(),
         type: 'text',
         x: midX,
-        y: midY - 10,
+        y: midY - 15,
         width: 0,
         height: 0,
         text: conn.label,
         fontSize: 'Small' as const,
         fontFamily: 'normal' as const,
         textAlign: 'center' as const,
-        strokeFill: "#ffffff",
+        strokeFill: "#a0aec0",
         strokeWidth: 1,
       };
 
@@ -328,6 +431,7 @@ export const convertSpecToShapes = (spec: DiagramSpec, offsetX: number = 100, of
     }
   });
 
+  console.log("[diagramService] Generated shapes:", shapes.length, shapes);
   return shapes;
 };
 
