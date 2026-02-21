@@ -26,7 +26,10 @@ import Folders from './pages/Folders';
 import ClassroomDetail from './pages/ClassroomDetail';
 import StudentClassrooms from './pages/StudentClassrooms';
 import StudentClassroomView from './pages/StudentClassroomView';
+import { WorkflowBoard } from './components/WorkflowBoard';
 import { AlertCircle, LogIn, X, Loader2 } from 'lucide-react';
+import { ExamTracker } from './pages/ExamTracker';
+
 
 const App: React.FC = () => {
   const [view, setView] = useState<ViewState | "folders">("landing");
@@ -456,6 +459,7 @@ const App: React.FC = () => {
               StorageService.saveNotes(n);
             }}
             onStartTask={handleStartFocus}
+            onNavigate={(view) => handleNavigate(view as any)}
           />
         )}
 
@@ -517,6 +521,19 @@ const App: React.FC = () => {
             onNavigate={handleNavigate}
           />
         )}
+
+        {view === "workflow" && (
+          <WorkflowBoard
+            userId={user.id}
+            onClose={() => setView("dashboard")}
+            sidebarCollapsed={sidebarCollapsed}
+          />
+        )}
+        
+        {view === "examTracker" && (
+          <ExamTracker userId={user.id} />
+        )}
+
       </main>
     </div>
   );
