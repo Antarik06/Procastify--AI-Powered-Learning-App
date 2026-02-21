@@ -147,49 +147,50 @@ const BlockComponent: React.FC<BlockProps> = ({
         }
 
         if (e.key === 'Enter') {
-    
-    if (block.type === 'code') {
-        return;
-    }
 
-    if (e.shiftKey) return;
+            if (block.type === 'code') {
+                return;
+            }
 
-    e.preventDefault();
-    onEnter(block.id, e);
-} else if (e.key === 'Backspace') {
-    const el = contentRef.current;
+            if (e.shiftKey) return;
 
-    // Delete block if it's empty (works for ALL block types)
-    if (
-        el &&
-        el.innerText.length === 0 &&
-        (!block.content || block.content === '')
-    ) {
-        e.preventDefault();
-        deleteBlock(block.id);
-    }
-}
- else if (e.key === 'ArrowUp') {
-    const selection = window.getSelection();
-    if (!selection || selection.anchorOffset !== 0) return;
+            e.preventDefault();
+            onEnter(block.id, e);
+        } else if (e.key === 'Backspace') {
+            const el = contentRef.current;
 
-    e.preventDefault();
-    onArrowUp(index);
-} else if (e.key === 'ArrowDown') {
-    const el = contentRef.current;
-    const selection = window.getSelection();
+            // Delete block if it's empty (works for ALL block types)
+            if (
+                el &&
+                el.innerText.length === 0 &&
+                (!block.content || block.content === '')
+            ) {
+                e.preventDefault();
+                deleteBlock(block.id);
+            }
+        } else if (e.key === 'ArrowUp') {
+            if (e.shiftKey) return; // Allow native shift-selection
+            const selection = window.getSelection();
+            if (!selection || selection.anchorOffset !== 0) return;
 
-    if (!el || !selection) return;
+            e.preventDefault();
+            onArrowUp(index);
+        } else if (e.key === 'ArrowDown') {
+            if (e.shiftKey) return; // Allow native shift-selection
+            const el = contentRef.current;
+            const selection = window.getSelection();
 
-    const isAtEnd =
-        selection.anchorNode === el.lastChild &&
-        selection.anchorOffset === el.lastChild?.textContent?.length;
+            if (!el || !selection) return;
 
-    if (!isAtEnd) return;
+            const isAtEnd =
+                selection.anchorNode === el.lastChild &&
+                selection.anchorOffset === el.lastChild?.textContent?.length;
 
-    e.preventDefault();
-    onArrowDown(index);
-}
+            if (!isAtEnd) return;
+
+            e.preventDefault();
+            onArrowDown(index);
+        }
 
     };
 
@@ -203,7 +204,7 @@ const BlockComponent: React.FC<BlockProps> = ({
             case 'bullet': return 'ml-0';
             case 'todo': return 'ml-0';
             case 'code':
-    return `
+                return `
         font-mono
         text-sm
         bg-[#0f1115]
@@ -248,8 +249,8 @@ const BlockComponent: React.FC<BlockProps> = ({
             );
         }
         if (block.type === 'code') {
-    return <Code size={16} className="mr-2 text-gray-400 mt-1 shrink-0" />;
-}
+            return <Code size={16} className="mr-2 text-gray-400 mt-1 shrink-0" />;
+        }
 
         if (block.type === 'link') {
             return <ExternalLink size={16} className="mr-2 text-blue-400 mt-1 shrink-0" />;
