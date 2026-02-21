@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { UserPreferences, RoutineTask, Note, QueueItem } from '../types';
 import { analyzeNoteWorkload, generateAdaptiveRoutine, generatePanicDecomposition } from '../services/geminiService';
 import { StorageService } from '../services/storageService';
-import { Clock, CheckCircle, RefreshCw, CalendarCheck, PlayCircle, Plus, BrainCircuit, Settings, Coffee, Trash2, AlertTriangle, Zap, KanbanSquare } from 'lucide-react';
+import { Clock, CheckCircle, RefreshCw, CalendarCheck, PlayCircle, Plus, BrainCircuit, Settings, Coffee, Trash2, AlertTriangle, Zap, KanbanSquare, BookMarked } from 'lucide-react';
 
 interface RoutineProps {
     user: UserPreferences;
@@ -431,7 +431,14 @@ const Routine: React.FC<RoutineProps> = ({ user, setUser, notes, setNotes, onSta
                         Optimized for <strong>{user.energyPeak}</strong> energy peak. {user.freeTimeHours}h free today.
                     </p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-3">
+                    <button
+                        onClick={() => onNavigate('examTracker')}
+                        className="p-3 bg-discord-accent hover:bg-discord-accentHover text-white rounded-xl transition-colors shadow-lg shadow-discord-accent/20 flex items-center gap-2 font-bold px-4 mr-3"
+                    >
+                        <BookMarked size={20} />
+                        <span>Exam Tracker</span>
+                    </button>
                     <button
                         onClick={() => onNavigate('workflow')}
                         className="p-3 bg-discord-accent hover:bg-discord-accentHover text-white rounded-xl transition-colors shadow-lg shadow-discord-accent/20 flex items-center gap-2 font-bold px-4 mr-3"

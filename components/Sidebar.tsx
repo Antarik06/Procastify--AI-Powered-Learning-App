@@ -176,14 +176,14 @@ const Sidebar: React.FC<SidebarProps> = ({
         <NavItem view="quiz" icon={Gamepad2} label="Quiz Arena" />
         <NavItem view="routine" icon={Clock} label="Routine" />
         <NavItem view="focus" icon={BrainCircuit} label="Focus Mode" />
-         <NavItem view="studentClassrooms" icon={Users} label="Classrooms" /> */}
+         <NavItem view="studentClassrooms" icon={Users} label="Classrooms" />
+         <NavItem view="workflow" icon={KanbanSquare} label="Workflow Board" />
+         <NavItem view="examTracker" icon={BookMarked} label="Exam Tracker" /> */}
 
         {userRole === "teacher" ? (
           <>
             <NavItem view="classrooms" icon={GraduationCap} label="My Classrooms" />
             <NavItem view="notes" icon={BookOpen} label="My Notes" />
-            <NavItem view="workflow" icon={KanbanSquare} label="Workflow Board" />
-            <NavItem view="examTracker" icon={BookMarked} label="Exam Tracker" />
           </>
         ) : (
           <>
@@ -194,8 +194,6 @@ const Sidebar: React.FC<SidebarProps> = ({
             <NavItem view="feed" icon={Flame} label="Learning Feed" />
             <NavItem view="quiz" icon={Gamepad2} label="Quiz Arena" />
             <NavItem view="routine" icon={Clock} label="Routine" />
-            <NavItem view="workflow" icon={KanbanSquare} label="Workflow Board" />
-            <NavItem view="examTracker" icon={BookMarked} label="Exam Tracker" />
             <NavItem view="focus" icon={BrainCircuit} label="Focus Mode" />
           </>
         )}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   Layout,
   LayoutList,
+  LayoutPanelLeft,
   Eye,
   ChevronDown,
 } from 'lucide-react';
@@ -25,31 +26,31 @@ export const LayoutSwitcher: React.FC<LayoutSwitcherProps> = ({
     description: string;
     icon: React.ReactNode;
   }> = [
-    {
-      mode: 'topbar',
-      label: 'Top Navbar',
-      description: 'Horizontal toolbar at the top',
-      icon: <Layout size={18} />,
-    },
-    {
-      mode: 'sidebar-left',
-      label: 'Left Sidebar',
-      description: 'Vertical tools on the left',
-      icon: <LayoutList size={18} />,
-    },
-    {
-      mode: 'sidebar-right',
-      label: 'Right Sidebar',
-      description: 'Vertical tools on the right',
-      icon: <LayoutList size={18} className="rotate-180" />,
-    },
-    {
-      mode: 'minimal',
-      label: 'Minimal',
-      description: 'Hide controls for focus',
-      icon: <Eye size={18} />,
-    },
-  ];
+      {
+        mode: 'topbar',
+        label: 'Top Navbar',
+        description: 'Horizontal toolbar at the top',
+        icon: <Layout size={18} />,
+      },
+      {
+        mode: 'sidebar-left',
+        label: 'Left Sidebar',
+        description: 'Vertical tools on the left',
+        icon: <LayoutPanelLeft size={18} />,
+      },
+      {
+        mode: 'sidebar-right',
+        label: 'Right Sidebar',
+        description: 'Vertical tools on the right',
+        icon: <LayoutPanelLeft size={18} className="rotate-180" />,
+      },
+      {
+        mode: 'minimal',
+        label: 'Minimal',
+        description: 'Hide controls for focus',
+        icon: <Eye size={18} />,
+      },
+    ];
 
   const currentLayoutInfo = layouts.find((l) => l.mode === currentLayout);
 
@@ -81,11 +82,10 @@ export const LayoutSwitcher: React.FC<LayoutSwitcherProps> = ({
               <button
                 key={layout.mode}
                 onClick={() => handleLayoutChange(layout.mode)}
-                className={`w-full text-left px-3 py-2 rounded-md mb-1 transition-all ${
-                  currentLayout === layout.mode
+                className={`w-full text-left px-3 py-2 rounded-md mb-1 transition-all ${currentLayout === layout.mode
                     ? 'bg-indigo-600 text-white'
                     : 'text-zinc-300 hover:bg-zinc-800'
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-3">
                   {layout.icon}
