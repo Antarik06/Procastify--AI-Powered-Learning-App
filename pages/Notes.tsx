@@ -21,6 +21,7 @@ import {
 import DocumentEditor from "../components/DocumentEditor";
 import CanvasBoard, { CanvasBoardRef } from "../components/CanvasBoard";
 import MigrationHub from "../components/MigrationHub";
+import NoteChatbot from "../components/NoteChatbot";
 import { StorageService } from "../services/storageService";
 import { generateDiagramFromText, convertSpecToShapes } from "../services/diagramService";
 import { Shape } from "../components/canvas/types";
@@ -683,6 +684,13 @@ const Notes: React.FC<NotesProps> = ({
           </div>
         )}
       </div>
+
+      {/* Notes Chatbot */}
+      <NoteChatbot
+        notes={notes}
+        user={user}
+        onNavigateToNote={(noteId) => setSelectedNoteId(noteId)}
+      />
     </div>
   );
 };
