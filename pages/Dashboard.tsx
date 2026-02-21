@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { UserPreferences, Summary, Note, UserStats } from '../types';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { Clock, BookOpen, FileText, Zap, Calendar, Flame, Trophy, ArrowRight, BrainCircuit, Sparkles, Target, PenLine } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { Clock, BookOpen, FileText, Zap, Calendar, Flame, Trophy, ArrowRight, BrainCircuit, Sparkles, Target, PenLine, TrendingUp, Activity } from 'lucide-react';
 import { generateDashboardInsight, generateDashboardInsightAsync, DashboardInsight, CTAAction } from '../services/insightService';
 
 interface DashboardProps {
@@ -22,7 +22,11 @@ interface StatCard {
   bg: string;
 }
 
+type TimeRange = 7 | 14 | 30;
+
 const Dashboard: React.FC<DashboardProps> = ({ user, summaries, notes, stats, onNoteClick, onNavigate }) => {
+
+  const [timeRange, setTimeRange] = useState<TimeRange>(7);
 
   const safeStats = stats || {
     id: '',
@@ -44,7 +48,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, summaries, notes, stats, on
   const actualSummariesCount = summaries.length;
 
 
-  const getLast7Days = () => {
+  const getActivityData = (days: number) => {
     const getLocalDateKey = (date: Date): string => {
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -52,20 +56,61 @@ const Dashboard: React.FC<DashboardProps> = ({ user, summaries, notes, stats, on
       return `${year}-${month}-${day}`;
     };
 
-    const days = [];
-    for (let i = 6; i >= 0; i--) {
+    const daysArray = [];
+    for (let i = days - 1; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const key = getLocalDateKey(d);
-      days.push({
-        name: d.toLocaleDateString('en-US', { weekday: 'short' }),
-        hours: (safeStats.dailyActivity[key] || 0) / 60 // Convert minutes to hours
+      const minutes = safeStats.dailyActivity[key] || 0;
+      daysArray.push({
+        date: key,
+        name: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        minutes: minutes,
+        hours: minutes / 60,
+        displayHours: minutes < 60 ? `${minutes}m` : `${(minutes / 60).toFixed(1)}h`
       });
     }
-    return days;
+    return daysArray;
   };
 
-  const activityData = getLast7Days();
+  const activityData = getActivityData(timeRange);
+
+  // Calculate dynamic Y-axis domain based on data
+  const maxHours = useMemo(() => {
+    if (activityData.length === 0) return 4;
+    const max = Math.max(...activityData.map(d => d.hours));
+    if (max === 0) return 4; // Minimum scale for no activity
+    if (max < 1) return 1; // For short sessions (10-15 mins)
+    if (max <= 4) return 4;
+    // Round up to nearest hour for longer sessions
+    return Math.ceil(max * 1.1); // Add 10% padding
+  }, [activityData]);
+
+  // Calculate total study time for the selected period
+  const totalStudyTime = useMemo(() => {
+    const totalMinutes = activityData.reduce((acc, d) => acc + d.minutes, 0);
+    const hours = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+  }, [activityData]);
+
+  // Calculate average daily study time
+  const averageDaily = useMemo(() => {
+    const totalMinutes = activityData.reduce((acc, d) => acc + d.minutes, 0);
+    const avgMinutes = Math.round(totalMinutes / timeRange);
+    const hours = Math.floor(avgMinutes / 60);
+    const mins = avgMinutes % 60;
+    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+  }, [activityData, timeRange]);
+
+  // Find best day
+  const bestDay = useMemo(() => {
+    if (activityData.length === 0) return null;
+    const best = activityData.reduce((prev, current) => 
+      current.hours > prev.hours ? current : prev
+    );
+    return best.hours > 0 ? best : null;
+  }, [activityData]);
 
   const statCards: StatCard[] = [
     {
@@ -222,61 +267,126 @@ const Dashboard: React.FC<DashboardProps> = ({ user, summaries, notes, stats, on
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        <div className="lg:col-span-2 bg-discord-panel p-6 rounded-2xl border border-white/5 shadow-sm">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <Zap size={18} className="text-discord-accent" /> Study Activity (Hours)
-            </h3>
-          </div>
-          <div style={{ width: '100%', height: '256px', minWidth: 0 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={activityData}>
-                <XAxis dataKey="name" stroke="#949ba4" tickLine={false} axisLine={false} />
-                <YAxis stroke="#949ba4" tickLine={false} axisLine={false} allowDecimals={false} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#111214', border: '1px solid #2b2d31', borderRadius: '12px' }}
-                  itemStyle={{ color: '#dbdee1' }}
-                  cursor={{ fill: '#35373c' }}
-                />
-                <Bar dataKey="hours" fill="#5865F2" radius={[6, 6, 0, 0]} barSize={48} />
-              </BarChart>
-            </ResponsiveContainer>
+      {/* Study Analytics - Full Width */}
+      <div className="bg-discord-panel p-6 rounded-2xl border border-white/5 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <h3 className="text-lg font-bold text-white flex items-center gap-2">
+            <Activity size={18} className="text-discord-accent" /> Study Analytics
+          </h3>
+          
+          {/* Time Range Filter Buttons */}
+          <div className="flex items-center gap-2 bg-discord-bg rounded-lg p-1">
+            {([7, 14, 30] as TimeRange[]).map((days) => (
+              <button
+                key={days}
+                onClick={() => setTimeRange(days)}
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  timeRange === days
+                    ? 'bg-discord-accent text-white shadow-md'
+                    : 'text-discord-textMuted hover:text-white hover:bg-white/5'
+                }`}
+              >
+                {days}D
+              </button>
+            ))}
           </div>
         </div>
 
-
-        <div className="bg-discord-panel p-6 rounded-2xl border border-white/5 shadow-sm flex flex-col">
-          <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-            <BookOpen size={18} className="text-discord-accent" /> Recent Notes
-          </h3>
-          <div className="space-y-2 overflow-y-auto flex-1 max-h-[300px] pr-2 custom-scrollbar">
-            {notes.slice(0, 5).map(note => (
-              <div
-                key={note.id}
-                onClick={() => onNoteClick?.(note.id)}
-                className="p-3 bg-discord-bg rounded-lg border border-white/5 hover:bg-discord-hover hover:border-discord-accent/30 transition-all cursor-pointer group">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm font-medium text-white truncate flex-1 group-hover:text-discord-accent transition-colors">
-                    {note.title.length > 50 ? note.title.substring(0, 50) + '…' : note.title}
-                  </p>
-                </div>
-                <div className="flex items-center justify-between mt-1.5">
-                  <span className="text-[9px] text-discord-textMuted/70">{note.folder}</span>
-                  <span className="text-[9px] text-discord-textMuted">
-                    {new Date(note.lastModified).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                  </span>
-                </div>
-              </div>
-            ))}
-            {notes.length === 0 && (
-              <div className="text-center py-8">
-                <BookOpen size={28} className="mx-auto mb-2 text-discord-textMuted/40" />
-                <p className="text-xs text-discord-textMuted">Start creating notes to see them here</p>
-              </div>
-            )}
+        {/* Summary Stats Row */}
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="bg-discord-bg/50 rounded-xl p-4 border border-white/5">
+            <div className="flex items-center gap-2 mb-1">
+              <Clock size={14} className="text-discord-accent" />
+              <span className="text-xs text-discord-textMuted">Total Time</span>
+            </div>
+            <p className="text-xl font-bold text-white">{totalStudyTime}</p>
           </div>
+          <div className="bg-discord-bg/50 rounded-xl p-4 border border-white/5">
+            <div className="flex items-center gap-2 mb-1">
+              <TrendingUp size={14} className="text-green-400" />
+              <span className="text-xs text-discord-textMuted">Daily Average</span>
+            </div>
+            <p className="text-xl font-bold text-white">{averageDaily}</p>
+          </div>
+          <div className="bg-discord-bg/50 rounded-xl p-4 border border-white/5">
+            <div className="flex items-center gap-2 mb-1">
+              <Zap size={14} className="text-yellow-400" />
+              <span className="text-xs text-discord-textMuted">Best Day</span>
+            </div>
+            <p className="text-xl font-bold text-white">
+              {bestDay ? bestDay.displayHours : '—'}
+            </p>
+          </div>
+        </div>
+
+        {/* Area Chart */}
+        <div style={{ width: '100%', height: '280px', minWidth: 0 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={activityData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <defs>
+                <linearGradient id="colorHours" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#5865F2" stopOpacity={0.4}/>
+                  <stop offset="95%" stopColor="#5865F2" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#2b2d31" vertical={false} />
+              <XAxis 
+                dataKey="name" 
+                stroke="#949ba4" 
+                tickLine={false} 
+                axisLine={false}
+                tick={{ fill: '#949ba4', fontSize: 12 }}
+                interval={timeRange === 30 ? 'preserveStartEnd' : 0}
+              />
+              <YAxis 
+                stroke="#949ba4" 
+                tickLine={false} 
+                axisLine={false}
+                tick={{ fill: '#949ba4', fontSize: 12 }}
+                domain={[0, maxHours]}
+                tickFormatter={(value) => value >= 1 ? `${value}h` : `${value * 60}m`}
+              />
+              <Tooltip
+                contentStyle={{ 
+                  backgroundColor: '#111214', 
+                  border: '1px solid #2b2d31', 
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                }}
+                itemStyle={{ color: '#dbdee1' }}
+                labelStyle={{ color: '#949ba4', marginBottom: '4px' }}
+                formatter={(value) => {
+                  const numValue = Number(value);
+                  return [
+                    numValue < 1 ? `${Math.round(numValue * 60)} minutes` : `${numValue.toFixed(1)} hours`,
+                    'Study Time'
+                  ];
+                }}
+                labelFormatter={(label) => `Date: ${label}`}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="hours" 
+                stroke="#5865F2" 
+                strokeWidth={3}
+                fillOpacity={1} 
+                fill="url(#colorHours)" 
+                animationDuration={1000}
+                animationEasing="ease-out"
+                dot={{ 
+                  fill: '#5865F2', 
+                  strokeWidth: 0, 
+                  r: 4
+                }}
+                activeDot={{ 
+                  r: 6, 
+                  fill: '#5865F2', 
+                  stroke: '#fff', 
+                  strokeWidth: 2 
+                }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
       </div>
     </div>
