@@ -329,6 +329,7 @@ export const convertSpecToShapes = (spec: DiagramSpec, offsetX: number = 100, of
           width,
           height,
           text: node.text,
+          lines: [node.text],
           fontSize: 'Medium' as const,
           fontFamily: 'normal' as const,
           textAlign: 'center' as const,
@@ -350,6 +351,7 @@ export const convertSpecToShapes = (spec: DiagramSpec, offsetX: number = 100, of
         width: 0,
         height: 0,
         text: node.text,
+        lines: [node.text],
         fontSize: 'Small' as const,
         fontFamily: 'normal' as const,
         textAlign: 'center' as const,
@@ -372,20 +374,21 @@ export const convertSpecToShapes = (spec: DiagramSpec, offsetX: number = 100, of
 
     if (!fromShape || !toShape) return;
 
-    // Calculate connection points
+    // Calculate connection points - use type casting to handle Shape union types
     const getConnectionPoint = (shape: Shape, isSource: boolean): { x: number; y: number } => {
+      const shapeAny = shape as any;
       if (shape.type === 'rectangle' || shape.type === 'diamond') {
         return {
-          x: shape.x + shape.width / 2,
-          y: isSource ? shape.y + shape.height : shape.y
+          x: shapeAny.x + shapeAny.width / 2,
+          y: isSource ? shapeAny.y + shapeAny.height : shapeAny.y
         };
       } else if (shape.type === 'ellipse') {
         return {
-          x: shape.x + (shape.radX || 0),
-          y: shape.y + (shape.radY || 0)
+          x: shapeAny.x + (shapeAny.radX || 0),
+          y: shapeAny.y + (shapeAny.radY || 0)
         };
       } else {
-        return { x: shape.x, y: shape.y };
+        return { x: shapeAny.x, y: shapeAny.y };
       }
     };
 
@@ -420,6 +423,7 @@ export const convertSpecToShapes = (spec: DiagramSpec, offsetX: number = 100, of
         width: 0,
         height: 0,
         text: conn.label,
+        lines: [conn.label],
         fontSize: 'Small' as const,
         fontFamily: 'normal' as const,
         textAlign: 'center' as const,

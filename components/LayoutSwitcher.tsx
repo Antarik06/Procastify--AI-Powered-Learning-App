@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   Layout,
   LayoutList,
-  LayoutSidebar,
+  PanelLeft,
   Eye,
   ChevronDown,
 } from 'lucide-react';
@@ -36,13 +36,13 @@ export const LayoutSwitcher: React.FC<LayoutSwitcherProps> = ({
       mode: 'sidebar-left',
       label: 'Left Sidebar',
       description: 'Vertical tools on the left',
-      icon: <LayoutSidebar size={18} />,
+      icon: <PanelLeft size={18} />,
     },
     {
       mode: 'sidebar-right',
       label: 'Right Sidebar',
       description: 'Vertical tools on the right',
-      icon: <LayoutSidebar size={18} className="rotate-180" />,
+      icon: <PanelLeft size={18} className="rotate-180" />,
     },
     {
       mode: 'minimal',

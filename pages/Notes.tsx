@@ -61,6 +61,7 @@ const Notes: React.FC<NotesProps> = ({
   // Diagram generation state
   const [isGeneratingDiagram, setIsGeneratingDiagram] = useState(false);
   const [diagramError, setDiagramError] = useState<string | null>(null);
+  const [diagramSuccess, setDiagramSuccess] = useState<string | null>(null);
 
   // Handle mouse move during drag
   const handleMouseMove = useCallback(
@@ -302,11 +303,12 @@ const Notes: React.FC<NotesProps> = ({
       console.log("[Notes.tsx] Successfully added", shapes.length, "shapes to canvas");
 
       // Show success message
+      setDiagramSuccess(`Diagram created with ${shapes.length} elements!`);
+      
+      // Auto-hide success message after 3 seconds
       setTimeout(() => {
-        setDiagramError(null); // Clear any previous errors
-        // Brief success feedback (can be replaced with toast notification)
-        console.log(`[Notes.tsx] Successfully generated diagram with ${shapes.length} elements!`);
-      }, 300);
+        setDiagramSuccess(null);
+      }, 3000);
 
     } catch (error) {
       console.error("[Notes.tsx] Diagram generation error:", error);
@@ -637,6 +639,45 @@ const Notes: React.FC<NotesProps> = ({
           )}
         </div>
       </div>
+
+      {/* Loading Overlay for Diagram Generation */}
+      {isGeneratingDiagram && (
+        <div className="absolute inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center">
+          <div className="bg-[#2b2d31] p-8 rounded-2xl shadow-2xl flex flex-col items-center gap-4 border border-white/10 max-w-md mx-4">
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-blue-500/30 rounded-full"></div>
+              <div className="absolute top-0 left-0 w-16 h-16 border-4 border-blue-500 rounded-full animate-spin border-t-transparent"></div>
+            </div>
+            <div className="text-center">
+              <h3 className="text-xl font-bold text-white mb-2">Generating Diagram</h3>
+              <p className="text-discord-textMuted text-sm">
+                AI is analyzing your text and creating shapes...
+              </p>
+            </div>
+            <div className="flex items-center gap-2 text-blue-400 text-sm">
+              <Loader2 size={16} className="animate-spin" />
+              <span>Processing</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Message Toast */}
+      {diagramSuccess && (
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-4">
+          <div className="bg-green-600/90 backdrop-blur-sm text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-3">
+            <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <span className="font-medium">{diagramSuccess}</span>
+            <button onClick={() => setDiagramSuccess(null)} className="ml-2 hover:bg-white/20 rounded p-1">
+              <X size={14} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Content Area */}
       <div ref={containerRef} className="flex-1 flex overflow-hidden relative">
