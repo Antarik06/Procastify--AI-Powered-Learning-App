@@ -18,7 +18,7 @@ service cloud.firestore {
       allow write: if isOwner(userId);
       
       // User subcollections (notes, summaries, quizzes, etc.)
-      match /{subcollection}/{docId} {
+      match /{document=**} {
         allow read, write: if isOwner(userId);
       }
     }
