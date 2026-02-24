@@ -543,3 +543,43 @@ export interface SearchResult {
   hasMore: boolean;
 }
 
+// Achievement Types
+export type AchievementCategory = 
+  | 'study' 
+  | 'notes' 
+  | 'summary' 
+  | 'quiz' 
+  | 'streak' 
+  | 'social';
+
+export type AchievementRarity = 'common' | 'rare' | 'epic' | 'legendary';
+
+export interface Achievement {
+  id: string;
+  name: string;
+  description: string;
+  category: AchievementCategory;
+  rarity: AchievementRarity;
+  icon: string; // emoji or icon name
+  criteria: {
+    type: 'notes_created' | 'summaries_made' | 'quizzes_taken' | 'study_time' | 'login_streak' | 'high_score' | 'perfect_quiz';
+    value: number;
+  };
+}
+
+export interface UserAchievement {
+  id: string;
+  userId: string;
+  achievementId: string;
+  unlockedAt: number;
+  progress?: number; // Current progress towards achievement
+  isUnlocked: boolean;
+}
+
+export interface UserAchievements {
+  userId: string;
+  achievements: UserAchievement[];
+  totalUnlocked: number;
+  lastUpdated: number;
+}
+

@@ -14,6 +14,7 @@
   ClassroomResource,
   TeacherStats,
   UserRole,
+  UserAchievement,
 } from "../types";
 import { db } from "../firebaseConfig";
 import {
@@ -903,6 +904,85 @@ export const StorageService = {
         lastActivityDate: new Date().toISOString(),
       };
     }
+  },
+
+  // --- Achievements ---
+
+  getAchievements: async (): Promise<UserAchievement[]> => {
+    if (!currentUserId) return [];
+
+    if (isGuestMode) {
+      const all = getLocalDB<{ userId: string; achievements: UserAchievement[] }>(LOCAL_KEYS.ACHIEVEMENTS);
+      const userData = all.find(a => a.userId === currentUserId);
+      return userData?.achievements || [];
+    } else {
+      try {
+        const docRef = doc(db, "users", currentUserId, "data", "achievements");
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          const data = snap.data();
+          return data.achievements || [];
+        }
+        return [];
+      } catch (e) {
+        console.error("Error fetching achievements:", e);
+        return [];
+      }
+    }
+  },
+
+  saveAchievement: async (achievement: UserAchievement): Promise<void> => {
+    if (!currentUserId) return;
+
+    const achievements = await StorageService.getAchievements();
+    const existingIndex = achievements.findIndex(
+      a => a.achievementId === achievement.achievementId
+    );
+
+    if (existingIndex >= 0) {
+      achievements[existingIndex] = achievement;
+    } else {
+      achievements.push(achievement);
+    }
+
+    if (isGuestMode) {
+      const all = getLocalDB<{ userId: string; achievements: UserAchievement[] }>(LOCAL_KEYS.ACHIEVEMENTS);
+      const userIndex = all.findIndex(a => a.userId === currentUserId);
+      const userData = { userId: currentUserId, achievements };
+      
+      if (userIndex >= 0) {
+        all[userIndex] = userData;
+      } else {
+        all.push(userData);
+      }
+      saveLocalDB(LOCAL_KEYS.ACHIEVEMENTS, all);
+    } else {
+      const docRef = doc(db, "users", currentUserId, "data", "achievements");
+      await setDoc(docRef, { achievements, lastUpdated: Date.now() });
+    }
+  },
+
+  unlockAchievement: async (achievementId: string): Promise<UserAchievement | null> => {
+    if (!currentUserId) return null;
+
+    const achievements = await StorageService.getAchievements();
+    const existing = achievements.find(a => a.achievementId === achievementId);
+
+    if (existing?.isUnlocked) {
+      return null;
+    }
+
+    const newAchievement: UserAchievement = {
+      id: existing?.id || `${currentUserId}_${achievementId}_${Date.now()}`,
+      userId: currentUserId,
+      achievementId,
+      unlockedAt: Date.now(),
+      isUnlocked: true,
+      progress: 100
+    };
+
+    await StorageService.saveAchievement(newAchievement);
+    return newAchievement;
   },
 
   // --- Helpers ---
