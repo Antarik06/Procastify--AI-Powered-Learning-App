@@ -26,9 +26,10 @@ import Folders from './pages/Folders';
 import ClassroomDetail from './pages/ClassroomDetail';
 import StudentClassrooms from './pages/StudentClassrooms';
 import StudentClassroomView from './pages/StudentClassroomView';
+import { WorkflowBoard } from './components/WorkflowBoard';
 import { AlertCircle, LogIn, X, Loader2 } from 'lucide-react';
-import { checkAchievements } from './services/achievements';
-import AchievementToast from './components/AchievementToast';
+import { ExamTracker } from './pages/ExamTracker';
+
 
 const App: React.FC = () => {
   const [view, setView] = useState<ViewState | "folders">("landing");
@@ -367,7 +368,7 @@ const App: React.FC = () => {
         user={user ? { name: user.name, avatarUrl: user.avatarUrl } : undefined}
       />
       <main
-        className={`flex-1 ${sidebarCollapsed ? "ml-20" : "ml-64"} overflow-y-auto max-h-screen relative transition-all duration-300 ease-in-out`}
+        className={`flex-1 ${sidebarCollapsed ? "lg:ml-20" : "lg:ml-64"} overflow-y-auto max-h-screen relative transition-all duration-300 ease-in-out`}
       >
         {/* User Context Bar (Small) */}
         {user.isGuest && (
@@ -460,6 +461,7 @@ const App: React.FC = () => {
               StorageService.saveNotes(n);
             }}
             onStartTask={handleStartFocus}
+            onNavigate={(view) => handleNavigate(view as any)}
           />
         )}
 
@@ -521,6 +523,19 @@ const App: React.FC = () => {
             onNavigate={handleNavigate}
           />
         )}
+
+        {view === "workflow" && (
+          <WorkflowBoard
+            userId={user.id}
+            onClose={() => setView("dashboard")}
+            sidebarCollapsed={sidebarCollapsed}
+          />
+        )}
+        
+        {view === "examTracker" && (
+          <ExamTracker userId={user.id} />
+        )}
+
       </main>
     </div>
   );

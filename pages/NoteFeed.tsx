@@ -42,8 +42,8 @@ interface ReelItem {
 // --- REEL COMPONENTS ---
 
 const TextReel = ({ reel }: { reel: ReelItem }) => (
-  <div className="px-2 pt-6 pb-16">
-    <p className="text-3xl md:text-4xl font-bold text-white leading-tight text-center drop-shadow-2xl font-serif">
+  <div className="px-4 sm:px-6 pt-6 pb-16">
+    <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white leading-tight text-center drop-shadow-2xl font-serif">
       {reel.content}
     </p>
   </div>
@@ -54,9 +54,9 @@ const ImageReel = ({ reel }: { reel: ReelItem }) => (
     {/* Mock Image Placeholder */}
     <div className="flex-1 bg-gradient-to-tr from-indigo-900 via-purple-900 to-pink-800 flex items-center justify-center relative overflow-hidden">
       <div className="absolute inset-0 opacity-30 mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-      <ImageIcon size={64} className="text-white/20 mb-4" />
-      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-8 pt-24">
-        <p className="text-xl md:text-2xl font-bold text-white leading-snug font-sans">
+      <ImageIcon size={48} className="sm:w-16 sm:h-16 text-white/20 mb-4" />
+      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-6 sm:p-8 pt-20 sm:pt-24">
+        <p className="text-lg sm:text-xl md:text-2xl font-bold text-white leading-snug font-sans">
           {reel.content}
         </p>
       </div>
@@ -143,9 +143,9 @@ const VideoReel = ({ reel, isActive }: { reel: ReelItem; isActive: boolean }) =>
       {/* Dark Overlay for Readability */}
       <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"></div>
       
-      <div className="z-10 relative px-8 w-full max-w-lg">
+      <div className="z-10 relative px-6 sm:px-8 w-full max-w-lg">
          {/* Kinetic Typography Container */}
-         <div className="min-h-[200px] flex flex-wrap content-center justify-center gap-x-3 gap-y-2">
+         <div className="min-h-[150px] sm:min-h-[200px] flex flex-wrap content-center justify-center gap-x-2 sm:gap-x-3 gap-y-1.5 sm:gap-y-2">
             {words.map((word, i) => (
                 <motion.span
                     key={i}
@@ -158,7 +158,7 @@ const VideoReel = ({ reel, isActive }: { reel: ReelItem; isActive: boolean }) =>
                         filter: i > wordIndex ? "blur(4px)" : "blur(0px)" 
                     }}
                     transition={{ duration: 0.3 }}
-                    className="text-3xl md:text-4xl font-black font-sans tracking-tight drop-shadow-lg"
+                    className="text-2xl sm:text-3xl md:text-4xl font-black font-sans tracking-tight drop-shadow-lg"
                 >
                     {word}
                 </motion.span>
@@ -260,20 +260,20 @@ const AudioReel = ({ reel, isActive }: { reel: ReelItem; isActive: boolean }) =>
         ))}
       </div>
 
-      <div className="z-10 bg-black/40 backdrop-blur-xl border border-white/10 p-8 rounded-3xl w-full max-w-sm flex flex-col items-center gap-6 shadow-2xl">
-        <div className="w-32 h-32 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/30 relative">
-          <Headphones size={48} className="text-white relative z-10" />
+      <div className="z-10 bg-black/40 backdrop-blur-xl border border-white/10 p-6 sm:p-8 rounded-2xl sm:rounded-3xl w-full max-w-sm mx-4 flex flex-col items-center gap-4 sm:gap-6 shadow-2xl">
+        <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/30 relative">
+          <Headphones size={36} className="sm:w-10 sm:h-10 md:w-12 md:h-12 text-white relative z-10" />
           {isPlaying && (
             <div className="absolute inset-0 rounded-full border border-white/30 animate-ping opacity-50"></div>
           )}
         </div>
 
-        <div className="text-center space-y-2">
-          <h3 className="text-xl font-bold text-white">Audio Insight</h3>
-          <p className="text-gray-400 text-sm">Listen to key takeaways</p>
+        <div className="text-center space-y-1.5 sm:space-y-2">
+          <h3 className="text-lg sm:text-xl font-bold text-white">Audio Insight</h3>
+          <p className="text-gray-400 text-xs sm:text-sm">Listen to key takeaways</p>
         </div>
 
-        <div className="w-full bg-white/10 h-16 rounded-xl flex items-center justify-center p-4 overflow-hidden relative">
+        <div className="w-full bg-white/10 h-12 sm:h-14 md:h-16 rounded-xl flex items-center justify-center p-3 sm:p-4 overflow-hidden relative">
              <div className="flex items-center gap-1 w-full h-8 justify-center">
                  {[...Array(24)].map((_, i) => (
                     <motion.div 
@@ -286,28 +286,28 @@ const AudioReel = ({ reel, isActive }: { reel: ReelItem; isActive: boolean }) =>
              </div>
         </div>
         
-        <div className="flex items-center gap-6 w-full justify-center">
-             <button className="text-gray-400 hover:text-white transition-colors" title="Volume"><Volume2 size={20} /></button>
+        <div className="flex items-center gap-4 sm:gap-6 w-full justify-center">
+             <button className="text-gray-400 hover:text-white transition-colors" title="Volume"><Volume2 size={18} className="sm:w-5 sm:h-5" /></button>
              
              <button 
                 onClick={handleToggle}
-                className="w-16 h-16 bg-white rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all text-black shadow-xl shadow-purple-500/20"
+                className="w-14 h-14 sm:w-16 sm:h-16 bg-white rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all text-black shadow-xl shadow-purple-500/20"
              >
                 {isPlaying ? (
-                    <div className="flex gap-1.5 h-6 items-center justify-center">
+                    <div className="flex gap-1.5 h-5 sm:h-6 items-center justify-center">
                         <div className="w-1.5 h-full bg-black rounded-full animate-pulse"></div>
                         <div className="w-1.5 h-full bg-black rounded-full animate-pulse delay-75"></div>
                     </div>
                 ) : (
-                    <Play size={28} fill="currentColor" className="ml-1" />
+                    <Play size={24} className="sm:w-7 sm:h-7 ml-1" fill="currentColor" />
                 )}
              </button>
              
-             <span className="text-xs text-gray-400 font-mono w-10 text-right">{isPlaying ? "Active" : "Paused"}</span>
+             <span className="text-[10px] sm:text-xs text-gray-400 font-mono w-10 text-right">{isPlaying ? "Active" : "Paused"}</span>
         </div>
 
-        <div className="bg-black/40 p-4 rounded-xl w-full border border-white/5 max-h-32 overflow-y-auto custom-scrollbar">
-            <p className="text-sm text-gray-300 italic text-center leading-relaxed">"{reel.content}"</p>
+        <div className="bg-black/40 p-3 sm:p-4 rounded-xl w-full border border-white/5 max-h-28 sm:max-h-32 overflow-y-auto custom-scrollbar">
+            <p className="text-xs sm:text-sm text-gray-300 italic text-center leading-relaxed">"{reel.content}"</p>
         </div>
       </div>
     </div>
@@ -335,8 +335,8 @@ const ReelCard = ({
         className={`w-full h-full max-w-md relative flex flex-col z-10 transition-all duration-700 ${isActive ? "opacity-100 scale-100" : "opacity-40 scale-95 blur-sm"}`}
       >
         {/* Minimal Header */}
-        <div className="pt-6 text-center px-6 z-20">
-          <span className="inline-block py-1 px-3 rounded-full bg-black/40 border border-white/10 text-xs font-bold text-gray-300 uppercase tracking-widest backdrop-blur-md">
+        <div className="pt-4 sm:pt-6 text-center px-4 sm:px-6 z-20">
+          <span className="inline-block py-1 px-2 sm:px-3 rounded-full bg-black/40 border border-white/10 text-[10px] sm:text-xs font-bold text-gray-300 uppercase tracking-widest backdrop-blur-md max-w-[90%] truncate">
             {reel.noteTitle} • {reel.index}/5
           </span>
         </div>
@@ -350,8 +350,8 @@ const ReelCard = ({
         </div>
 
         {/* Footer hint */}
-        <div className="absolute bottom-12 left-0 right-0 text-center animate-bounce z-20 pointer-events-none">
-          <p className="text-xs text-white/50 font-medium">
+        <div className="absolute bottom-8 sm:bottom-12 left-0 right-0 text-center animate-bounce z-20 pointer-events-none">
+          <p className="text-[10px] sm:text-xs text-white/50 font-medium">
             Swipe for next insight
           </p>
         </div>
@@ -436,15 +436,15 @@ const NoteFeed: React.FC<NoteFeedProps> = ({ notes, user, onClose }) => {
     // --- VIEW: SELECTION ---
     if (view === 'selection') {
         return (
-            <div className="p-8 max-w-7xl mx-auto h-full flex flex-col animate-in fade-in">
-                <div className="flex items-center justify-between mb-8">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-discord-accent rounded-xl flex items-center justify-center shadow-lg shadow-discord-accent/20">
-                            <Play className="text-white" size={24} fill="currentColor" />
+            <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto h-full flex flex-col animate-in fade-in">
+                <div className="flex items-center justify-between mb-4 sm:mb-6 lg:mb-8">
+                    <div className="flex items-center gap-3 sm:gap-4">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-discord-accent rounded-xl flex items-center justify-center shadow-lg shadow-discord-accent/20">
+                            <Play className="text-white" size={20} fill="currentColor" />
                         </div>
                         <div>
-                            <h2 className="text-3xl font-bold text-white">Learning Feed</h2>
-                            <p className="text-discord-textMuted text-sm">Select notes to generate your study reels.</p>
+                            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">Learning Feed</h2>
+                            <p className="text-discord-textMuted text-xs sm:text-sm">Select notes to generate your study reels.</p>
                         </div>
                     </div>
                 </div>
@@ -452,35 +452,35 @@ const NoteFeed: React.FC<NoteFeedProps> = ({ notes, user, onClose }) => {
                 <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-3 gap-8">
 
                     {/* LEFT COLUMN: Note Selection (Vertical) */}
-                    <div className="lg:col-span-2 flex flex-col min-h-0 bg-discord-panel/50 rounded-2xl border border-white/5 p-6">
+                    <div className="lg:col-span-2 flex flex-col min-h-0 bg-discord-panel/50 rounded-xl sm:rounded-2xl border border-white/5 p-4 sm:p-6">
                         
                         {/* Format Selection Helper */}
-                        <div className="mb-6 flex items-center gap-4 bg-black/20 p-2 rounded-xl">
-                            <span className="text-xs font-bold text-discord-textMuted uppercase ml-2">Format:</span>
-                            <div className="flex gap-2">
+                        <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 bg-black/20 p-3 sm:p-2 rounded-xl">
+                            <span className="text-xs font-bold text-discord-textMuted uppercase">Format:</span>
+                            <div className="grid grid-cols-2 sm:flex gap-2 flex-1">
                                 <button 
                                     onClick={() => setSelectedFormat('text')}
-                                    className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${selectedFormat === 'text' ? 'bg-discord-accent text-white shadow-lg' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                                    className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 sm:gap-2 transition-all ${selectedFormat === 'text' ? 'bg-discord-accent text-white shadow-lg' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
                                 >
-                                    <FileText size={16} /> Text
+                                    <FileText size={14} className="sm:w-4 sm:h-4" /> <span className="hidden sm:inline">Text</span>
                                 </button>
                                 <button 
                                     onClick={() => setSelectedFormat('image')}
-                                    className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${selectedFormat === 'image' ? 'bg-pink-600 text-white shadow-lg' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                                    className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 sm:gap-2 transition-all ${selectedFormat === 'image' ? 'bg-pink-600 text-white shadow-lg' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
                                 >
-                                    <ImageIcon size={16} /> Image
+                                    <ImageIcon size={14} className="sm:w-4 sm:h-4" /> <span className="hidden sm:inline">Image</span>
                                 </button>
                                 <button 
                                     onClick={() => setSelectedFormat('video')}
-                                    className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${selectedFormat === 'video' ? 'bg-blue-600 text-white shadow-lg' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                                    className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 sm:gap-2 transition-all ${selectedFormat === 'video' ? 'bg-blue-600 text-white shadow-lg' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
                                 >
-                                    <Video size={16} /> Video
+                                    <Video size={14} className="sm:w-4 sm:h-4" /> <span className="hidden sm:inline">Video</span>
                                 </button>
                                 <button 
                                     onClick={() => setSelectedFormat('audio')}
-                                    className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${selectedFormat === 'audio' ? 'bg-purple-600 text-white shadow-lg' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                                    className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 sm:gap-2 transition-all ${selectedFormat === 'audio' ? 'bg-purple-600 text-white shadow-lg' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
                                 >
-                                    <Mic size={16} /> Audio
+                                    <Mic size={14} className="sm:w-4 sm:h-4" /> <span className="hidden sm:inline">Audio</span>
                                 </button>
                             </div>
                         </div>
@@ -489,27 +489,27 @@ const NoteFeed: React.FC<NoteFeedProps> = ({ notes, user, onClose }) => {
                             <BookOpen size={16} /> Available Notes
                         </h3>
 
-                        <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar mb-6">
+                        <div className="flex-1 overflow-y-auto pr-1 sm:pr-2 space-y-2 sm:space-y-3 custom-scrollbar mb-4 sm:mb-6">
                             {notes.map(note => (
                                 <div
                                     key={note.id}
                                     onClick={() => setSelectedNoteIds(prev => prev.includes(note.id) ? prev.filter(id => id !== note.id) : [...prev, note.id])}
-                                    className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between group
+                                    className={`p-3 sm:p-4 rounded-lg sm:rounded-xl border cursor-pointer transition-all flex items-start sm:items-center justify-between group
                                     ${selectedNoteIds.includes(note.id)
                                             ? 'bg-discord-accent/10 border-discord-accent text-white shadow-md'
                                             : 'bg-discord-bg border-white/5 text-discord-textMuted hover:bg-[#2b2d31] hover:text-white'}`}
                                 >
-                                    <div className="flex items-center gap-4">
-                                        <div className={`w-6 h-6 rounded-md border flex items-center justify-center transition-colors shrink-0
+                                    <div className="flex items-start sm:items-center gap-2.5 sm:gap-4 flex-1 min-w-0">
+                                        <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-md border flex items-center justify-center transition-colors shrink-0 mt-0.5 sm:mt-0
                                             ${selectedNoteIds.includes(note.id) ? 'bg-discord-accent border-discord-accent' : 'border-white/20 group-hover:border-white/40'}`}>
-                                            {selectedNoteIds.includes(note.id) && <CheckCircle size={14} className="text-white" />}
+                                            {selectedNoteIds.includes(note.id) && <CheckCircle size={12} className="sm:w-3.5 sm:h-3.5 text-white" />}
                                         </div>
-                                        <div className="min-w-0">
-                                            <span className="font-bold text-sm block mb-1 truncate">{note.title}</span>
-                                            <span className="text-xs text-discord-textMuted/70 flex items-center gap-1.5">
-                                                <span className="px-1.5 py-0.5 bg-white/5 rounded text-[10px] truncate max-w-[80px]">{note.folder}</span>
+                                        <div className="min-w-0 flex-1">
+                                            <span className="font-bold text-xs sm:text-sm block mb-1 truncate">{note.title}</span>
+                                            <span className="text-[10px] sm:text-xs text-discord-textMuted/70 flex items-center gap-1 sm:gap-1.5 flex-wrap">
+                                                <span className="px-1.5 py-0.5 bg-white/5 rounded text-[9px] sm:text-[10px] truncate max-w-[60px] sm:max-w-[80px]">{note.folder}</span>
                                                 <span className="shrink-0">•</span>
-                                                <span className="shrink-0">{new Date(note.lastModified).toLocaleDateString()}</span>
+                                                <span className="shrink-0 text-[10px] sm:text-xs">{new Date(note.lastModified).toLocaleDateString()}</span>
                                             </span>
                                         </div>
                                     </div>
@@ -526,16 +526,16 @@ const NoteFeed: React.FC<NoteFeedProps> = ({ notes, user, onClose }) => {
                             <button
                                 onClick={handleGenerate}
                                 disabled={selectedNoteIds.length === 0}
-                                className="w-full sm:w-auto px-8 bg-discord-green hover:bg-green-600 text-white py-3 rounded-xl font-bold text-lg transition-all disabled:opacity-50 disabled:grayscale flex items-center justify-center gap-3 shadow-lg hover:shadow-green-500/20"
+                                className="w-full sm:w-auto px-6 sm:px-8 bg-discord-green hover:bg-green-600 text-white py-2.5 sm:py-3 rounded-xl font-bold text-base sm:text-lg transition-all disabled:opacity-50 disabled:grayscale flex items-center justify-center gap-2 sm:gap-3 shadow-lg hover:shadow-green-500/20"
                             >
-                                Generate Feed <Play size={20} fill="currentColor" />
+                                Generate Feed <Play size={18} className="sm:w-5 sm:h-5" fill="currentColor" />
                             </button>
                         </div>
                     </div>
 
                     {/* RIGHT COLUMN: Info Panel */}
-                    <div className="flex flex-col gap-6">
-                        <div className="bg-gradient-to-br from-[#2b2d31] to-[#1e1f22] p-8 rounded-2xl border border-white/10 relative overflow-hidden group">
+                    <div className="flex flex-col gap-4 sm:gap-6">
+                        <div className="bg-gradient-to-br from-[#2b2d31] to-[#1e1f22] p-6 sm:p-8 rounded-xl sm:rounded-2xl border border-white/10 relative overflow-hidden group">
                             {/* Decorative Background Elements */}
                             <div className="absolute top-0 right-0 w-32 h-32 bg-discord-accent/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
                             <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl -ml-5 -mb-5"></div>
@@ -545,13 +545,13 @@ const NoteFeed: React.FC<NoteFeedProps> = ({ notes, user, onClose }) => {
                                     Format: {selectedFormat.toUpperCase()}
                                 </span>
 
-                                <h3 className="text-2xl font-bold text-white mb-3">
+                                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-2 sm:mb-3">
                                     {selectedFormat === 'text' && "Card-based Learning"}
                                     {selectedFormat === 'image' && "Visual Flashcards"}
                                     {selectedFormat === 'video' && "Video Summaries"}
                                     {selectedFormat === 'audio' && "Audio Insights"}
                                 </h3>
-                                <p className="text-discord-textMuted text-sm leading-relaxed mb-6">
+                                <p className="text-discord-textMuted text-xs sm:text-sm leading-relaxed mb-4 sm:mb-6">
                                     {selectedFormat === 'text' && "Classic text-based cards for focused reading and quick absorbtion of facts."}
                                     {selectedFormat === 'image' && "Visual representations of concepts to help visual learners retain information better."}
                                     {selectedFormat === 'video' && "Dynamic video-style playback with scripted narration for an immersive experience."}
@@ -587,7 +587,7 @@ const NoteFeed: React.FC<NoteFeedProps> = ({ notes, user, onClose }) => {
                             </div>
                         </div>
 
-                        <div className="bg-discord-panel p-6 rounded-2xl border border-white/5 flex items-center gap-4 opacity-70">
+                        <div className="bg-discord-panel p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-white/5 flex items-center gap-3 sm:gap-4 opacity-70">
                             <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center">
                                 <Clock size={20} className="text-discord-textMuted" />
                             </div>
@@ -606,14 +606,14 @@ const NoteFeed: React.FC<NoteFeedProps> = ({ notes, user, onClose }) => {
     // --- VIEW: LOADING ---
     if (view === 'loading') {
         return (
-            <div className="fixed inset-0 z-[100] bg-[#111214] flex flex-col items-center justify-center text-white space-y-6">
+            <div className="fixed inset-0 z-[100] bg-[#111214] flex flex-col items-center justify-center text-white space-y-4 sm:space-y-6 px-4">
                 <div className="relative">
                     <div className="absolute inset-0 bg-discord-accent blur-xl opacity-20 animate-pulse"></div>
-                    <RefreshCw size={64} className="text-discord-accent animate-spin relative z-10" />
+                    <RefreshCw size={48} className="sm:w-16 sm:h-16 text-discord-accent animate-spin relative z-10" />
                 </div>
                 <div className="text-center">
-                    <h2 className="text-2xl font-bold mb-2">Curating your Feed...</h2>
-                    <p className="text-discord-textMuted">AI is slicing your notes into bite-sized reels.</p>
+                    <h2 className="text-xl sm:text-2xl font-bold mb-2">Curating your Feed...</h2>
+                    <p className="text-sm sm:text-base text-discord-textMuted">AI is slicing your notes into bite-sized reels.</p>
                 </div>
             </div>
         );
@@ -622,9 +622,9 @@ const NoteFeed: React.FC<NoteFeedProps> = ({ notes, user, onClose }) => {
     // --- VIEW: FEED ---
     return (
         <div className="fixed inset-0 z-[100] bg-black text-white flex flex-col">
-            <div className="absolute top-4 left-4 z-50 mix-blend-difference">
-                <button onClick={() => setView('selection')} className="p-3 bg-white/10 rounded-full text-white hover:bg-white/20 transition-all backdrop-blur-md border border-white/10">
-                    <ArrowLeft size={24} />
+            <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-50 mix-blend-difference">
+                <button onClick={() => setView('selection')} className="p-2 sm:p-3 bg-white/10 rounded-full text-white hover:bg-white/20 transition-all backdrop-blur-md border border-white/10">
+                    <ArrowLeft size={20} className="sm:w-6 sm:h-6" />
                 </button>
             </div>
 

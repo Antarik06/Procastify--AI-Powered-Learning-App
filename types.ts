@@ -16,7 +16,9 @@ export type ViewState =
   | "classrooms"
   | "classroomDetail"
   | "studentClassrooms"
-  | "studentClassroomView";
+  | "studentClassroomView"
+  | "workflow"
+  | "examTracker";
 
 
 export type CanvasLayoutMode = 'topbar' | 'sidebar-left' | 'sidebar-right' | 'minimal';
@@ -543,43 +545,24 @@ export interface SearchResult {
   hasMore: boolean;
 }
 
-// Achievement Types
-export type AchievementCategory = 
-  | 'study' 
-  | 'notes' 
-  | 'summary' 
-  | 'quiz' 
-  | 'streak' 
-  | 'social';
-
-export type AchievementRarity = 'common' | 'rare' | 'epic' | 'legendary';
-
-export interface Achievement {
+// Notes Chatbot Types
+export interface ChatMessage {
   id: string;
-  name: string;
-  description: string;
-  category: AchievementCategory;
-  rarity: AchievementRarity;
-  icon: string; // emoji or icon name
-  criteria: {
-    type: 'notes_created' | 'summaries_made' | 'quizzes_taken' | 'study_time' | 'login_streak' | 'high_score' | 'perfect_quiz';
-    value: number;
-  };
+  role: 'user' | 'assistant';
+  content: string;
+  sourceNotes?: { id: string; title: string }[];
+  timestamp: number;
 }
 
-export interface UserAchievement {
-  id: string;
-  userId: string;
-  achievementId: string;
-  unlockedAt: number;
-  progress?: number; // Current progress towards achievement
-  isUnlocked: boolean;
+export interface NoteChatContext {
+  noteId: string;
+  noteTitle: string;
+  content: string;
 }
 
-export interface UserAchievements {
-  userId: string;
-  achievements: UserAchievement[];
-  totalUnlocked: number;
-  lastUpdated: number;
+export interface ChatResponse {
+  answer: string;
+  sourceNoteIds: string[];
+  confidence: 'high' | 'medium' | 'low' | 'not_found';
 }
 
