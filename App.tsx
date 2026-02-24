@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ViewState, UserPreferences, Summary, Note, RoutineTask, UserStats, Flashcard, NoteElement, Folder, UserRole } from './types';
+import { ViewState, UserPreferences, Summary, Note, RoutineTask, UserStats, Flashcard, NoteElement, Folder, UserRole, UserAchievement, Achievement } from './types';
 import { StorageService } from './services/storageService';
 import { auth, isFirebaseConfigured } from './firebaseConfig';
 import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
@@ -27,6 +27,8 @@ import ClassroomDetail from './pages/ClassroomDetail';
 import StudentClassrooms from './pages/StudentClassrooms';
 import StudentClassroomView from './pages/StudentClassroomView';
 import { AlertCircle, LogIn, X, Loader2 } from 'lucide-react';
+import { checkAchievements } from './services/achievements';
+import AchievementToast from './components/AchievementToast';
 
 const App: React.FC = () => {
   const [view, setView] = useState<ViewState | "folders">("landing");
@@ -36,6 +38,8 @@ const App: React.FC = () => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [folders, setFolders] = useState<Folder[]>([]);
   const [stats, setStats] = useState<UserStats | null>(null);
+  const [achievements, setAchievements] = useState<UserAchievement[]>([]);
+  const [newAchievements, setNewAchievements] = useState<Achievement[]>([]);
   const [focusTask, setFocusTask] = useState<RoutineTask | undefined>(
     undefined,
   );

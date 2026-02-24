@@ -1,14 +1,18 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { UserPreferences, Summary, Note, UserStats } from '../types';
+import { UserPreferences, Summary, Note, UserStats, UserAchievement } from '../types';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Clock, BookOpen, FileText, Zap, Calendar, Flame, Trophy, ArrowRight, BrainCircuit, Sparkles, Target, PenLine, TrendingUp, Activity } from 'lucide-react';
+import { Clock, BookOpen, FileText, Zap, Calendar, Flame, Trophy, ArrowRight, BrainCircuit, Sparkles, Target, PenLine, TrendingUp, Activity, Award } from 'lucide-react';
 import { generateDashboardInsight, generateDashboardInsightAsync, DashboardInsight, CTAAction } from '../services/insightService';
+import { getAchievementById, getAchievementStats } from '../services/achievements';
+import AchievementBadge from '../components/AchievementBadge';
+import AchievementPanel from '../components/AchievementPanel';
 
 interface DashboardProps {
   user: UserPreferences;
   summaries: Summary[];
   notes: Note[];
   stats: UserStats | null;
+  achievements?: UserAchievement[];
   onNoteClick?: (noteId: string) => void;
   onNavigate?: (view: string) => void;
 }
