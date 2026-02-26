@@ -1,168 +1,154 @@
-import React, { useState, useEffect } from 'react';
-import { ViewState, UserPreferences, Summary, Note, RoutineTask, UserStats, Flashcard, NoteElement, Folder, UserRole } from './types';
-import { StorageService } from './services/storageService';
-import { auth, isFirebaseConfigured } from './firebaseConfig';
-import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
-import { authRateLimiter } from './services/rateLimiter';
-import { validateUserInput } from './services/validation';
-import { initializeSecureKeys } from './services/secureKeyManager';
-import logger from './services/securityLogger';
+import React, { useState, useEffect } from "react";
+import {
+  ViewState,
+  UserPreferences,
+  Summary,
+  Note,
+  RoutineTask,
+  UserStats,
+  Flashcard,
+  Folder,
+} from "./types";
 
-import Sidebar from './components/Sidebar';
-import Landing from './pages/Landing';
-import Dashboard from './pages/Dashboard';
-import Summarizer from './pages/Summarizer';
-import Notes from './pages/Notes';
-import Routine from './pages/Routine';
-import Focus from './pages/Focus';
-import QuizPage from './pages/Quiz';
-import NoteFeed from './pages/NoteFeed';
-import NotesStore from './pages/NotesStore';
-import Classrooms from './pages/Classrooms';
-import Auth from './pages/Auth';
-import RoleSelection from './pages/RoleSelection';
-import TeacherDashboard from './pages/TeacherDashboard';
-import Folders from './pages/Folders';
-import ClassroomDetail from './pages/ClassroomDetail';
-import StudentClassrooms from './pages/StudentClassrooms';
-import StudentClassroomView from './pages/StudentClassroomView';
-import { WorkflowBoard } from './components/WorkflowBoard';
-import { AlertCircle, LogIn, X, Loader2 } from 'lucide-react';
-import { ExamTracker } from './pages/ExamTracker';
+import { StorageService } from "./services/storageService";
+import { auth, isFirebaseConfigured } from "./firebaseConfig";
+import {
+  onAuthStateChanged,
+  signOut,
+} from "firebase/auth";
 
+import Sidebar from "./components/Sidebar";
+import Landing from "./pages/Landing";
+import Dashboard from "./pages/Dashboard";
+import Summarizer from "./pages/Summarizer";
+import Notes from "./pages/Notes";
+import Routine from "./pages/Routine";
+import Focus from "./pages/Focus";
+import QuizPage from "./pages/Quiz";
+import NoteFeed from "./pages/NoteFeed";
+import NotesStore from "./pages/NotesStore";
+import Classrooms from "./pages/Classrooms";
+import Auth from "./pages/Auth";
+import RoleSelection from "./pages/RoleSelection";
+import TeacherDashboard from "./pages/TeacherDashboard";
+import Folders from "./pages/Folders";
+import ClassroomDetail from "./pages/ClassroomDetail";
+import StudentClassrooms from "./pages/StudentClassrooms";
+import StudentClassroomView from "./pages/StudentClassroomView";
+import { WorkflowBoard } from "./components/WorkflowBoard";
+import { ExamTracker } from "./pages/ExamTracker";
+import { Loader2 } from "lucide-react";
 
 const App: React.FC = () => {
-  const [view, setView] = useState<ViewState | "folders">("landing");
+  const [view, setView] = useState<ViewState  >("landing");
   const [user, setUser] = useState<UserPreferences | null>(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
   const [summaries, setSummaries] = useState<Summary[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
   const [folders, setFolders] = useState<Folder[]>([]);
   const [stats, setStats] = useState<UserStats | null>(null);
-  const [focusTask, setFocusTask] = useState<RoutineTask | undefined>(
-    undefined,
-  );
+  const [focusTask, setFocusTask] = useState<RoutineTask | undefined>(undefined);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [selectedClassroomId, setSelectedClassroomId] = useState<string | undefined>(undefined);
+  const [activeFolderId, setActiveFolderId] = useState<string | null | undefined>(undefined);
 
-  // Folder filtering state
-  const [activeFolderId, setActiveFolderId] = useState<
-    string | null | undefined
-  >(undefined);
+  const deriveName = (email?: string | null) =>
+    email ? email.split("@")[0] : "User";
 
-  const deriveName = (email?: string | null) => {
-    if (!email) return "User";
-    return email.split("@")[0];
-  };
-
+  /* =======================================================
+     SAFE AUTH INITIALIZATION
+  ======================================================= */
   useEffect(() => {
+    // 🔐 If Firebase not configured → fallback to guest / landing
+    if (!isFirebaseConfigured() || !auth) {
+      console.warn("Firebase not configured — running UI-only mode");
+
+      const guestUser = StorageService.getGuestSession();
+      if (guestUser) {
+        StorageService.setSession(guestUser);
+        setUser(guestUser);
+        loadUserData();
+        setView("dashboard");
+      } else {
+        setUser(null);
+        setView("landing");
+      }
+
+      setLoadingAuth(false);
+      return;
+    }
+
+    // ✅ Firebase configured → attach listener
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         let profile = await StorageService.getUserProfile(firebaseUser.uid);
 
         if (!profile) {
-          // Generate avatar URL from Firebase photoURL or create one
-          const avatarUrl = firebaseUser.photoURL ||
-            `https://api.dicebear.com/7.x/notionists/svg?seed=${firebaseUser.displayName || firebaseUser.email}`;
-
           profile = {
             id: firebaseUser.uid,
             isGuest: false,
             name: firebaseUser.displayName || deriveName(firebaseUser.email),
             email: firebaseUser.email || undefined,
-            avatarUrl: avatarUrl,
+            avatarUrl:
+              firebaseUser.photoURL ||
+              `https://api.dicebear.com/7.x/notionists/svg?seed=${firebaseUser.displayName || firebaseUser.email}`,
             freeTimeHours: 2,
             energyPeak: "morning",
             goal: "Productivity",
             distractionLevel: "medium",
           };
           await StorageService.saveUserProfile(profile);
-        } else {
-          // Always update email and avatar if missing or different (ensures existing profiles get them)
-          let needsUpdate = false;
-          if (!profile.email && firebaseUser.email) {
-            profile.email = firebaseUser.email;
-            needsUpdate = true;
-          }
-          if (!profile.avatarUrl) {
-            profile.avatarUrl = firebaseUser.photoURL ||
-              `https://api.dicebear.com/7.x/notionists/svg?seed=${profile.name}`;
-            needsUpdate = true;
-          }
-          if (needsUpdate) {
-            await StorageService.saveUserProfile(profile);
-          }
         }
 
         StorageService.setSession(profile);
         setUser(profile);
-        loadUserData();
+        await loadUserData();
 
-        // Check if user has selected a role
-        if (!profile.role) {
-          setView("roleSelection");
-        } else {
-          setView("dashboard");
-        }
+        if (!profile.role) setView("roleSelection");
+        else setView("dashboard");
       } else {
         const guestUser = StorageService.getGuestSession();
         if (guestUser) {
           StorageService.setSession(guestUser);
           setUser(guestUser);
-          loadUserData();
+          await loadUserData();
           setView("dashboard");
         } else {
           setUser(null);
           setView("landing");
         }
       }
+
       setLoadingAuth(false);
     });
 
     return () => unsubscribe();
   }, []);
 
+  /* =======================================================
+     LOAD USER DATA
+  ======================================================= */
   const loadUserData = async () => {
     try {
       await StorageService.checkLoginStreak();
-      const n = await StorageService.getNotes();
-      const s = await StorageService.getSummaries();
-      const st = await StorageService.getStats();
-      const f = await StorageService.getFolders();
-      setNotes(n);
-      setSummaries(s);
-      setStats(st);
-      setFolders(f);
+      setNotes(await StorageService.getNotes());
+      setSummaries(await StorageService.getSummaries());
+      setStats(await StorageService.getStats());
+      setFolders(await StorageService.getFolders());
     } catch (error) {
       console.error("Error loading user data:", error);
     }
   };
 
-  const handleGuestAccess = () => {
-    const guestUser = StorageService.createGuestUser();
-    StorageService.saveUserProfile(guestUser);
-    StorageService.setSession(guestUser);
-    setUser(guestUser);
-    loadUserData();
-    setView("dashboard");
-  };
-
-  const handleRoleSelected = async (role: "student" | "teacher") => {
-    if (!user) return;
-
-    const updatedUser = { ...user, role };
-    await StorageService.saveUserProfile(updatedUser);
-    StorageService.setSession(updatedUser);
-    setUser(updatedUser);
-    setView("dashboard");
-  };
-
+  /* =======================================================
+     LOGOUT (SAFE)
+  ======================================================= */
   const handleLogout = async () => {
     if (user?.isGuest) {
       localStorage.removeItem("procastify_session");
       setUser(null);
       setView("landing");
-    } else {
+    } else if (auth) {
       await signOut(auth);
     }
   };
@@ -171,6 +157,16 @@ const App: React.FC = () => {
     setFocusTask(task);
     setView("focus");
   };
+  const handleGuestAccess = () => {
+  const guestUser = StorageService.createGuestUser();
+
+  StorageService.saveUserProfile(guestUser);
+  StorageService.setSession(guestUser);
+
+  setUser(guestUser);
+  loadUserData();
+  setView("dashboard");
+};
 
   const handleFocusExit = (minutesSpent: number) => {
     if (minutesSpent > 0) {
@@ -180,146 +176,9 @@ const App: React.FC = () => {
     setView("routine");
   };
 
-  const handleNavigate = (
-    newView: ViewState | "folders",
-    folderId?: string | null,
-  ) => {
-    if (newView === "notes") {
-      setActiveFolderId(folderId);
-    } else if (newView === "folders") {
-      // Folders view - accessible through Notes page button only
-      setActiveFolderId(undefined);
-    } else if (newView === "classroomDetail" || newView === "studentClassroomView") {
-      // Store classroom ID for detail views
-      setSelectedClassroomId(folderId || undefined);
-    } else {
-      setActiveFolderId(undefined);
-    }
-    setView(newView);
-  };
-
-  const handleAddToNote = async (
-    noteId: string | null,
-    summary: Summary,
-    flashcards: Flashcard[],
-  ) => {
-    if (!user) return;
-
-    const timestamp = Date.now();
-
-    // --- Generate Blocks for Document Section ---
-    const newBlocks: any[] = [];
-
-    // 1. Summary Header
-    newBlocks.push({
-      id: `${timestamp}-h1`,
-      type: "h1",
-      content: `Summary: ${new Date().toLocaleDateString()}`,
-    });
-
-    // 2. Summary Text
-    const formattedSummary = summary.summaryText.replace(/\n/g, "<br />");
-    newBlocks.push({
-      id: `${timestamp}-text`,
-      type: "text",
-      content: formattedSummary,
-    });
-
-    // 3. Flashcards Section
-    if (flashcards.length > 0) {
-      newBlocks.push({
-        id: `${timestamp}-fc-h2`,
-        type: "h2",
-        content: "Flashcards (Key Learning Concepts)",
-      });
-
-      flashcards.forEach((fc, i) => {
-        newBlocks.push({
-          id: `${timestamp}-fc-${i}-q`,
-          type: "h3",
-          content: fc.front,
-        });
-        newBlocks.push({
-          id: `${timestamp}-fc-${i}-a`,
-          type: "text",
-          content: fc.back,
-        });
-        newBlocks.push({
-          id: `${timestamp}-fc-${i}-d`,
-          type: "text",
-          content: "",
-        });
-      });
-    }
-
-    let updatedNotes = [...notes];
-    let noteWasCreated = false;
-    let noteToSave: Note | null = null;
-
-    if (noteId === null) {
-      // --- Create New Note ---
-      const newNote: Note = {
-        id: timestamp.toString(),
-        userId: user.id,
-        title: `Summary: ${new Date().toLocaleDateString()}`,
-        document: { blocks: newBlocks },
-        canvas: { elements: [] },
-        elements: [],
-        tags: [],
-        folder: "Summaries",
-        folderId: null,
-        lastModified: timestamp,
-        createdAt: timestamp,
-      };
-      updatedNotes = [newNote, ...updatedNotes];
-      noteToSave = newNote;
-      noteWasCreated = true;
-    } else {
-      // --- Update Existing Note ---
-      updatedNotes = updatedNotes.map((n) => {
-        if (n.id === noteId) {
-          const existingBlocks = n.document?.blocks || [];
-
-          const separatorBlock = {
-            id: `${timestamp}-sep`,
-            type: "text",
-            content: "<br/>---<br/>",
-          };
-
-          const updatedBlocks = [
-            ...existingBlocks,
-            separatorBlock,
-            ...newBlocks,
-          ];
-
-          const updated = {
-            ...n,
-            document: { blocks: updatedBlocks },
-            lastModified: timestamp,
-          };
-          noteToSave = updated;
-          return updated;
-        }
-        return n;
-      });
-    }
-
-    setNotes(updatedNotes);
-
-    if (noteToSave) {
-      await StorageService.saveNote(noteToSave);
-    }
-
-    if (noteWasCreated) {
-      await StorageService.updateStats((s) => ({
-        ...s,
-        notesCreated: (s.notesCreated || 0) + 1,
-      }));
-      const updatedStats = await StorageService.getStats();
-      setStats(updatedStats);
-    }
-  };
-
+  /* =======================================================
+     LOADING SCREEN
+  ======================================================= */
   if (loadingAuth) {
     return (
       <div className="min-h-screen bg-[#1e1f22] flex items-center justify-center text-white">
@@ -328,212 +187,73 @@ const App: React.FC = () => {
     );
   }
 
-  if (view === "auth") {
-    return (
-      <Auth
-        onLoginSuccess={() => setView("dashboard")}
-        onGuestAccess={handleGuestAccess}
-        onBack={user ? () => setView("dashboard") : () => setView("landing")}
-      />
-    );
-  }
-
-  if (view === "roleSelection") {
-    return <RoleSelection onRoleSelected={handleRoleSelected} />;
-  }
-
   if (!user || view === "landing") {
     return (
       <Landing
-        onLogin={() => setView("auth")}
-        onGuestAccess={handleGuestAccess}
-      />
+  onLogin={() => setView("auth")}
+  onGuestAccess={handleGuestAccess}
+/>
     );
   }
 
-  if (view === "focus")
-    return <Focus initialTask={focusTask} onExit={handleFocusExit} />;
+ if (view === "focus")
+  return <Focus onExit={handleFocusExit} />
 
+  /* =======================================================
+     MAIN LAYOUT
+  ======================================================= */
   return (
     <div className="flex min-h-screen bg-[#1e1f22]">
       <Sidebar
-        currentView={view === "folders" ? "notes" : view}
-        onNavigate={handleNavigate}
+        currentView={view}
+        onNavigate={(v) => setView(v)}
         onLogout={handleLogout}
         collapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
         userRole={user.role}
-        user={user ? { name: user.name, avatarUrl: user.avatarUrl } : undefined}
+        user={{ name: user.name, avatarUrl: user.avatarUrl }}
       />
-      <main
-        className={`flex-1 ${sidebarCollapsed ? "lg:ml-20" : "lg:ml-64"} overflow-y-auto max-h-screen relative transition-all duration-300 ease-in-out`}
-      >
-        {/* User Context Bar (Small) */}
-        {user.isGuest && (
-          <div className="bg-indigo-900/30 border-b border-indigo-500/20 px-4 py-1 text-xs text-indigo-200 flex justify-between items-center sticky top-0 z-50 backdrop-blur-md">
-            <span>Guest Mode: Data saved to this device only.</span>
-            <button
-              onClick={() => setView("auth")}
-              className="hover:text-white underline"
-            >
-              Sign up to sync
-            </button>
-          </div>
-        )}
 
+      <main className="flex-1 overflow-y-auto">
         {view === "dashboard" && stats && (
-          <>
-            {user.role === "teacher" ? (
-              <TeacherDashboard
-                user={user}
-                onNavigate={handleNavigate}
-              />
-            ) : (
-              <Dashboard
-                user={user}
-                summaries={summaries}
-                notes={notes}
-                stats={stats}
-                onNoteClick={(noteId) => {
-                  setView("notes");
-                }}
-                onNavigate={(view) => handleNavigate(view as any)}
-              />
-            )}
-          </>
-        )}
-
-        {view === "summarizer" && (
-          <Summarizer
-            onSave={async (s) => {
-              const sWithUser = { ...s, userId: user.id };
-              const newSums = [sWithUser, ...summaries];
-              setSummaries(newSums);
-              await StorageService.saveSummaries(newSums);
-            }}
-            notes={notes}
-            onAddToNote={handleAddToNote}
-          />
-        )}
-
-        {view === "notes" && (
-          <Notes
-            notes={notes}
-            setNotes={(newNotes) => {
-              setNotes(newNotes);
-              const notesArray = typeof newNotes === 'function' ? newNotes(notes) : newNotes;
-              StorageService.saveNotes(notesArray);
-            }}
-            onDeleteNote={async (noteId) => {
-              await StorageService.deleteNote(noteId);
-              setNotes((prev) => prev.filter((n) => n.id !== noteId));
-              console.log("[DELETE] Removed from local React state:", noteId);
-            }}
+          <Dashboard
             user={user}
-            onNavigate={handleNavigate}
-            activeFolderId={activeFolderId}
-            folders={folders}
-          />
-        )}
-
-        {view === "folders" && (
-          <Folders
-            folders={folders}
-            setFolders={setFolders}
+            summaries={summaries}
             notes={notes}
-            user={user}
-            onNavigate={handleNavigate}
+            stats={stats}
+            onNavigate={(v) => setView(v as any)}
           />
         )}
 
         {view === "routine" && (
           <Routine
             user={user}
-            setUser={async (u) => {
-              await StorageService.saveUserProfile(u);
-              setUser(u);
-            }}
+            setUser={setUser}
             notes={notes}
-            setNotes={(n) => {
-              setNotes(n);
-              StorageService.saveNotes(n);
-            }}
+            setNotes={setNotes}
             onStartTask={handleStartFocus}
-            onNavigate={(view) => handleNavigate(view as any)}
+            onNavigate={(v) => setView(v as any)}
           />
         )}
 
-        {view === "quiz" && (
-          <QuizPage
-            notes={notes}
-            user={user}
-            stats={stats}
-            setStats={setStats}
-          />
-        )}
+        {view === "notes" && (
+  <Notes
+    notes={notes}
+    setNotes={setNotes}
+    user={user}
+    onNavigate={(v) => setView(v as any)}
+    activeFolderId={activeFolderId}
+    folders={folders}
+    onDeleteNote={async (noteId: string) => {
+      await StorageService.deleteNote(noteId);
+      setNotes((prev) => prev.filter((n) => n.id !== noteId));
+    }}
+  />
+)}
 
-        {view === "feed" && (
-          <NoteFeed
-            notes={notes}
-            user={user}
-            onClose={() => setView("dashboard")}
-          />
-        )}
-
-        {view === "store" && (
-          <NotesStore
-            user={user}
-            onImportNote={(newNote) => {
-              setNotes([newNote, ...notes]);
-              StorageService.saveNote(newNote);
-              setView("notes");
-            }}
-            onNavigate={handleNavigate}
-          />
-        )}
-
-        {view === "classrooms" && (
-          <Classrooms
-            user={user}
-            onNavigate={handleNavigate}
-          />
-        )}
-
-        {view === "classroomDetail" && selectedClassroomId && (
-          <ClassroomDetail
-            user={user}
-            classroomId={selectedClassroomId}
-            onNavigate={handleNavigate}
-          />
-        )}
-
-        {view === "studentClassrooms" && (
-          <StudentClassrooms
-            user={user}
-            onNavigate={handleNavigate}
-          />
-        )}
-
-        {view === "studentClassroomView" && selectedClassroomId && (
-          <StudentClassroomView
-            user={user}
-            classroomId={selectedClassroomId}
-            onNavigate={handleNavigate}
-          />
-        )}
-
-        {view === "workflow" && (
-          <WorkflowBoard
-            userId={user.id}
-            onClose={() => setView("dashboard")}
-            sidebarCollapsed={sidebarCollapsed}
-          />
-        )}
-        
         {view === "examTracker" && (
           <ExamTracker userId={user.id} />
         )}
-
       </main>
     </div>
   );

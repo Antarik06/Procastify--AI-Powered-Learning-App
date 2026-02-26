@@ -1,335 +1,472 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { RoutineTask } from '../types';
-import {
-  Play, Pause, Square, Coffee, BrainCircuit, ChevronLeft, Volume2, VolumeX,
-  Settings2, Sparkles, Zap, Wind, Timer, StopCircle, RotateCcw, BarChart3, ShieldAlert
-} from 'lucide-react';
+import React, { useState, useEffect, useMemo } from "react";
+import { RoutineTask } from "../types";
+import { Play, Pause, Square, ChevronLeft, BarChart3 } from "lucide-react";
 
 interface FocusProps {
   initialTask?: RoutineTask;
   onExit: (minutesSpent: number) => void;
 }
 
-type FocusPhase = 'warmup' | 'flow' | 'fatigue' | 'completed' | 'break' | 'stopwatch';
-type FocusMode = 'countdown' | 'stopwatch';
-type SoundType = 'brown-noise' | 'heavy-rain' | 'forest' | 'none';
+type SoundType = "brown-noise" | "heavy-rain" | "forest" | "none";
 
 const PRESETS = [
-  { label: 'Pomodoro', focus: 25 },
-  { label: 'Deep Work', focus: 50 },
-  { label: 'Extended', focus: 90 },
+  { label: "Pomodoro", minutes: 25 },
+  { label: "Extended Focus", minutes: 50 },
+  { label: "Deep Work", minutes: 90 },
 ];
-
 const SOUND_LIBRARY: Record<SoundType, string | null> = {
-  'brown-noise': null, // Generated via Web Audio
-  'heavy-rain': 'https://www.soundjay.com/nature/rain-01.mp3',
-  'forest': 'https://www.soundjay.com/nature/forest-01.mp3',
-  'none': null
+  "brown-noise": null,
+  "heavy-rain": "/sounds/rain.mp3",
+  forest: "/sounds/forest.mp3",
+  none: null,
 };
 
-// --- Enhanced Audio Engine ---
-class AmbientSoundEngine {
-  private ctx: AudioContext | null = null;
-  private gainNode: GainNode | null = null;
-  // Use AudioNode as the base type to support both buffers and media elements
-  private source: AudioNode | null = null;
-  private audioTag: HTMLAudioElement | null = null;
-  private isPlaying = false;
+/* ---------------- SOUND ENGINE ---------------- */
 
-  init() {
-    if (!this.ctx) {
-      this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      this.gainNode = this.ctx.createGain();
-      this.gainNode.connect(this.ctx.destination);
-      this.gainNode.gain.value = 0;
-    }
-  }
+class SoundEngine {
+  private audio: HTMLAudioElement | null = null;
+  private ctx: AudioContext | null = null;
+  private brownSource: AudioBufferSourceNode | null = null;
 
   play(type: SoundType) {
     this.stop();
-    this.init();
-    if (!this.ctx || !this.gainNode) return;
 
-    if (type === 'brown-noise') {
-      const bufferSize = this.ctx.sampleRate * 2;
-      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-      let lastOut = 0;
-      for (let i = 0; i < bufferSize; i++) {
-        const white = Math.random() * 2 - 1;
-        lastOut = (lastOut + (0.02 * white)) / 1.02;
-        data[i] = lastOut * 3.5;
-      }
-      const noise = this.ctx.createBufferSource();
-      noise.buffer = buffer;
-      noise.loop = true;
-      const filter = this.ctx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.value = 400;
-      noise.connect(filter);
-      filter.connect(this.gainNode);
-      noise.start();
-      this.source = noise;
-    } else if (SOUND_LIBRARY[type]) {
-      this.audioTag = new Audio(SOUND_LIBRARY[type]!);
-      this.audioTag.loop = true;
-      this.source = this.ctx.createMediaElementSource(this.audioTag);
-      this.source.connect(this.gainNode);
-      this.audioTag.play();
+    if (type === "brown-noise") {
+      this.playBrownNoise();
+      return;
     }
 
-    this.isPlaying = true;
-    this.fadeIn();
+    if (SOUND_LIBRARY[type]) {
+      this.audio = new Audio(SOUND_LIBRARY[type]!);
+      this.audio.loop = true;
+      this.audio.volume = 0.4;
+      this.audio.play().catch(() => {});
+    }
+  }
+
+  private playBrownNoise() {
+    this.ctx = new (window.AudioContext ||
+      (window as any).webkitAudioContext)();
+
+    const bufferSize = 2 * this.ctx.sampleRate;
+    const noiseBuffer = this.ctx.createBuffer(
+      1,
+      bufferSize,
+      this.ctx.sampleRate
+    );
+    const output = noiseBuffer.getChannelData(0);
+
+    let lastOut = 0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      lastOut = (lastOut + 0.02 * white) / 1.02;
+      output[i] = lastOut * 3.5;
+    }
+
+    const source = this.ctx.createBufferSource();
+    source.buffer = noiseBuffer;
+    source.loop = true;
+
+    const gain = this.ctx.createGain();
+    gain.gain.value = 0.15;
+
+    source.connect(gain);
+    gain.connect(this.ctx.destination);
+    source.start(0);
+
+    this.brownSource = source;
   }
 
   stop() {
-    if (this.isPlaying) {
-      this.fadeOut(() => {
-        if (this.audioTag) { this.audioTag.pause(); this.audioTag = null; }
-        if (this.source instanceof AudioBufferSourceNode) this.source.stop();
-        this.isPlaying = false;
-      });
+    if (this.audio) {
+      this.audio.pause();
+      this.audio.currentTime = 0;
+      this.audio = null;
     }
-  }
 
-  private fadeIn() {
-    if (!this.gainNode || !this.ctx) return;
-    this.gainNode.gain.linearRampToValueAtTime(0.1, this.ctx.currentTime + 2);
-  }
+    if (this.brownSource) {
+      this.brownSource.stop();
+      this.brownSource.disconnect();
+      this.brownSource = null;
+    }
 
-  private fadeOut(cb: () => void) {
-    if (!this.gainNode || !this.ctx) return cb();
-    this.gainNode.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 1);
-    setTimeout(cb, 1000);
+    if (this.ctx) {
+      this.ctx.close();
+      this.ctx = null;
+    }
   }
 }
 
-const soundEngine = new AmbientSoundEngine();
+const soundEngine = new SoundEngine();
+
+/* ---------------- COMPONENT ---------------- */
 
 const Focus: React.FC<FocusProps> = ({ initialTask, onExit }) => {
-  // --- State ---
-  const [mode, setMode] = useState<FocusMode>('countdown');
-  const [initialSeconds, setInitialSeconds] = useState((initialTask?.durationMinutes || 25) * 60);
-  const [timeLeft, setTimeLeft] = useState(initialSeconds);
+  const defaultMinutes = initialTask?.durationMinutes || 25;
+
+  const [hours, setHours] = useState(0);
+  const [minutes, setMinutes] = useState(defaultMinutes);
+  const [seconds, setSeconds] = useState(0);
+
+  const [initialSeconds, setInitialSeconds] = useState(defaultMinutes * 60);
+  const [timeLeft, setTimeLeft] = useState(defaultMinutes * 60);
+
   const [isActive, setIsActive] = useState(false);
   const [secondsSpent, setSecondsSpent] = useState(0);
   const [pauseCount, setPauseCount] = useState(0);
-  const [showSummary, setShowSummary] = useState(false);
-
-  // Customization & Features
-  const [soundType, setSoundType] = useState<SoundType>('none');
-  const [blockedUrls, setBlockedUrls] = useState<string[]>(['facebook.com', 'twitter.com', 'youtube.com']);
   const [distractionCount, setDistractionCount] = useState(0);
+  const [showSummary, setShowSummary] = useState(false);
+  const [soundType, setSoundType] = useState<SoundType>("none");
 
-  // --- Logic ---
-  const progressPercent = mode === 'countdown' ? ((initialSeconds - timeLeft) / initialSeconds) * 100 : 0;
+  /* -------- Sync Manual Time -------- */
 
   useEffect(() => {
-    let interval: any = null;
+    const total = hours * 3600 + minutes * 60 + seconds;
+    setInitialSeconds(total);
+    if (!isActive) setTimeLeft(total);
+  }, [hours, minutes, seconds]);
+
+  /* -------- Timer -------- */
+
+  useEffect(() => {
+    let interval: any;
+
     if (isActive) {
       interval = setInterval(() => {
-        if (mode === 'countdown') {
-          if (timeLeft > 0) {
-            setTimeLeft(t => t - 1);
-            setSecondsSpent(s => s + 1);
-          } else {
-            setIsActive(false);
-            setShowSummary(true);
-          }
+        if (timeLeft > 0) {
+          setTimeLeft((t) => t - 1);
+          setSecondsSpent((s) => s + 1);
         } else {
-          setTimeLeft(t => t + 1);
-          setSecondsSpent(s => s + 1);
+          setIsActive(false);
+          setShowSummary(true);
         }
       }, 1000);
     }
+
     return () => clearInterval(interval);
-  }, [isActive, timeLeft, mode]);
+  }, [isActive, timeLeft]);
+
+  /* -------- Sound -------- */
 
   useEffect(() => {
-    if (isActive && soundType !== 'none') soundEngine.play(soundType);
+    if (isActive) soundEngine.play(soundType);
     else soundEngine.stop();
   }, [isActive, soundType]);
 
-  // Distraction Blocking (Tab Visibility API)
+  /* -------- Distraction Tracking -------- */
+
   useEffect(() => {
     const handleVisibility = () => {
       if (document.hidden && isActive) {
-        setDistractionCount(prev => prev + 1);
+        setDistractionCount((d) => d + 1);
       }
     };
-    document.addEventListener('visibilitychange', handleVisibility);
-    return () => document.removeEventListener('visibilitychange', handleVisibility);
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibility);
   }, [isActive]);
 
-  const currentPhase: FocusPhase = useMemo(() => {
-    if (mode === 'stopwatch') return 'stopwatch';
-    if (timeLeft === 0) return 'completed';
-    if (progressPercent < 15) return 'warmup';
-    if (progressPercent > 85) return 'fatigue';
-    return 'flow';
-  }, [timeLeft, progressPercent, mode]);
+  /* -------- Progress -------- */
+
+  const progressPercent =
+    initialSeconds > 0
+      ? ((initialSeconds - timeLeft) / initialSeconds) * 100
+      : 0;
+
+  const completionPercent =
+    initialSeconds > 0
+      ? (secondsSpent / initialSeconds) * 100
+      : 0;
+
+  const ambientColor = useMemo(() => {
+    if (!isActive) return "rgba(99,102,241,0.15)";
+    if (progressPercent < 50) return "rgba(59,130,246,0.18)";
+    if (progressPercent < 90) return "rgba(99,102,241,0.20)";
+    return "rgba(251,146,60,0.22)";
+  }, [progressPercent, isActive]);
+
+  const sessionInsight = useMemo(() => {
+    if (completionPercent >= 100 && distractionCount === 0)
+      return "Outstanding discipline. You maintained deep focus throughout.";
+    if (completionPercent >= 75)
+      return "Strong effort. Your focus consistency is improving.";
+    if (completionPercent >= 40)
+      return "Solid progress. Try reducing pauses next time.";
+    if (completionPercent > 0)
+      return "Session ended early. Consider smaller goals for momentum.";
+    return "Session not completed.";
+  }, [completionPercent, distractionCount]);
 
   const formatTime = (s: number) => {
-    const mins = Math.floor(s / 60);
-    const secs = s % 60;
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+
+    return `${h.toString().padStart(2, "0")}:${m
+      .toString()
+      .padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
   };
 
-  const getPhaseStyles = () => {
-    switch (currentPhase) {
-      case 'warmup': return { color: '#60a5fa', text: 'Entering Flow' };
-      case 'flow': return { color: '#5865F2', text: 'Deep Flow' };
-      case 'fatigue': return { color: '#fb923c', text: 'Fatigue Zone' };
-      case 'stopwatch': return { color: '#a855f7', text: 'Open Focus' };
-      default: return { color: '#10b981', text: 'Completed' };
-    }
-  };
+  const handleEndEarly = () => {
+  if (secondsSpent === 0) return;
 
-  const style = getPhaseStyles();
+  soundEngine.stop();
+  setIsActive(false);
+
+  // Add to routine
+  onExit(Math.floor(secondsSpent / 60));
+
+  setShowSummary(true);
+};
+
+  const radius = 140;
+  const circumference = 2 * Math.PI * radius;
+
+  /* ================= UI ================= */
 
   return (
-    <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#0f1012] text-white overflow-hidden">
+    <div className="relative min-h-screen bg-[#0f1012] text-white flex flex-col overflow-hidden">
 
-      {/* --- Top Bar --- */}
-      <div className="absolute top-0 w-full p-4 md:p-6 flex justify-between items-center z-20">
-        <button onClick={() => onExit(Math.floor(secondsSpent / 60))} className="flex items-center gap-2 opacity-50 hover:opacity-100 transition-opacity">
+      {/* Ambient Background */}
+      <div
+        className="absolute inset-0 transition-all duration-1000"
+        style={{
+          background: `radial-gradient(circle at center,
+            ${ambientColor},
+            #0f1012 65%)`,
+        }}
+      />
+
+      {/* Header */}
+      <div className="relative z-10 px-6 py-4 flex justify-between items-center border-b border-white/10">
+        <button
+          onClick={() => onExit(Math.floor(secondsSpent / 60))}
+          className="flex items-center gap-2 text-white/60 hover:text-white transition"
+        >
           <ChevronLeft size={18} /> Exit
         </button>
 
-        <div className="flex items-center gap-4 bg-white/5 p-1 rounded-lg border border-white/10">
-          <button
-            onClick={() => { setMode('countdown'); setIsActive(false); setTimeLeft(initialSeconds); }}
-            className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${mode === 'countdown' ? 'bg-white/10 text-white' : 'text-white/40'}`}
-          >Countdown</button>
-          <button
-            onClick={() => { setMode('stopwatch'); setIsActive(false); setTimeLeft(0); }}
-            className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${mode === 'stopwatch' ? 'bg-white/10 text-white' : 'text-white/40'}`}
-          >Stopwatch</button>
+        <div className="text-xs uppercase tracking-widest text-white/40">
+          Focus Mode
         </div>
+
+        <div />
       </div>
 
-      {/* --- Main Timer Circle --- */}
-      <div className="relative flex flex-col items-center">
-        <div
-          className="absolute inset-0 rounded-full blur-[120px] opacity-20 transition-colors duration-1000"
-          style={{ backgroundColor: style.color }}
-        />
+      {/* Timer Core */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center gap-8">
 
-        <div className="relative z-10 flex flex-col items-center">
-          <div className="mb-4 px-4 py-1 rounded-full border border-white/10 bg-white/5 flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold">
-            <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: style.color }} />
-            {style.text}
-          </div>
+        <div className="relative flex items-center justify-center">
 
-          <h1 className="text-6xl md:text-9xl font-mono font-medium tracking-tighter mb-4 md:mb-8 tabular-nums">
+          <svg className="absolute w-[320px] h-[320px] -rotate-90">
+            <circle
+              cx="160"
+              cy="160"
+              r={radius}
+              stroke="rgba(255,255,255,0.08)"
+              strokeWidth="8"
+              fill="none"
+            />
+            <circle
+              cx="160"
+              cy="160"
+              r={radius}
+              stroke="#6366f1"
+              strokeWidth="8"
+              fill="none"
+              strokeDasharray={circumference}
+              style={{
+                strokeDashoffset:
+                  circumference -
+                  (circumference * progressPercent) / 100,
+                transition: "stroke-dashoffset 0.5s ease-out",
+              }}
+              strokeLinecap="round"
+            />
+          </svg>
+
+          <h1 className="text-6xl md:text-9xl font-mono tracking-tight z-10">
             {formatTime(timeLeft)}
           </h1>
-
-          <div className="flex items-center gap-4 md:gap-6">
-            {mode === 'stopwatch' && (
-              <button onClick={() => { setTimeLeft(0); setIsActive(false); }} className="p-3 md:p-4 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-all">
-                <RotateCcw size={24} />
-              </button>
-            )}
-
-            <button
-              onClick={() => { if (isActive) setPauseCount(p => p + 1); setIsActive(!isActive); }}
-              className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center bg-white text-black hover:scale-105 transition-transform"
-            >
-              {isActive ? <Pause size={32} className="md:w-10 md:h-10" fill="currentColor" /> : <Play size={32} className="ml-1 md:ml-2 md:w-10 md:h-10" fill="currentColor" />}
-            </button>
-
-            <button onClick={() => setShowSummary(true)} className="p-3 md:p-4 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-all">
-              <Square size={24} />
-            </button>
-          </div>
         </div>
+
+        <div className="flex items-center gap-8">
+          <button
+            onClick={() => {
+              if (isActive) {
+                setPauseCount((p) => p + 1);
+                soundEngine.stop();
+                setIsActive(false);
+              } else {
+                setIsActive(true);
+              }
+            }}
+            className="w-20 h-20 rounded-full bg-white text-black flex items-center justify-center
+                       transition-all duration-300 hover:scale-110 active:scale-95
+                       hover:shadow-[0_0_25px_rgba(99,102,241,0.5)]"
+          >
+            {isActive ? <Pause size={28} /> : <Play size={28} />}
+          </button>
+
+          <button
+            onClick={handleEndEarly}
+            className="p-4 rounded-full bg-red-500/20 border border-red-400/40
+           hover:bg-red-500/30 transition"
+          >
+            <div className="flex items-center gap-2">
+  <Square size={18} />
+  <span className="text-xs font-medium">Add</span>
+</div>
+          </button>
+        </div>
+
+        {isActive && (
+          <div className="text-xs text-white/30 tracking-widest">
+            Stay present. Stay intentional.
+          </div>
+        )}
       </div>
 
-      {/* --- Part 1: Custom Duration & Part 2: Sound Controls --- */}
+      {/* Config Panel */}
       {!isActive && !showSummary && (
-        <div className="mt-8 md:mt-12 flex flex-col md:flex-row items-center gap-6 md:gap-8 animate-in fade-in slide-in-from-bottom-4 w-full px-4 md:px-0 md:w-auto">
-          <div className="flex flex-col gap-2 items-center">
-            <span className="text-[10px] uppercase font-bold text-white/30 tracking-widest">Adjust Duration</span>
-            <div className="flex flex-wrap justify-center gap-2">
-              <input
-                type="number"
-                value={Math.floor(initialSeconds / 60)}
-                onChange={(e) => {
-                  const val = parseInt(e.target.value) || 0;
-                  setInitialSeconds(val * 60);
-                  if (mode === 'countdown') setTimeLeft(val * 60);
-                }}
-                className="w-20 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-white/30"
-              />
-              {PRESETS.map(p => (
-                <button key={p.label} onClick={() => { setInitialSeconds(p.focus * 60); setTimeLeft(p.focus * 60); }} className="px-3 py-2 bg-white/5 rounded-lg text-xs hover:bg-white/10">
-                  {p.focus}m
-                </button>
-              ))}
-            </div>
-          </div>
+        <div className="relative z-10 border-t border-white/10 bg-[#0c0d10] px-6 py-12">
+          <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-12">
 
-          <div className="flex flex-col gap-2 items-center">
-            <span className="text-[10px] uppercase font-bold text-white/30 tracking-widest">Focus Sounds</span>
-            <div className="flex flex-wrap justify-center gap-2">
-              {(['none', 'brown-noise', 'heavy-rain', 'forest'] as SoundType[]).map(s => (
-                <button
-                  key={s}
-                  onClick={() => setSoundType(s)}
-                  className={`px-3 py-2 rounded-lg text-xs capitalize transition-all ${soundType === s ? 'bg-white/20 text-white' : 'bg-white/5 text-white/40'}`}
-                >
-                  {s.replace('-', ' ')}
-                </button>
-              ))}
+            <div>
+              <h3 className="text-xs uppercase text-white/40 tracking-widest mb-6">
+                Session Duration
+              </h3>
+
+              <div className="flex gap-4 flex-wrap mb-6">
+  {PRESETS.map((p) => (
+    <button
+      key={p.label}
+      onClick={() => {
+        const totalSeconds = p.minutes * 60;
+
+        setHours(0);
+        setMinutes(p.minutes);
+        setSeconds(0);
+
+        setInitialSeconds(totalSeconds);
+        setTimeLeft(totalSeconds);
+        setSecondsSpent(0);
+      }}
+      className="px-6 py-4 bg-white/5 border border-white/10 rounded-xl
+                 hover:bg-white/10 transition-all duration-300"
+    >
+      <div className="font-semibold text-base">
+        {p.minutes} min
+      </div>
+
+      <div className="text-xs text-white/40 mt-1 tracking-wide">
+        {p.label}
+      </div>
+    </button>
+  ))}
+</div>
+
+              <div className="flex gap-4">
+                <TimeInput label="HH" value={hours} setValue={setHours} max={23} />
+                <TimeInput label="MM" value={minutes} setValue={setMinutes} max={59} />
+                <TimeInput label="SS" value={seconds} setValue={setSeconds} max={59} />
+              </div>
             </div>
+
+            <div>
+              <h3 className="text-xs uppercase text-white/40 tracking-widest mb-6">
+                Focus Sounds
+              </h3>
+
+              <div className="flex gap-4 flex-wrap">
+                {(["none","brown-noise","heavy-rain","forest"] as SoundType[]).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setSoundType(s)}
+                    className={`px-6 py-3 rounded-xl transition-all ${
+                      soundType === s
+                        ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
+                        : "bg-white/5 text-white/40 hover:bg-white/10 hover:text-white"
+                    }`}
+                  >
+                    {s.replace("-", " ")}
+                  </button>
+                ))}
+              </div>
+            </div>
+
           </div>
         </div>
       )}
 
-      {/* --- Part 1: Session Summary Report --- */}
+      {/* Summary */}
       {showSummary && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 md:p-6">
-          <div className="bg-[#1a1b1e] border border-white/10 p-6 md:p-8 rounded-3xl max-w-md w-full shadow-2xl">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-6 z-50">
+          <div className="bg-[#1a1b1e] border border-white/10 rounded-3xl p-8 w-full max-w-md">
             <div className="flex items-center gap-3 mb-6">
               <BarChart3 className="text-indigo-400" />
-              <h2 className="text-2xl font-bold">Session Report</h2>
+              <h2 className="text-xl font-bold">Session Report</h2>
             </div>
 
-            <div className="space-y-4 mb-8">
-              <div className="flex justify-between p-4 bg-white/5 rounded-2xl">
-                <span className="text-white/50">Focused Time</span>
-                <span className="font-mono font-bold text-xl">{formatTime(secondsSpent)}</span>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-white/5 rounded-2xl">
-                  <span className="text-[10px] uppercase text-white/40 block mb-1">Pauses</span>
-                  <span className="text-xl font-bold">{pauseCount}</span>
-                </div>
-                <div className="p-4 bg-white/5 rounded-2xl">
-                  <span className="text-[10px] uppercase text-white/40 block mb-1">Distractions</span>
-                  <span className="text-xl font-bold text-orange-400">{distractionCount}</span>
-                </div>
-              </div>
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <StatCard label="Focused Time" value={formatTime(secondsSpent)} />
+              <StatCard label="Completion" value={`${completionPercent.toFixed(0)}%`} />
+              <StatCard label="Pauses" value={pauseCount} />
+              <StatCard label="Distractions" value={distractionCount} />
+            </div>
+
+            <div className="text-sm text-white/60 mb-6">
+              {sessionInsight}
             </div>
 
             <button
               onClick={() => onExit(Math.floor(secondsSpent / 60))}
-              className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 rounded-2xl font-bold transition-all shadow-lg shadow-indigo-500/20"
+              className="w-full py-3 bg-indigo-600 rounded-2xl font-bold hover:bg-indigo-500 transition"
             >
               Complete Session
             </button>
+            <button
+  onClick={handleEndEarly}
+  className="px-6 py-3 bg-indigo-600 rounded-xl font-semibold hover:bg-indigo-500"
+>
+  Complete & Add to Routine
+</button>
           </div>
         </div>
       )}
-
-      {/* --- Part 3: Distraction Block Indicator --- */}
-      <div className="absolute bottom-4 left-4 md:bottom-6 md:left-6 flex items-center gap-3 text-white/20 text-[10px] font-bold tracking-widest uppercase">
-        <ShieldAlert size={14} className={distractionCount > 0 ? 'text-orange-500' : ''} />
-        Guard Active: {blockedUrls.length} Sites Restricted
-      </div>
     </div>
   );
 };
+
+const TimeInput = ({ label, value, setValue, max }) => (
+  <div className="flex flex-col items-center">
+    <input
+      type="number"
+      value={value}
+      min={0}
+      max={max}
+      onChange={(e) => {
+        let num = parseInt(e.target.value) || 0;
+        if (num > max) num = max;
+        if (num < 0) num = 0;
+        setValue(num);
+      }}
+      className="w-20 h-14 bg-[#15171c] border border-white/10 rounded-xl text-center text-lg font-mono focus:outline-none focus:border-indigo-500"
+    />
+    <span className="text-xs text-white/40 mt-2 uppercase tracking-widest">
+      {label}
+    </span>
+  </div>
+);
+
+const StatCard = ({ label, value }) => (
+  <div className="bg-white/5 border border-white/10 rounded-2xl p-4 hover:bg-white/10 transition">
+    <div className="text-xs text-white/40 uppercase tracking-widest mb-2">
+      {label}
+    </div>
+    <div className="text-lg font-bold">{value}</div>
+  </div>
+);
 
 export default Focus;

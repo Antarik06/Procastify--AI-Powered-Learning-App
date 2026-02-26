@@ -18,7 +18,8 @@ export type ViewState =
   | "studentClassrooms"
   | "studentClassroomView"
   | "workflow"
-  | "examTracker";
+  | "examTracker"
+  | "folders";
 
 
 export type CanvasLayoutMode = 'topbar' | 'sidebar-left' | 'sidebar-right' | 'minimal';
