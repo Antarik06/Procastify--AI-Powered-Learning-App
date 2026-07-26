@@ -6,9 +6,12 @@ import { CanvasEngine } from "./canvas/CanvasEngine";
 import { ToolType, Shape, StrokeWidth, StrokeStyle, RoughStyle, FillStyle, FontSize } from "./canvas/types";
 import { CanvasLayoutMode } from "../types";
 import { CanvasLayoutService } from "../services/canvasLayoutService";
-import { TopNavBar, SidebarToolBar } from "./CanvasToolbars";
+import { TopNavBar, ToolRail, CanvasActionBar } from "./CanvasToolbars";
 import { LayoutSwitcher, LayoutSwitcherFAB } from "./LayoutSwitcher";
 import styles from "./canvas.module.css";
+
+/** Below this width a horizontal toolbar no longer fits, so we fall back to the rail. */
+const NARROW_BREAKPOINT = 760;
 
 interface CanvasBoardProps {
     canvasId?: string;
@@ -25,6 +28,7 @@ export interface CanvasBoardRef {
 
 const CanvasBoard = forwardRef<CanvasBoardRef, CanvasBoardProps>(({ canvasId, readOnly = false, elements, onShapesAdded }: CanvasBoardProps, ref) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
     const [engine, setEngine] = useState<CanvasEngine | null>(null);
     const [activeTool, setActiveTool] = useState<ToolType>("selection");
     const [color, setColor] = useState("#ffffff");
@@ -32,7 +36,9 @@ const CanvasBoard = forwardRef<CanvasBoardRef, CanvasBoardProps>(({ canvasId, re
 
     // Layout state
     const [layoutMode, setLayoutMode] = useState<CanvasLayoutMode>("topbar");
-    const [sidebarWidth, setSidebarWidth] = useState(280);
+    // The pane can be narrower than the viewport (split view), so toolbars adapt
+    // to the container rather than to a media query.
+    const [isNarrow, setIsNarrow] = useState(false);
 
     // New style states
     const [strokeWidth, setStrokeWidth] = useState<StrokeWidth>(2);
@@ -59,9 +65,6 @@ const CanvasBoard = forwardRef<CanvasBoardRef, CanvasBoardProps>(({ canvasId, re
         // Load layout preferences
         const preferences = CanvasLayoutService.getLocalPreferences();
         setLayoutMode(preferences.layoutMode);
-        if (preferences.sidebarWidth) {
-            setSidebarWidth(preferences.sidebarWidth);
-        }
 
         const canvas = canvasRef.current;
         const parent = canvas.parentElement;
@@ -82,6 +85,8 @@ const CanvasBoard = forwardRef<CanvasBoardRef, CanvasBoardProps>(({ canvasId, re
             if (parent) {
                 const rect = parent.getBoundingClientRect();
                 const dpr = window.devicePixelRatio || 1;
+
+                setIsNarrow(rect.width > 0 && rect.width < NARROW_BREAKPOINT);
 
                 // Set Display Size (CSS)
                 canvas.style.width = `${rect.width}px`;
@@ -130,9 +135,9 @@ const CanvasBoard = forwardRef<CanvasBoardRef, CanvasBoardProps>(({ canvasId, re
         if (engine) engine.setTool(tool);
     };
 
-    const changeColor = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setColor(e.target.value);
-        if (engine) engine.strokeFill = e.target.value;
+    const changeColor = (value: string) => {
+        setColor(value);
+        if (engine) engine.strokeFill = value;
     };
 
     const changeStrokeWidth = (width: StrokeWidth) => {
@@ -191,6 +196,62 @@ const CanvasBoard = forwardRef<CanvasBoardRef, CanvasBoardProps>(({ canvasId, re
         CanvasLayoutService.setLayoutMode(newLayout);
     };
 
+    // Keyboard shortcuts (the ones advertised in the toolbar tooltips).
+    useEffect(() => {
+        if (readOnly || !engine) return;
+
+        const shortcuts: Record<string, ToolType> = {
+            v: "selection",
+            h: "grab",
+            r: "rectangle",
+            d: "diamond",
+            o: "ellipse",
+            l: "line",
+            a: "arrow",
+            p: "free-draw",
+            t: "text",
+            e: "eraser",
+        };
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+            const target = e.target as HTMLElement | null;
+            if (
+                target &&
+                (target.isContentEditable ||
+                    ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))
+            ) {
+                return;
+            }
+
+            // Only react while the pointer is over this canvas, so shortcuts don't
+            // fire while the user is working in the document pane next to it.
+            if (!containerRef.current?.matches(":hover")) return;
+
+            const key = e.key.toLowerCase();
+            if (shortcuts[key]) {
+                e.preventDefault();
+                selectTool(shortcuts[key]);
+                return;
+            }
+
+            if (key === "+" || key === "=") {
+                e.preventDefault();
+                zoomIn();
+            } else if (key === "-" || key === "_") {
+                e.preventDefault();
+                zoomOut();
+            } else if (key === "0") {
+                e.preventDefault();
+                resetZoom();
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [engine, readOnly]);
+
     // Expose methods via ref
     useImperativeHandle(ref, () => ({
         addShapes: (shapes: Shape[]) => {
@@ -203,107 +264,69 @@ const CanvasBoard = forwardRef<CanvasBoardRef, CanvasBoardProps>(({ canvasId, re
         }
     }), [engine, readOnly]);
 
-    // Compute container class
-    let containerClass = `${styles.canvasContainer}`;
-    if (layoutMode === 'topbar' && !readOnly) {
-        containerClass += ` ${styles.canvasContainerWithTopBar}`;
-    } else if (layoutMode === 'sidebar-left' && !readOnly) {
-        containerClass += ` ${styles.canvasContainerWithLeftSidebar}`;
-    } else if (layoutMode === 'sidebar-right' && !readOnly) {
-        containerClass += ` ${styles.canvasContainerWithRightSidebar}`;
-    }
+    // Toolbars float above the canvas, so the drawing surface always fills the
+    // container. A narrow pane (e.g. split view) always uses the vertical rail.
+    const effectiveLayout: CanvasLayoutMode =
+        layoutMode === 'topbar' && isNarrow ? 'sidebar-left' : layoutMode;
+    const railSide = effectiveLayout === 'sidebar-right' ? 'right' : 'left';
+
+    const toolBarProps = {
+        activeTool,
+        color,
+        strokeWidth,
+        strokeStyle,
+        fontSize,
+        zoomScale: zoomInfo.scale,
+        canZoomIn: zoomInfo.canZoomIn,
+        canZoomOut: zoomInfo.canZoomOut,
+        onSelectTool: selectTool,
+        onColorChange: changeColor,
+        onStrokeWidthChange: changeStrokeWidth,
+        onStrokeStyleChange: changeStrokeStyle,
+        onFontSizeChange: changeFontSize,
+        onZoomIn: zoomIn,
+        onZoomOut: zoomOut,
+        onResetZoom: resetZoom,
+        onClear: clearCanvas,
+    };
 
     return (
-        <div className={containerClass}>
-            {/* Layout Switcher - Always visible in non-readonly mode */}
-            {!readOnly && (
-                <div className="absolute top-4 right-4 z-10">
-                    <LayoutSwitcher 
-                        currentLayout={layoutMode} 
+        <div ref={containerRef} className={styles.canvasContainer}>
+            {/* Layout Switcher */}
+            {!readOnly && effectiveLayout !== 'minimal' && (
+                <div className="absolute top-3 right-3 z-30">
+                    <LayoutSwitcher
+                        currentLayout={layoutMode}
                         onLayoutChange={handleLayoutChange}
+                        compact={isNarrow}
                     />
                 </div>
             )}
 
-            {/* Top Navigation Bar */}
-            {!readOnly && layoutMode === 'topbar' && (
-                <TopNavBar
-                    activeTool={activeTool}
-                    color={color}
-                    strokeWidth={strokeWidth}
-                    strokeStyle={strokeStyle}
-                    fontSize={fontSize}
+            {/* Tools */}
+            {!readOnly && effectiveLayout === 'topbar' && <TopNavBar {...toolBarProps} />}
+
+            {!readOnly &&
+                (effectiveLayout === 'sidebar-left' || effectiveLayout === 'sidebar-right') && (
+                    <ToolRail side={railSide} {...toolBarProps} />
+                )}
+
+            {/* Zoom + canvas actions (hidden in minimal mode) */}
+            {!readOnly && effectiveLayout !== 'minimal' && (
+                <CanvasActionBar
                     zoomScale={zoomInfo.scale}
                     canZoomIn={zoomInfo.canZoomIn}
                     canZoomOut={zoomInfo.canZoomOut}
-                    onSelectTool={selectTool}
-                    onColorChange={changeColor}
-                    onStrokeWidthChange={changeStrokeWidth}
-                    onStrokeStyleChange={changeStrokeStyle}
-                    onFontSizeChange={changeFontSize}
                     onZoomIn={zoomIn}
                     onZoomOut={zoomOut}
                     onResetZoom={resetZoom}
                     onClear={clearCanvas}
+                    align={railSide === 'left' ? 'right' : 'left'}
                 />
             )}
 
-            {/* Left Sidebar */}
-            {!readOnly && layoutMode === 'sidebar-left' && (
-                <div className={`${styles.sidebarToolbar} ${styles.sidebarToolbarLeft}`}>
-                    <SidebarToolBar
-                        side="left"
-                        width={sidebarWidth}
-                        activeTool={activeTool}
-                        color={color}
-                        strokeWidth={strokeWidth}
-                        strokeStyle={strokeStyle}
-                        fontSize={fontSize}
-                        zoomScale={zoomInfo.scale}
-                        canZoomIn={zoomInfo.canZoomIn}
-                        canZoomOut={zoomInfo.canZoomOut}
-                        onSelectTool={selectTool}
-                        onColorChange={changeColor}
-                        onStrokeWidthChange={changeStrokeWidth}
-                        onStrokeStyleChange={changeStrokeStyle}
-                        onFontSizeChange={changeFontSize}
-                        onZoomIn={zoomIn}
-                        onZoomOut={zoomOut}
-                        onResetZoom={resetZoom}
-                        onClear={clearCanvas}
-                    />
-                </div>
-            )}
-
-            {/* Right Sidebar */}
-            {!readOnly && layoutMode === 'sidebar-right' && (
-                <div className={`${styles.sidebarToolbar} ${styles.sidebarToolbarRight}`}>
-                    <SidebarToolBar
-                        side="right"
-                        width={sidebarWidth}
-                        activeTool={activeTool}
-                        color={color}
-                        strokeWidth={strokeWidth}
-                        strokeStyle={strokeStyle}
-                        fontSize={fontSize}
-                        zoomScale={zoomInfo.scale}
-                        canZoomIn={zoomInfo.canZoomIn}
-                        canZoomOut={zoomInfo.canZoomOut}
-                        onSelectTool={selectTool}
-                        onColorChange={changeColor}
-                        onStrokeWidthChange={changeStrokeWidth}
-                        onStrokeStyleChange={changeStrokeStyle}
-                        onFontSizeChange={changeFontSize}
-                        onZoomIn={zoomIn}
-                        onZoomOut={zoomOut}
-                        onResetZoom={resetZoom}
-                        onClear={clearCanvas}
-                    />
-                </div>
-            )}
-
             {/* Minimal Mode FAB */}
-            {!readOnly && layoutMode === 'minimal' && (
+            {!readOnly && effectiveLayout === 'minimal' && (
                 <LayoutSwitcherFAB
                     currentLayout={layoutMode}
                     onLayoutChange={handleLayoutChange}

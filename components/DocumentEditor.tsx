@@ -454,6 +454,8 @@ interface DocumentEditorProps {
     onUpdate: (newBlocks: Block[]) => void;
     readOnly?: boolean;
     onGenerateDiagram?: (selectedText: string, selectedBlockIds: string[]) => void;
+    /** Narrow pane (split view): trims labels and hints so the toolbar fits. */
+    compact?: boolean;
 }
 
 const initialBlock: Block = {
@@ -462,7 +464,7 @@ const initialBlock: Block = {
     content: 'Untitled',
 };
 
-const DocumentEditor: React.FC<DocumentEditorProps> = ({ content, onUpdate, readOnly = false, onGenerateDiagram }) => {
+const DocumentEditor: React.FC<DocumentEditorProps> = ({ content, onUpdate, readOnly = false, onGenerateDiagram, compact = false }) => {
     // Initialize blocks with content prop, or default if empty
     const [blocks, setBlocks] = useState<Block[]>(() => {
         if (content && content.length > 0) return content;
@@ -738,8 +740,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ content, onUpdate, read
 
             {/* Top Toolbar */}
             {!readOnly && (
-                <div className="sticky top-0 z-40 w-full bg-[#2b2d31] border-b border-[#1e1f22] flex justify-center shadow-md shrink-0">
-                    <div className="flex items-center gap-1 py-2 px-4 w-full overflow-x-auto">
+                <div className="sticky top-0 z-40 w-full bg-[#232428] border-b border-white/[0.06] flex justify-center shrink-0">
+                    <div className={`flex items-center gap-1 w-full overflow-x-auto no-scrollbar ${compact ? 'py-1.5 px-2' : 'py-2 px-4'}`}>
                         <div className="flex items-center gap-1 border-r border-gray-700 pr-2 mr-2">
                             <ToolbarButton
                                 icon={Bold}
@@ -795,10 +797,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ content, onUpdate, read
                         </div>
 
                         {onGenerateDiagram && (
-                            <div className="flex items-center gap-1 ml-4 pl-4 border-l border-gray-700">
-                                <div className="flex items-center gap-2 px-2 py-1 bg-black/30 rounded-md">
+                            <div className={`flex items-center gap-1 border-l border-gray-700 ${compact ? 'ml-2 pl-2' : 'ml-4 pl-4'}`}>
+                                <div className="flex items-center gap-2 px-1.5 py-1 bg-black/30 rounded-md">
                                     {/* Selection indicator */}
-                                    {selectedText.length > 0 && (
+                                    {selectedText.length > 0 && !compact && (
                                         <div className="flex items-center gap-2">
                                             <div className="flex items-center gap-1 px-2 py-0.5 bg-blue-500/30 rounded text-xs text-blue-300 max-w-xs">
                                                 <span className="truncate">{selectedText.substring(0, 20)}{selectedText.length > 20 ? '...' : ''}</span>
@@ -832,14 +834,14 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ content, onUpdate, read
                                         title={selectedText.length > 0 ? 'Generate Diagram from Selection' : 'Select text to enable'}
                                     >
                                         <Wand2 size={18} />
-                                        <span className="text-sm hidden sm:inline">Generate</span>
+                                        <span className={`text-sm ${compact ? 'hidden' : 'hidden sm:inline'}`}>Generate</span>
                                     </button>
                                 </div>
                             </div>
                         )}
 
                         {/* Shortcuts hint */}
-                        <div className="hidden lg:flex items-center gap-2 ml-auto text-xs text-gray-500">
+                        <div className={`items-center gap-2 ml-auto pl-3 text-xs text-gray-500 ${compact ? 'hidden' : 'hidden 2xl:flex'}`}>
                             <span>Shortcuts:</span>
                             <kbd className="px-1.5 py-0.5 bg-black/20 rounded text-[10px]">Ctrl+H</kbd>
                             <span>Heading</span>
@@ -850,7 +852,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ content, onUpdate, read
                 </div>
             )}
 
-            <div className="w-full flex-1 overflow-y-auto px-6 md:px-10 py-8 document-editor-container" onPaste={!readOnly ? handlePaste : undefined}>
+            <div className={`w-full flex-1 overflow-y-auto document-editor-container ${compact ? 'px-5 py-6' : 'px-6 md:px-10 py-8'}`} onPaste={!readOnly ? handlePaste : undefined}>
                 {/* Editor Area */}
                 <div className="flex flex-col gap-1 max-w-[720px] mx-auto w-full">
 

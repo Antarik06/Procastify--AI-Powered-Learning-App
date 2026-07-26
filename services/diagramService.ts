@@ -1,11 +1,13 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { v4 as uuidv4 } from "uuid";
 import { Shape, ShapeBase } from "../components/canvas/types";
+import { getGeminiApiKey } from "./env";
+
 const getAI = () => {
-  const apiKey = (import.meta.env as any).VITE_GEMINI_API_KEY || (process.env as any).VITE_GEMINI_API_KEY;
+  const apiKey = getGeminiApiKey();
 
   if (!apiKey) {
-    console.error(" Gemini API key missing. Did you set VITE_GEMINI_API_KEY in your .env?");
+    throw new Error('Gemini API key missing. Set VITE_GEMINI_API_KEY in your .env.local file.');
   }
 
   return new GoogleGenAI({ apiKey });
@@ -53,8 +55,6 @@ const safeJSONParse = <T>(text: string, fallback: T): T => {
 };
 
 export const generateDiagramFromText = async (selectedText: string): Promise<DiagramSpec | null> => {
-  const ai = getAI();
-
   if (!selectedText || selectedText.trim().length === 0) {
     console.error("[diagramService] Empty text provided");
     return null;
@@ -114,6 +114,7 @@ Return only valid JSON, no markdown formatting.
 `;
 
   try {
+    const ai = getAI();
     const response = await ai.models.generateContent({
       model: MODEL_TEXT,
       contents: [{ text: prompt }],

@@ -85,6 +85,11 @@ const Notes: React.FC<NotesProps> = ({
     setIsDragging(false);
   }, []);
 
+  // Keyboard support for the split handle (and double-click to re-center).
+  const nudgeSplit = useCallback((delta: number) => {
+    setSplitPosition((prev) => Math.min(80, Math.max(20, prev + delta)));
+  }, []);
+
   // Add/remove global event listeners for drag
   useEffect(() => {
     if (isDragging) {
@@ -534,27 +539,32 @@ const Notes: React.FC<NotesProps> = ({
 
   if (!activeNote) return null;
 
+  const viewModes: Array<{ mode: ViewMode; icon: any; label: string }> = [
+    { mode: "document", icon: FileText, label: "Document" },
+    { mode: "split", icon: SplitSquareHorizontal, label: "Split" },
+    { mode: "canvas", icon: ImageIcon, label: "Canvas" },
+  ];
+
   return (
-    <div className="h-screen flex flex-col bg-[#1e1f22] overflow-hidden">
+    <div className="h-full flex flex-col bg-[#1e1f22] overflow-hidden">
       {/* Header */}
-      <div className="h-16 border-b border-white/10 flex items-center justify-between px-6 bg-discord-panel shrink-0 z-50 shadow-sm">
-        <div className="flex items-center gap-4">
+      <div className="h-14 border-b border-white/[0.06] flex items-center justify-between gap-4 px-4 bg-[#1a1b1e] shrink-0 z-50">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
           <button
             onClick={() => setSelectedNoteId(null)}
-            className="text-discord-textMuted hover:text-white transition-colors p-2 hover:bg-white/5 rounded-lg"
+            title="Back to all notes"
+            className="text-discord-textMuted hover:text-white transition-colors p-2 hover:bg-white/5 rounded-lg shrink-0"
           >
-            <ChevronLeft size={20} />
+            <ChevronLeft size={18} />
           </button>
-
-          <div className="h-6 w-[1px] bg-white/10"></div>
 
           <input
             value={activeNote.title}
             onChange={(e) => updateTitle(e.target.value)}
             onFocus={() => setIsEditingTitle(true)}
             onBlur={() => setIsEditingTitle(false)}
-            className={`bg-transparent text-white font-bold text-xl focus:outline-none w-64 px-3 py-1.5 rounded-lg transition-all border border-transparent
-                ${isEditingTitle ? "bg-black/20 border-white/10" : "hover:bg-white/5 hover:border-white/5"}
+            className={`bg-transparent text-white font-semibold text-base focus:outline-none min-w-0 flex-1 max-w-sm px-2.5 py-1.5 rounded-lg transition-all border border-transparent
+                ${isEditingTitle ? "bg-black/25 border-white/10" : "hover:bg-white/5"}
             `}
             placeholder="Untitled Note"
           />
@@ -565,7 +575,8 @@ const Notes: React.FC<NotesProps> = ({
             onChange={(e) =>
               updateNoteFolder(activeNote.id, e.target.value || null)
             }
-            className="bg-black/20 border border-white/10 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-discord-accent transition-all"
+            title="Move to folder"
+            className="hidden md:block shrink-0 bg-transparent border border-white/10 rounded-lg px-2.5 py-1.5 text-discord-textMuted text-xs hover:text-white hover:border-white/20 focus:outline-none focus:border-discord-accent transition-all max-w-[9rem]"
           >
             <option value="">Uncategorized</option>
             {folders.map((folder) => (
@@ -574,70 +585,68 @@ const Notes: React.FC<NotesProps> = ({
               </option>
             ))}
           </select>
+
+          {/* Inline diagram status — kept out of the toolbar so nothing shifts */}
+          {isGeneratingDiagram && (
+            <span className="hidden lg:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-300 text-xs shrink-0">
+              <Loader2 size={13} className="animate-spin" />
+              Generating diagram…
+            </span>
+          )}
+          {diagramError && (
+            <span
+              className="hidden lg:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-red-500/10 text-red-300 text-xs shrink-0 max-w-xs"
+              title={diagramError}
+            >
+              <span className="truncate">{diagramError}</span>
+              <button onClick={() => setDiagramError(null)} className="hover:text-red-200">
+                <X size={12} />
+              </button>
+            </span>
+          )}
         </div>
 
-        {/* View Toggles */}
-        <div className="flex bg-black/20 p-1 rounded-lg border border-white/5 items-center">
+        <div className="flex items-center gap-2 shrink-0">
           {!user.isGuest && (
-            <>
-              <button
-                onClick={handleTogglePublish}
-                className={`p-2 rounded-md transition-all flex items-center gap-2 ${activeNote.isPublic ? "bg-green-600 text-white" : "text-discord-textMuted hover:text-white hover:bg-white/5"}`}
-                title={
-                  activeNote.isPublic
-                    ? "Published (Click to unpublish)"
-                    : "Publish to Community"
-                }
-              >
-                <Globe size={18} />
-              </button>
-              <div className="w-[1px] h-6 bg-white/10 mx-1"></div>
-            </>
+            <button
+              onClick={handleTogglePublish}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+                activeNote.isPublic
+                  ? "bg-green-500/15 border-green-500/30 text-green-300 hover:bg-green-500/25"
+                  : "border-white/10 text-discord-textMuted hover:text-white hover:border-white/20"
+              }`}
+              title={
+                activeNote.isPublic
+                  ? "Published to Community (click to unpublish)"
+                  : "Publish to Community"
+              }
+            >
+              <Globe size={14} />
+              <span className="hidden sm:inline">
+                {activeNote.isPublic ? "Published" : "Publish"}
+              </span>
+            </button>
           )}
 
-          {isGeneratingDiagram && (
-            <div className="flex items-center gap-2 px-3 text-blue-400">
-              <Loader2 size={18} className="animate-spin" />
-              <span className="text-sm">Generating Diagram...</span>
-            </div>
-          )}
-
-          {diagramError && (
-            <div className="flex items-center gap-2 px-3 text-red-400" title={diagramError}>
-              <span className="text-sm">{diagramError}</span>
-              <button onClick={() => setDiagramError(null)} className="hover:text-red-300">
-                <X size={14} />
-              </button>
-            </div>
-          )}
-
-          {!isGeneratingDiagram && !diagramError && (
-            <>
+          {/* Segmented view switcher */}
+          <div className="flex items-center gap-0.5 bg-black/25 p-1 rounded-xl border border-white/[0.06]">
+            {viewModes.map(({ mode, icon: Icon, label }) => (
               <button
-                onClick={() => setViewMode("document")}
-                className={`p-2 rounded-md transition-all flex items-center gap-2 ${viewMode === "document" ? "bg-[#5865F2] text-white" : "text-discord-textMuted hover:text-white"}`}
-                title="Document Only"
+                key={mode}
+                onClick={() => setViewMode(mode)}
+                title={`${label} view`}
+                aria-pressed={viewMode === mode}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  viewMode === mode
+                    ? "bg-discord-accent text-white shadow-sm shadow-discord-accent/30"
+                    : "text-discord-textMuted hover:text-white hover:bg-white/5"
+                }`}
               >
-                <FileText size={18} />
+                <Icon size={15} />
+                <span className="hidden xl:inline">{label}</span>
               </button>
-              <div className="w-[1px] bg-white/10 my-1 mx-1"></div>
-              <button
-                onClick={() => setViewMode("split")}
-                className={`p-2 rounded-md transition-all flex items-center gap-2 ${viewMode === "split" ? "bg-[#5865F2] text-white" : "text-discord-textMuted hover:text-white"}`}
-                title="Split View"
-              >
-                <SplitSquareHorizontal size={18} />
-              </button>
-              <div className="w-[1px] bg-white/10 my-1 mx-1"></div>
-              <button
-                onClick={() => setViewMode("canvas")}
-                className={`p-2 rounded-md transition-all flex items-center gap-2 ${viewMode === "canvas" ? "bg-[#5865F2] text-white" : "text-discord-textMuted hover:text-white"}`}
-                title="Canvas Only"
-              >
-                <ImageIcon size={18} />
-              </button>
-            </>
-          )}
+            ))}
+          </div>
         </div>
       </div>
 
@@ -681,19 +690,28 @@ const Notes: React.FC<NotesProps> = ({
       )}
 
       {/* Content Area */}
-      <div ref={containerRef} className="flex-1 flex overflow-hidden relative">
+      <div
+        ref={containerRef}
+        className={`flex-1 flex overflow-hidden relative bg-[#151619] ${viewMode === "split" ? "p-2 gap-0" : ""}`}
+      >
         {/* Document Section */}
         {(viewMode === "document" || viewMode === "split") && (
           <div
-            className={`bg-[#1e1f22] flex flex-col overflow-hidden`}
+            className={`bg-[#1e1f22] flex flex-col overflow-hidden ${
+              viewMode === "split" ? "rounded-2xl border border-white/[0.06] shadow-lg shadow-black/20" : ""
+            }`}
             style={{
-              width: viewMode === "split" ? `${splitPosition}%` : "100%",
+              width:
+                viewMode === "split"
+                  ? `calc(${splitPosition}% - 7px)`
+                  : "100%",
             }}
           >
             <DocumentEditor
               content={getDocumentContent(activeNote)}
               onUpdate={updateDocumentContent}
               onGenerateDiagram={!isGeneratingDiagram ? handleGenerateDiagram : undefined}
+              compact={viewMode === "split"}
             />
           </div>
         )}
@@ -701,14 +719,39 @@ const Notes: React.FC<NotesProps> = ({
         {/* Resizable Divider - Only in split mode */}
         {viewMode === "split" && (
           <div
-            className={`w-2 bg-[#2b2d31] hover:bg-discord-accent/50 cursor-col-resize flex items-center justify-center transition-colors group ${isDragging ? "bg-discord-accent" : ""}`}
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize document and canvas panes"
+            aria-valuenow={Math.round(splitPosition)}
+            aria-valuemin={20}
+            aria-valuemax={80}
+            tabIndex={0}
+            className="group w-[14px] shrink-0 cursor-col-resize flex items-center justify-center focus:outline-none"
             onMouseDown={(e) => {
               e.preventDefault();
               setIsDragging(true);
             }}
+            onDoubleClick={() => setSplitPosition(50)}
+            onKeyDown={(e) => {
+              if (e.key === "ArrowLeft") {
+                e.preventDefault();
+                nudgeSplit(-2);
+              } else if (e.key === "ArrowRight") {
+                e.preventDefault();
+                nudgeSplit(2);
+              } else if (e.key === "Home") {
+                e.preventDefault();
+                setSplitPosition(50);
+              }
+            }}
+            title="Drag to resize · double-click to reset"
           >
             <div
-              className={`w-1 h-12 rounded-full transition-colors ${isDragging ? "bg-discord-accent" : "bg-white/20 group-hover:bg-discord-accent/70"}`}
+              className={`w-1 h-10 rounded-full transition-all ${
+                isDragging
+                  ? "bg-discord-accent h-16"
+                  : "bg-white/15 group-hover:bg-discord-accent/70 group-hover:h-14 group-focus:bg-discord-accent"
+              }`}
             />
           </div>
         )}
@@ -716,9 +759,14 @@ const Notes: React.FC<NotesProps> = ({
         {/* Canvas Section */}
         {(viewMode === "canvas" || viewMode === "split") && (
           <div
-            className={`bg-[#1e1f22] overflow-hidden`}
+            className={`bg-[#1e1f22] overflow-hidden ${
+              viewMode === "split" ? "rounded-2xl border border-white/[0.06] shadow-lg shadow-black/20" : ""
+            }`}
             style={{
-              width: viewMode === "split" ? `${100 - splitPosition}%` : "100%",
+              width:
+                viewMode === "split"
+                  ? `calc(${100 - splitPosition}% - 7px)`
+                  : "100%",
             }}
           >
             <CanvasBoard canvasId={activeNote.id} readOnly={false} ref={canvasBoardRef} />

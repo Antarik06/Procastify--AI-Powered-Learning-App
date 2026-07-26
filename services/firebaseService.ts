@@ -13,11 +13,23 @@ import {
   orderBy,
   Firestore,
 } from "firebase/firestore";
-import { Note, Folder, Classroom, Invitation, Announcement, ClassroomResource, Activity } from "../types";
+import {
+  Note,
+  Folder,
+  Classroom,
+  Invitation,
+  Announcement,
+  ClassroomResource,
+  Activity,
+  MultiplayerQuizSession,
+  QuizParticipant,
+  QuizAnswer,
+  QuizLeaderboard,
+  QuizRanking,
+} from "../types";
 import { apiRateLimiter } from './rateLimiter';
-import { sanitizeContent, sanitizePayload } from './validation';
+import { sanitizeContent } from './validation';
 import logger from './securityLogger';
-import { mapFirestoreDataToNote } from './utils/mappers'; // Assuming this helper exists or needs to be defined if used
 
 export const FirebaseService = {
   // --- Notes ---
@@ -293,20 +305,11 @@ export const FirebaseService = {
 
   getInvitationsByEmail: async (email: string, status?: string): Promise<Invitation[]> => {
     try {
-      let q;
+      const constraints = [where("studentEmail", "==", email)];
       if (status) {
-        q = query(
-          collection(db, "invitations"),
-          where("studentEmail", "==", email),
-          where("status", "==", status),
-        );
-      } else {
-        q = query(
-          collection(db, "invitations"),
-          where("studentEmail", "==", email),
-        );
+        constraints.push(where("status", "==", status));
       }
-      const snap = await getDocs(q);
+      const snap = await getDocs(query(collection(db, "invitations"), ...constraints));
       return snap.docs.map((d) => {
         const data = d.data();
         return {
@@ -427,7 +430,7 @@ export const FirebaseService = {
   },
 
   // --- Activity Tracking ---
-  logActivity: async (activity: Omit<import("../types").Activity, "id">) => {
+  logActivity: async (activity: Omit<Activity, "id">) => {
     try {
       const activityId = `activity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const ref = doc(db, "classrooms", activity.classroomId, "activities", activityId);
@@ -451,7 +454,7 @@ export const FirebaseService = {
       const classroomsSnapshot = await getDocs(classroomsQuery);
 
       // Fetch activities from all classrooms
-      const allActivities: import("../types").Activity[] = [];
+      const allActivities: Activity[] = [];
 
       for (const classroomDoc of classroomsSnapshot.docs) {
         const activitiesQuery = query(
@@ -465,7 +468,7 @@ export const FirebaseService = {
           allActivities.push({
             ...data,
             timestamp: data.timestamp?.toMillis ? data.timestamp.toMillis() : data.timestamp,
-          } as import("../types").Activity);
+          } as Activity);
         });
       }
 
@@ -501,7 +504,7 @@ export const FirebaseService = {
       }
 
       const classroomDoc = snapshot.docs[0];
-      const classroom = classroomDoc.data() as import("../types").Classroom;
+      const classroom = classroomDoc.data() as Classroom;
 
       // Check if student already in classroom
       if (classroom.studentIds.includes(studentId)) {
@@ -553,7 +556,7 @@ export const FirebaseService = {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
   },
 
-  createQuizSession: async (session: import("../types").MultiplayerQuizSession) => {
+  createQuizSession: async (session: MultiplayerQuizSession) => {
     try {
       const ref = doc(db, "quizSessions", session.id);
       await setDoc(ref, sanitizePayload({
@@ -567,7 +570,7 @@ export const FirebaseService = {
     }
   },
 
-  getQuizSession: async (sessionId: string): Promise<import("../types").MultiplayerQuizSession | null> => {
+  getQuizSession: async (sessionId: string): Promise<MultiplayerQuizSession | null> => {
     try {
       const ref = doc(db, "quizSessions", sessionId);
       const snap = await getDoc(ref);
@@ -578,7 +581,7 @@ export const FirebaseService = {
           createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : data.createdAt,
           startedAt: data.startedAt?.toMillis ? data.startedAt.toMillis() : data.startedAt,
           completedAt: data.completedAt?.toMillis ? data.completedAt.toMillis() : data.completedAt,
-        } as import("../types").MultiplayerQuizSession;
+        } as MultiplayerQuizSession;
       }
       return null;
     } catch (e) {
@@ -587,7 +590,7 @@ export const FirebaseService = {
     }
   },
 
-  getQuizSessionByCode: async (code: string): Promise<import("../types").MultiplayerQuizSession | null> => {
+  getQuizSessionByCode: async (code: string): Promise<MultiplayerQuizSession | null> => {
     try {
       const q = query(
         collection(db, "quizSessions"),
@@ -603,7 +606,7 @@ export const FirebaseService = {
           createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : data.createdAt,
           startedAt: data.startedAt?.toMillis ? data.startedAt.toMillis() : data.startedAt,
           completedAt: data.completedAt?.toMillis ? data.completedAt.toMillis() : data.completedAt,
-        } as import("../types").MultiplayerQuizSession;
+        } as MultiplayerQuizSession;
       }
       return null;
     } catch (e) {
@@ -612,7 +615,7 @@ export const FirebaseService = {
     }
   },
 
-  updateQuizSession: async (sessionId: string, updates: Partial<import("../types").MultiplayerQuizSession>) => {
+  updateQuizSession: async (sessionId: string, updates: Partial<MultiplayerQuizSession>) => {
     try {
       const ref = doc(db, "quizSessions", sessionId);
       await setDoc(ref, sanitizePayload(updates), { merge: true });
@@ -622,7 +625,7 @@ export const FirebaseService = {
     }
   },
 
-  joinQuizSession: async (sessionId: string, participant: import("../types").QuizParticipant) => {
+  joinQuizSession: async (sessionId: string, participant: QuizParticipant) => {
     try {
       const session = await FirebaseService.getQuizSession(sessionId);
       if (!session) throw new Error("Session not found");
@@ -664,7 +667,7 @@ export const FirebaseService = {
     }
   },
 
-  submitQuizAnswer: async (sessionId: string, userId: string, answer: import("../types").QuizAnswer) => {
+  submitQuizAnswer: async (sessionId: string, userId: string, answer: QuizAnswer) => {
     try {
       const session = await FirebaseService.getQuizSession(sessionId);
       if (!session) throw new Error("Session not found");
@@ -689,12 +692,12 @@ export const FirebaseService = {
     }
   },
 
-  generateLeaderboard: async (sessionId: string): Promise<import("../types").QuizLeaderboard> => {
+  generateLeaderboard: async (sessionId: string): Promise<QuizLeaderboard> => {
     try {
       const session = await FirebaseService.getQuizSession(sessionId);
       if (!session) throw new Error("Session not found");
 
-      const rankings: import("../types").QuizRanking[] = session.participants
+      const rankings: QuizRanking[] = session.participants
         .map(p => {
           const correctAnswers = p.answers.filter(a => a.isCorrect).length;
           const totalTime = p.answers.reduce((sum, a) => sum + a.timeSpent, 0);

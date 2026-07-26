@@ -1,19 +1,19 @@
-import { Question, FillInTheBlanksQuestion, ExplainQuestion, QuizModeType, TimerConfig } from '../types';
+import { AnyQuestion, FillInTheBlanksQuestion, ExplainQuestion, QuizModeType, TimerConfig } from '../types';
 
 // Type guards
-export function isFillBlanksQuestion(question: Question): question is FillInTheBlanksQuestion {
+export function isFillBlanksQuestion(question: AnyQuestion): question is FillInTheBlanksQuestion {
   return question.mode === 'fillBlanks';
 }
 
-export function isExplainQuestion(question: Question): question is ExplainQuestion {
+export function isExplainQuestion(question: AnyQuestion): question is ExplainQuestion {
   return question.mode === 'explain';
 }
 
-export function isStandardQuestion(question: Question): boolean {
+export function isStandardQuestion(question: AnyQuestion): boolean {
   return !question.mode || question.mode === 'standard';
 }
 
-export function isSwipeQuestion(question: Question): boolean {
+export function isSwipeQuestion(question: AnyQuestion): boolean {
   return question.mode === 'swipe';
 }
 

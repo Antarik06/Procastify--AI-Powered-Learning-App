@@ -4,6 +4,8 @@
  * Prevents API key exposure and misuse
  */
 
+import { getEnvVar } from './env';
+
 interface KeyConfig {
   name: string;
   pattern?: RegExp;
@@ -224,10 +226,19 @@ class SecureKeyManager {
 // Singleton instance
 const keyManager = new SecureKeyManager();
 
+let initialized = false;
+
 /**
- * Initialize and load API keys from environment
+ * Initialize and load API keys from environment.
+ *
+ * Runs automatically when this module is first imported so that consumers which
+ * read keys during their own module evaluation (firebaseConfig) cannot observe
+ * an uninitialized manager. Safe to call again; repeat calls are no-ops.
  */
 export const initializeSecureKeys = (): void => {
+  if (initialized) return;
+  initialized = true;
+
   // Register key configurations
   keyManager.registerKey('GEMINI_API_KEY', {
     pattern: /^[A-Za-z0-9_-]{32,}$/,
@@ -239,21 +250,23 @@ export const initializeSecureKeys = (): void => {
     maxAge: 180 * 24 * 60 * 60 * 1000 // 180 days
   });
 
-  // Load keys from environment
-  typeof window !== 'undefined' ? (() => {
-    try {
-      // Browser environment - use window.process or bundler-provided env
-      const env = (window as any).__ENV__ || {};
-      const geminiKey = env.VITE_GEMINI_API_KEY;
-      if (geminiKey) keyManager.setKey('GEMINI_API_KEY', geminiKey);
-
-      const firebaseKey = env.VITE_FIREBASE_API_KEY;
-      if (firebaseKey) keyManager.setKey('FIREBASE_API_KEY', firebaseKey);
-    } catch (error) {
-      console.warn('Could not load keys from environment');
+  // Load keys from the environment variables Vite inlines at build time.
+  for (const name of ['GEMINI_API_KEY', 'FIREBASE_API_KEY'] as const) {
+    const key = getEnvVar(name);
+    if (!key) {
+      console.warn(`[env] VITE_${name} is not set - features relying on it are disabled.`);
+      continue;
     }
-  })() : null;
+
+    const result = keyManager.setKey(name, key);
+    if (!result.success) {
+      console.warn(`[env] VITE_${name} was rejected: ${result.error}`);
+    }
+  }
 };
+
+// Load keys before any importer can read them.
+initializeSecureKeys();
 
 /**
  * Safely retrieves a managed API key

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { ViewState, UserPreferences, Summary, Note, RoutineTask, UserStats, Flashcard, NoteElement, Folder, UserRole, UserAchievement, Achievement } from './types';
 import { StorageService } from './services/storageService';
+import { ActivityTracker } from './services/activityTracker';
 import { auth, isFirebaseConfigured } from './firebaseConfig';
 import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { authRateLimiter } from './services/rateLimiter';
@@ -8,27 +9,43 @@ import { validateUserInput } from './services/validation';
 import { initializeSecureKeys } from './services/secureKeyManager';
 import logger from './services/securityLogger';
 
+import { AlertCircle, LogIn, X, Loader2 } from 'lucide-react';
+
+// Eager: shell and the pre-login screens, which are always on the critical path.
 import Sidebar from './components/Sidebar';
 import Landing from './pages/Landing';
-import Dashboard from './pages/Dashboard';
-import Summarizer from './pages/Summarizer';
-import Notes from './pages/Notes';
-import Routine from './pages/Routine';
-import Focus from './pages/Focus';
-import QuizPage from './pages/Quiz';
-import NoteFeed from './pages/NoteFeed';
-import NotesStore from './pages/NotesStore';
-import Classrooms from './pages/Classrooms';
 import Auth from './pages/Auth';
 import RoleSelection from './pages/RoleSelection';
-import TeacherDashboard from './pages/TeacherDashboard';
-import Folders from './pages/Folders';
-import ClassroomDetail from './pages/ClassroomDetail';
-import StudentClassrooms from './pages/StudentClassrooms';
-import StudentClassroomView from './pages/StudentClassroomView';
-import { WorkflowBoard } from './components/WorkflowBoard';
-import { AlertCircle, LogIn, X, Loader2 } from 'lucide-react';
-import { ExamTracker } from './pages/ExamTracker';
+
+// Lazy: only one of these renders at a time, and several pull in heavy
+// dependencies (charts, pdf.js, tiptap, canvas). Loading them on demand keeps
+// them out of the initial bundle.
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const TeacherDashboard = lazy(() => import('./pages/TeacherDashboard'));
+const Summarizer = lazy(() => import('./pages/Summarizer'));
+const Notes = lazy(() => import('./pages/Notes'));
+const Folders = lazy(() => import('./pages/Folders'));
+const Routine = lazy(() => import('./pages/Routine'));
+const Focus = lazy(() => import('./pages/Focus'));
+const QuizPage = lazy(() => import('./pages/Quiz'));
+const NoteFeed = lazy(() => import('./pages/NoteFeed'));
+const NotesStore = lazy(() => import('./pages/NotesStore'));
+const Classrooms = lazy(() => import('./pages/Classrooms'));
+const ClassroomDetail = lazy(() => import('./pages/ClassroomDetail'));
+const StudentClassrooms = lazy(() => import('./pages/StudentClassrooms'));
+const StudentClassroomView = lazy(() => import('./pages/StudentClassroomView'));
+const WorkflowBoard = lazy(() =>
+  import('./components/WorkflowBoard').then((m) => ({ default: m.WorkflowBoard })),
+);
+const ExamTracker = lazy(() =>
+  import('./pages/ExamTracker').then((m) => ({ default: m.ExamTracker })),
+);
+
+const PageLoader: React.FC = () => (
+  <div className="flex items-center justify-center h-screen w-full">
+    <Loader2 className="animate-spin text-discord-accent" size={32} />
+  </div>
+);
 
 
 const App: React.FC = () => {
@@ -44,7 +61,6 @@ const App: React.FC = () => {
   const [focusTask, setFocusTask] = useState<RoutineTask | undefined>(
     undefined,
   );
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [selectedClassroomId, setSelectedClassroomId] = useState<string | undefined>(undefined);
 
   // Folder filtering state
@@ -140,6 +156,26 @@ const App: React.FC = () => {
     }
   };
 
+  // Track time spent in the app so the dashboard analytics chart has real data.
+  useEffect(() => {
+    if (!user) return;
+
+    ActivityTracker.start(() => {
+      StorageService.getStats().then(setStats).catch(console.error);
+    });
+
+    return () => ActivityTracker.stop();
+  }, [user?.id]);
+
+  // Focus Mode logs its own session time on exit; don't double count.
+  useEffect(() => {
+    if (view === "focus") {
+      ActivityTracker.pause();
+    } else {
+      ActivityTracker.resume();
+    }
+  }, [view]);
+
   const handleGuestAccess = () => {
     const guestUser = StorageService.createGuestUser();
     StorageService.saveUserProfile(guestUser);
@@ -197,6 +233,15 @@ const App: React.FC = () => {
     } else {
       setActiveFolderId(undefined);
     }
+
+    // Make sure the dashboard shows time earned in the session just finished.
+    if (newView === "dashboard") {
+      ActivityTracker.flushNow()
+        .then(() => StorageService.getStats())
+        .then(setStats)
+        .catch(console.error);
+    }
+
     setView(newView);
   };
 
@@ -354,7 +399,11 @@ const App: React.FC = () => {
   }
 
   if (view === "focus")
-    return <Focus initialTask={focusTask} onExit={handleFocusExit} />;
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <Focus initialTask={focusTask} onExit={handleFocusExit} />
+      </Suspense>
+    );
 
   return (
     <div className="flex min-h-screen bg-[#1e1f22]">
@@ -362,17 +411,15 @@ const App: React.FC = () => {
         currentView={view === "folders" ? "notes" : view}
         onNavigate={handleNavigate}
         onLogout={handleLogout}
-        collapsed={sidebarCollapsed}
-        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
         userRole={user.role}
         user={user ? { name: user.name, avatarUrl: user.avatarUrl } : undefined}
       />
       <main
-        className={`flex-1 ${sidebarCollapsed ? "lg:ml-20" : "lg:ml-64"} overflow-y-auto max-h-screen relative transition-all duration-300 ease-in-out`}
+        className="flex-1 lg:ml-[92px] h-screen max-h-screen flex flex-col overflow-hidden relative transition-all duration-300 ease-in-out"
       >
         {/* User Context Bar (Small) */}
         {user.isGuest && (
-          <div className="bg-indigo-900/30 border-b border-indigo-500/20 px-4 py-1 text-xs text-indigo-200 flex justify-between items-center sticky top-0 z-50 backdrop-blur-md">
+          <div className="bg-indigo-900/30 border-b border-indigo-500/20 px-4 py-1 text-xs text-indigo-200 flex justify-between items-center shrink-0 z-50 backdrop-blur-md">
             <span>Guest Mode: Data saved to this device only.</span>
             <button
               onClick={() => setView("auth")}
@@ -383,6 +430,9 @@ const App: React.FC = () => {
           </div>
         )}
 
+        {/* Page viewport: pages that manage their own layout use h-full, the rest scroll here. */}
+        <div className="flex-1 min-h-0 overflow-y-auto">
+        <Suspense fallback={<PageLoader />}>
         {view === "dashboard" && stats && (
           <>
             {user.role === "teacher" ? (
@@ -528,13 +578,14 @@ const App: React.FC = () => {
           <WorkflowBoard
             userId={user.id}
             onClose={() => setView("dashboard")}
-            sidebarCollapsed={sidebarCollapsed}
           />
         )}
 
         {view === "examTracker" && (
           <ExamTracker userId={user.id} />
         )}
+        </Suspense>
+        </div>
 
       </main>
     </div>

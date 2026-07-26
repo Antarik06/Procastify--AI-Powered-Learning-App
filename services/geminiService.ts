@@ -1,13 +1,13 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
-import { UserPreferences, RoutineTask, Question, Flashcard, Note, QueueItem, Attachment } from '../types';
+import { UserPreferences, RoutineTask, Question, Flashcard, Note, QueueItem, Attachment, QuizReport } from '../types';
 import { apiRateLimiter, searchRateLimiter } from './rateLimiter';
 import { sanitizeContent, validateUserInput, validateJSON } from './validation';
 import { getSecureKey, initializeSecureKeys, hasSecureKey } from './secureKeyManager';
 import logger, { APIError, getClientErrorMessage } from './securityLogger';
+import { prepareTextForSummarization } from './extractionService';
 
 // Initialize secure keys on module load
 initializeSecureKeys();
-import { UserPreferences, RoutineTask, Question, Flashcard, Note, QueueItem, Attachment, QuizReport } from '../types';
 
 const getAI = () => {
   const apiKey = getSecureKey('GEMINI_API_KEY');
@@ -58,8 +58,6 @@ const safeJSONParse = <T>(text: string, fallback: T): T => {
 
 
 
-import { prepareTextForSummarization } from './extractionService';
-
 export const summarizeContent = async (
   textContext: string,
   attachments: Attachment[],
@@ -75,11 +73,16 @@ export const summarizeContent = async (
       throw new APIError('Rate limit exceeded. Please try again later.', 429);
     }
 
-    // Input validation
-    const textValidation = validateUserInput(textContext, 'text');
-    if (!textValidation.valid) {
-      logger.logValidationError('textContext', textValidation.errors.join(', '));
-      throw new APIError('Invalid text input', 400);
+    // Input validation. Text is optional when attachments are supplied, so only
+    // validate it when the user actually typed something.
+    if (textContext) {
+      const textValidation = validateUserInput(textContext, 'text');
+      if (!textValidation.valid) {
+        logger.logValidationError('textContext', textValidation.errors.join(', '));
+        throw new APIError('Invalid text input', 400);
+      }
+    } else if (attachments.length === 0) {
+      throw new APIError('Provide text or at least one attachment to summarize', 400);
     }
 
     // Sanitize inputs
@@ -87,8 +90,8 @@ export const summarizeContent = async (
     const sanitizedMode = validateUserInput(mode, 'text').sanitized;
     const sanitizedPrompt = customPrompt ? sanitizeContent(customPrompt, 5000) : undefined;
 
-    if (!sanitizedText) {
-      throw new APIError('Text input cannot be empty', 400);
+    if (!sanitizedText && attachments.length === 0) {
+      throw new APIError('Provide text or at least one attachment to summarize', 400);
     }
 
     const ai = getAI();
@@ -100,13 +103,13 @@ export const summarizeContent = async (
       return "Please enter text or add valid attachments to summarize.";
     }
 
-    const finalContent = preparation.combinedText;
+    const { combinedText, failedExtractions, mediaAttachments } = preparation;
 
     // Inform user about any failed extractions
     let warningText = "";
-    if (preparation.failedExtractions.length > 0) {
-      logger.log(`Failed to process attachments: ${preparation.failedExtractions.join(', ')}`, 'EXTRACTION', 'WARNING' as any);
-      warningText = `\n\n⚠️ Note: Some files could not be processed (${preparation.failedExtractions.join(', ')}). The summary includes only successfully processed content.`;
+    if (failedExtractions.length > 0) {
+      logger.log(`Failed to process attachments: ${failedExtractions.join(', ')}`, 'EXTRACTION', 'WARNING' as any);
+      warningText = `\n\n⚠️ Note: Some files could not be processed (${failedExtractions.join(', ')}). The summary includes only successfully processed content.`;
     }
 
     let systemPrompt = "";
@@ -125,12 +128,31 @@ export const summarizeContent = async (
     }
 
     const parts: any[] = [];
-    parts.push({ text: `${systemPrompt}\n\nContent to summarize:\n${finalContent}` });
 
-    const model = 'gemini-3-flash-preview';
+    if (combinedText) {
+      parts.push({ text: `Content to summarize:\n${combinedText}` });
+    }
+
+    // Images and audio can't be extracted locally - hand them to the model directly.
+    for (const media of mediaAttachments) {
+      parts.push({
+        inlineData: {
+          mimeType: media.mimeType || (media.type === 'image' ? 'image/png' : 'audio/webm'),
+          data: media.content
+        }
+      });
+    }
+
+    if (parts.length === 0) {
+      return "Please enter text or add valid attachments to summarize.";
+    }
+
+    // Text-only requests can use the faster text model; anything with media
+    // needs the multimodal one.
+    const model = mediaAttachments.length > 0 ? MODEL_MULTIMODAL : MODEL_TEXT;
 
     const response = await ai.models.generateContent({
-      model: model,
+      model,
       contents: { parts },
       config: {
         systemInstruction: systemPrompt
@@ -191,7 +213,7 @@ export const analyzeNoteWorkload = async (noteContent: string, userId?: string):
 
     const ai = getAI();
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: MODEL_TEXT,
       contents: `Analyze this study material. Estimate the difficulty, time required to study it effectively, and cognitive load. Return JSON.
       Material: ${sanitizedContent}`,
       config: {
@@ -210,7 +232,7 @@ export const analyzeNoteWorkload = async (noteContent: string, userId?: string):
 
     if (!response || !response.text) throw new APIError('No response from AI', 500);
 
-    const result = safeJSONParse(response.text, {
+    const result = safeJSONParse<NonNullable<Note['aiAnalysis']>>(response.text, {
       difficulty: 'medium',
       estimatedMinutes: 30,
       cognitiveLoad: 'medium',

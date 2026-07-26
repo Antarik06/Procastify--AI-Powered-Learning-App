@@ -1,5 +1,6 @@
 import { Attachment } from '../types';
 import * as pdfjsLib from 'pdfjs-dist';
+import { fetchURLContent } from './urlContentService';
 
 // Configure PDF.js worker to use local bundled worker
 try {
@@ -16,9 +17,14 @@ export interface ExtractionResult {
   error?: string;
 }
 
-interface NormalizeResult {
+export interface NormalizeResult {
   combinedText: string;
   failedExtractions: string[];
+  /**
+   * Image/audio attachments that cannot be turned into text locally. These are
+   * forwarded to the multimodal model as inline data parts by the caller.
+   */
+  mediaAttachments: Attachment[];
 }
 
 /**
@@ -86,95 +92,73 @@ export const prepareTextForSummarization = async (
   // If no context at all
   if (!userText && attachments.length === 0) return null;
 
-  let combinedText = userText || '';
+  const textSegments: string[] = userText ? [userText] : [];
   const failedExtractions: string[] = [];
+  const mediaAttachments: Attachment[] = [];
 
-  // First, handle PDF attachments locally using our PDF.js extraction
-  const pdfAttachments = attachments.filter(a => a.type === 'pdf');
-  const nonPdfAttachments = attachments.filter(a => a.type !== 'pdf');
+  const label = (attachment: Attachment, fallback: string) =>
+    attachment.name || fallback;
 
-  // Extract text from PDF files locally
-  for (const pdfAttachment of pdfAttachments) {
-    try {
-      const result = await extractPDFText(pdfAttachment.content);
-      if (result.success && result.text) {
-        combinedText += `\n\n--- Content from ${pdfAttachment.name || 'PDF file'} ---\n${result.text}`;
-      } else {
-        console.warn(`Failed to extract text from PDF: ${result.error}`);
-        failedExtractions.push(pdfAttachment.name || 'PDF file');
-      }
-    } catch (error) {
-      console.error('PDF extraction error:', error);
-      failedExtractions.push(pdfAttachment.name || 'PDF file');
-    }
-  }
-
-  // Handle non-PDF attachments through backend (if needed)
-  if (nonPdfAttachments.length > 0) {
-    try {
-      const response = await fetch(`${BACKEND_URL}/normalize`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_text: '', // We'll merge manually
-          attachments: nonPdfAttachments.map(a => ({
-            type: a.type,
-            content: a.content,
-            name: a.name,
-            mimeType: a.mimeType
-          }))
-        })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.status === 'success' && data.normalized_text) {
-          combinedText += `\n\n--- Content from other attachments ---\n${data.normalized_text}`;
-        } else {
-          // If backend failed, add failed attachments to our list
-          if (data.failed_attachments) {
-            failedExtractions.push(...data.failed_attachments);
+  // PDFs and URLs are turned into text here; images and audio are passed
+  // through to the multimodal model by the caller.
+  const extractions = attachments.map(async (attachment) => {
+    switch (attachment.type) {
+      case 'pdf': {
+        const name = label(attachment, 'PDF file');
+        try {
+          const result = await extractPDFText(attachment.content);
+          if (result.success && result.text) {
+            textSegments.push(`\n\n--- Content from ${name} ---\n${result.text}`);
           } else {
-            failedExtractions.push(...nonPdfAttachments.map(a => a.name || a.type));
+            console.warn(`Failed to extract text from PDF: ${result.error}`);
+            failedExtractions.push(name);
           }
+        } catch (error) {
+          console.error('PDF extraction error:', error);
+          failedExtractions.push(name);
         }
-      } else {
-        console.warn('Backend not available for non-PDF attachments');
-        failedExtractions.push(...nonPdfAttachments.map(a => a.name || a.type));
+        break;
       }
-    } catch (error) {
-      console.warn('Backend not available for non-PDF attachments:', error);
-      failedExtractions.push(...nonPdfAttachments.map(a => a.name || a.type));
-    }
-  }
 
-  // Final fallback if no text was extracted
-  if (!combinedText.trim()) {
+      case 'url': {
+        const name = label(attachment, 'link');
+        try {
+          const result = await fetchURLContent(attachment.content);
+          if (result.success && result.text) {
+            textSegments.push(`\n\n--- Content from ${name} ---\n${result.text}`);
+          } else {
+            console.warn(`Failed to fetch URL content: ${result.error}`);
+            failedExtractions.push(name);
+          }
+        } catch (error) {
+          console.error('URL extraction error:', error);
+          failedExtractions.push(name);
+        }
+        break;
+      }
+
+      case 'image':
+      case 'audio':
+        mediaAttachments.push(attachment);
+        break;
+
+      default:
+        failedExtractions.push(label(attachment, attachment.type));
+    }
+  });
+
+  await Promise.all(extractions);
+
+  const combinedText = textSegments.join('').trim();
+
+  // Nothing usable at all
+  if (!combinedText && mediaAttachments.length === 0) {
     return null;
   }
 
   return {
-    combinedText: combinedText.trim(),
-    failedExtractions
-  };
-};
-
-// Legacy function - kept for backward compatibility but redirects to new implementation
-export const extractYouTubeTranscript = async (url: string): Promise<ExtractionResult> => {
-  const result = await fetchURLContent(url);
-  return {
-    text: result.text,
-    success: result.success,
-    error: result.error
-  };
-};
-
-// Legacy function - kept for backward compatibility but redirects to new implementation
-export const extractWebsiteContent = async (url: string): Promise<ExtractionResult> => {
-  const result = await fetchURLContent(url);
-  return {
-    text: result.text,
-    success: result.success,
-    error: result.error
+    combinedText,
+    failedExtractions,
+    mediaAttachments
   };
 };

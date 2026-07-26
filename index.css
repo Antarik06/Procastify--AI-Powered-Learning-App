@@ -127,6 +127,17 @@ input:focus-visible {
 }
 
 
+/* Used by dense toolbars that scroll horizontally without showing a bar. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;

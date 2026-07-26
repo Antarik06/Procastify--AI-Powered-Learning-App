@@ -1,58 +1,82 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Layout,
-  LayoutList,
   LayoutPanelLeft,
   Eye,
   ChevronDown,
+  Check,
+  Maximize,
 } from 'lucide-react';
 import { CanvasLayoutMode } from '../types';
 import { CanvasLayoutService } from '../services/canvasLayoutService';
 
+interface LayoutOption {
+  mode: CanvasLayoutMode;
+  label: string;
+  description: string;
+  icon: React.ReactNode;
+}
+
+const LAYOUTS: LayoutOption[] = [
+  {
+    mode: 'topbar',
+    label: 'Top bar',
+    description: 'Tools across the top',
+    icon: <Layout size={16} />,
+  },
+  {
+    mode: 'sidebar-left',
+    label: 'Left rail',
+    description: 'Vertical tools on the left',
+    icon: <LayoutPanelLeft size={16} />,
+  },
+  {
+    mode: 'sidebar-right',
+    label: 'Right rail',
+    description: 'Vertical tools on the right',
+    icon: <LayoutPanelLeft size={16} className="rotate-180" />,
+  },
+  {
+    mode: 'minimal',
+    label: 'Focus',
+    description: 'Hide every control',
+    icon: <Eye size={16} />,
+  },
+];
+
+const PANEL =
+  'rounded-2xl border border-white/10 bg-[#1a1b1e]/95 shadow-2xl shadow-black/50 backdrop-blur-xl';
+
 interface LayoutSwitcherProps {
   currentLayout: CanvasLayoutMode;
   onLayoutChange: (layout: CanvasLayoutMode) => void;
+  /** Icon-only trigger, for narrow panes such as split view. */
+  compact?: boolean;
 }
 
 export const LayoutSwitcher: React.FC<LayoutSwitcherProps> = ({
   currentLayout,
   onLayoutChange,
+  compact = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
 
-  const layouts: Array<{
-    mode: CanvasLayoutMode;
-    label: string;
-    description: string;
-    icon: React.ReactNode;
-  }> = [
-      {
-        mode: 'topbar',
-        label: 'Top Navbar',
-        description: 'Horizontal toolbar at the top',
-        icon: <Layout size={18} />,
-      },
-      {
-        mode: 'sidebar-left',
-        label: 'Left Sidebar',
-        description: 'Vertical tools on the left',
-        icon: <LayoutPanelLeft size={18} />,
-      },
-      {
-        mode: 'sidebar-right',
-        label: 'Right Sidebar',
-        description: 'Vertical tools on the right',
-        icon: <LayoutPanelLeft size={18} className="rotate-180" />,
-      },
-      {
-        mode: 'minimal',
-        label: 'Minimal',
-        description: 'Hide controls for focus',
-        icon: <Eye size={18} />,
-      },
-    ];
+  useEffect(() => {
+    if (!isOpen) return;
+    const handlePointerDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setIsOpen(false);
+    };
+    const handleKey = (e: KeyboardEvent) => e.key === 'Escape' && setIsOpen(false);
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [isOpen]);
 
-  const currentLayoutInfo = layouts.find((l) => l.mode === currentLayout);
+  const current = LAYOUTS.find((l) => l.mode === currentLayout);
 
   const handleLayoutChange = (mode: CanvasLayoutMode) => {
     CanvasLayoutService.setLayoutMode(mode);
@@ -61,42 +85,53 @@ export const LayoutSwitcher: React.FC<LayoutSwitcherProps> = ({
   };
 
   return (
-    <div className="relative">
+    <div className="relative" ref={ref}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-md border border-zinc-600 transition-colors text-sm"
-        title="Change canvas layout"
+        title={`Canvas layout: ${current?.label ?? ''}`}
+        aria-label="Change canvas layout"
+        aria-expanded={isOpen}
+        className={`flex items-center rounded-xl border border-white/10 bg-[#1a1b1e]/95 text-zinc-300 shadow-xl backdrop-blur-xl transition-colors hover:bg-white/[0.09] hover:text-white ${
+          compact ? 'h-9 w-9 justify-center' : 'gap-2 px-2.5 py-2 text-xs font-medium'
+        }`}
       >
-        {currentLayoutInfo?.icon}
-        <span>{currentLayoutInfo?.label}</span>
-        <ChevronDown
-          size={16}
-          className={`transition-transform ${isOpen ? 'rotate-180' : ''}`}
-        />
+        {current?.icon}
+        {!compact && (
+          <>
+            <span>{current?.label}</span>
+            <ChevronDown
+              size={14}
+              className={`transition-transform ${isOpen ? 'rotate-180' : ''}`}
+            />
+          </>
+        )}
       </button>
 
       {isOpen && (
-        <div className="absolute top-full mt-2 left-0 bg-zinc-900 rounded-lg border border-zinc-700 shadow-xl z-50 min-w-56">
-          <div className="p-2">
-            {layouts.map((layout) => (
+        <div className={`absolute right-0 top-full z-50 mt-2 w-52 p-1.5 ${PANEL}`}>
+          {LAYOUTS.map((layout) => {
+            const active = currentLayout === layout.mode;
+            return (
               <button
                 key={layout.mode}
                 onClick={() => handleLayoutChange(layout.mode)}
-                className={`w-full text-left px-3 py-2 rounded-md mb-1 transition-all ${currentLayout === layout.mode
-                    ? 'bg-indigo-600 text-white'
-                    : 'text-zinc-300 hover:bg-zinc-800'
-                  }`}
+                className={`flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-colors ${
+                  active ? 'bg-discord-accent/15 text-white' : 'text-zinc-300 hover:bg-white/[0.07]'
+                }`}
               >
-                <div className="flex items-center gap-3">
+                <span className={active ? 'text-discord-accent' : 'text-zinc-400'}>
                   {layout.icon}
-                  <div>
-                    <div className="font-medium text-sm">{layout.label}</div>
-                    <div className="text-xs text-zinc-400">{layout.description}</div>
-                  </div>
-                </div>
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-xs font-medium">{layout.label}</span>
+                  <span className="block truncate text-[11px] text-zinc-500">
+                    {layout.description}
+                  </span>
+                </span>
+                {active && <Check size={14} className="text-discord-accent" />}
               </button>
-            ))}
-          </div>
+            );
+          })}
         </div>
       )}
     </div>
@@ -104,7 +139,8 @@ export const LayoutSwitcher: React.FC<LayoutSwitcherProps> = ({
 };
 
 /**
- * Floating action button for layout switching (useful for minimal mode)
+ * Floating action button used in minimal ("Focus") mode, where every other
+ * control is hidden.
  */
 export const LayoutSwitcherFAB: React.FC<{
   currentLayout: CanvasLayoutMode;
@@ -112,62 +148,45 @@ export const LayoutSwitcherFAB: React.FC<{
 }> = ({ currentLayout, onLayoutChange }) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  if (currentLayout === 'minimal') {
-    return (
-      <div className="absolute bottom-6 right-6 z-50">
-        {!isOpen && (
+  if (currentLayout !== 'minimal') return null;
+
+  const exitTo = (mode: CanvasLayoutMode) => {
+    CanvasLayoutService.setLayoutMode(mode);
+    onLayoutChange(mode);
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="absolute bottom-3 right-3 z-30">
+      {!isOpen ? (
+        <button
+          onClick={() => setIsOpen(true)}
+          title="Show canvas tools"
+          aria-label="Show canvas tools"
+          className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-[#1a1b1e]/95 text-zinc-300 shadow-xl backdrop-blur-xl transition-colors hover:bg-white/[0.09] hover:text-white"
+        >
+          <Maximize size={17} />
+        </button>
+      ) : (
+        <div className={`w-48 p-1.5 ${PANEL}`}>
+          {LAYOUTS.filter((l) => l.mode !== 'minimal').map((layout) => (
+            <button
+              key={layout.mode}
+              onClick={() => exitTo(layout.mode)}
+              className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-xs font-medium text-zinc-300 transition-colors hover:bg-white/[0.07] hover:text-white"
+            >
+              <span className="text-zinc-400">{layout.icon}</span>
+              {layout.label}
+            </button>
+          ))}
           <button
-            onClick={() => setIsOpen(true)}
-            className="w-12 h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110"
-            title="Show layout options"
+            onClick={() => setIsOpen(false)}
+            className="mt-0.5 w-full rounded-xl px-2.5 py-2 text-left text-xs font-medium text-zinc-500 transition-colors hover:bg-white/[0.07] hover:text-zinc-300"
           >
-            <Layout size={20} />
+            Cancel
           </button>
-        )}
-
-        {isOpen && (
-          <div className="absolute bottom-0 right-0 bg-zinc-900 rounded-lg border border-zinc-700 shadow-xl p-3 space-y-2">
-            <button
-              onClick={() => {
-                onLayoutChange('topbar');
-                CanvasLayoutService.setLayoutMode('topbar');
-                setIsOpen(false);
-              }}
-              className="block w-full text-left px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-md text-sm transition-colors"
-            >
-              Top Navbar
-            </button>
-            <button
-              onClick={() => {
-                onLayoutChange('sidebar-left');
-                CanvasLayoutService.setLayoutMode('sidebar-left');
-                setIsOpen(false);
-              }}
-              className="block w-full text-left px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-md text-sm transition-colors"
-            >
-              Left Sidebar
-            </button>
-            <button
-              onClick={() => {
-                onLayoutChange('sidebar-right');
-                CanvasLayoutService.setLayoutMode('sidebar-right');
-                setIsOpen(false);
-              }}
-              className="block w-full text-left px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-md text-sm transition-colors"
-            >
-              Right Sidebar
-            </button>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="block w-full text-left px-3 py-2 bg-zinc-700 hover:bg-zinc-600 text-zinc-200 rounded-md text-sm transition-colors"
-            >
-              Close
-            </button>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  return null;
+        </div>
+      )}
+    </div>
+  );
 };

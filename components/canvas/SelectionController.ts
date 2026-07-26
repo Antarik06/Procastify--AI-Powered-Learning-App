@@ -196,6 +196,13 @@ export class SelectionController {
         this.isDragging = false;
         this.multiSelection.isDragging = false;
         this.initialShapeState = null;
+
+        // Drop the drag scratch state so it isn't serialised with the shapes.
+        this.multiSelection.selectedShapes.forEach(shape => {
+            delete (shape as any).__initialPosition;
+            delete (shape as any).__initialToPosition;
+            delete (shape as any).__initialPoints;
+        });
     }
 
     public startMultiDragging(x: number, y: number) {
@@ -204,6 +211,14 @@ export class SelectionController {
         this.dragStart = { x, y };
         // Store initial positions of all selected shapes
         this.multiSelection.selectedShapes.forEach(shape => {
+            if (shape.type === "free-draw") {
+                // Free-draw shapes have no x/y - snapshot the points instead, or the
+                // drag would re-apply the delta to already-moved points each frame.
+                (shape as any).__initialPoints = shape.points.map(p => ({ ...p }));
+                (shape as any).__initialPosition = { x: 0, y: 0 };
+                return;
+            }
+
             (shape as any).__initialPosition = { x: shape.x, y: shape.y };
             if (shape.type === 'line' || shape.type === 'arrow') {
                 (shape as any).__initialToPosition = { x: shape.toX, y: shape.toY };

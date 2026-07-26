@@ -1,6 +1,6 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { UserPreferences, Summary, Note, UserStats, UserAchievement } from '../types';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { Clock, BookOpen, FileText, Zap, Calendar, Flame, Trophy, ArrowRight, BrainCircuit, Sparkles, Target, PenLine, TrendingUp, Activity, Award } from 'lucide-react';
 import { generateDashboardInsight, generateDashboardInsightAsync, DashboardInsight, CTAAction } from '../services/insightService';
 import { getAchievementById, getAchievementStats } from '../services/achievements';
@@ -32,7 +32,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, summaries, notes, stats, on
 
   const [timeRange, setTimeRange] = useState<TimeRange>(7);
 
-  const safeStats = stats || {
+  // Stats written by older app versions can be missing fields entirely, so
+  // every value the dashboard reads gets a defined fallback here.
+  const safeStats: UserStats = {
     id: '',
     userId: '',
     totalTimeStudiedMinutes: 0,
@@ -40,9 +42,34 @@ const Dashboard: React.FC<DashboardProps> = ({ user, summaries, notes, stats, on
     quizzesTaken: 0,
     loginStreak: 0,
     lastLoginDate: new Date().toISOString(),
-    dailyActivity: {},
-    highScore: 0
+    highScore: 0,
+    ...(stats || {}),
+    dailyActivity: stats?.dailyActivity ?? {},
   };
+
+  // The chart is measured explicitly: recharts' ResponsiveContainer reports
+  // width/height of -1 on the first paint inside a lazily mounted flex column,
+  // which leaves an empty chart area until something else forces a resize.
+  const chartWrapperRef = useRef<HTMLDivElement>(null);
+  const [chartWidth, setChartWidth] = useState(0);
+  const CHART_HEIGHT = 280;
+
+  useLayoutEffect(() => {
+    const element = chartWrapperRef.current;
+    if (!element) return;
+
+    const measure = () => setChartWidth(element.clientWidth);
+    measure();
+
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    window.addEventListener('resize', measure);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, []);
 
 
   const highScore = safeStats.highScore || 0;
@@ -89,6 +116,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, summaries, notes, stats, on
     // Round up to nearest hour for longer sessions
     return Math.ceil(max * 1.1); // Add 10% padding
   }, [activityData]);
+
+  const hasActivity = useMemo(
+    () => activityData.some((d) => d.minutes > 0),
+    [activityData],
+  );
 
   // Calculate total study time for the selected period
   const totalStudyTime = useMemo(() => {
@@ -324,9 +356,26 @@ const Dashboard: React.FC<DashboardProps> = ({ user, summaries, notes, stats, on
         </div>
 
         {/* Area Chart */}
-        <div style={{ width: '100%', height: '280px', minWidth: 0 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={activityData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+        <div
+          ref={chartWrapperRef}
+          className="relative w-full"
+          style={{ height: CHART_HEIGHT, minWidth: 0 }}
+        >
+          {hasActivity ? null : (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 pointer-events-none">
+              <p className="text-sm font-medium text-white">No study time logged yet</p>
+              <p className="text-xs text-discord-textMuted">
+                Time is tracked automatically while you work in Procastify.
+              </p>
+            </div>
+          )}
+          {chartWidth > 0 && (
+            <AreaChart
+              width={chartWidth}
+              height={CHART_HEIGHT}
+              data={activityData}
+              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+            >
               <defs>
                 <linearGradient id="colorHours" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#5865F2" stopOpacity={0.4}/>
@@ -390,7 +439,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, summaries, notes, stats, on
                 }}
               />
             </AreaChart>
-          </ResponsiveContainer>
+          )}
         </div>
       </div>
     </div>

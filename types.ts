@@ -263,6 +263,11 @@ export interface ExplainQuestion extends Question {
   reasoningFeedback?: string;
 }
 
+// Any question shape a quiz can contain. FillInTheBlanksQuestion drops
+// options/correctIndex, so it is not assignable to Question - use this union
+// wherever a question of any mode is accepted.
+export type AnyQuestion = Question | FillInTheBlanksQuestion | ExplainQuestion;
+
 // Attempted question types for results
 export interface AttemptedFillQuestion {
   question: string;
@@ -309,6 +314,109 @@ export interface Quiz {
   questions: Question[];
   highScore: number;
   lastPlayed?: number;
+}
+
+// Multiplayer Quiz Types
+export type MultiplayerQuizStatus = "waiting" | "in_progress" | "completed";
+
+export interface QuizAnswer {
+  questionIndex: number;
+  selectedOption: number;
+  isCorrect: boolean;
+  timeSpent: number; // seconds
+  timestamp: number;
+}
+
+export interface QuizParticipant {
+  id: string;
+  userId: string;
+  userName: string;
+  score: number;
+  answers: QuizAnswer[];
+  joinedAt: number;
+  isReady: boolean;
+}
+
+export interface MultiplayerQuizSession {
+  id: string;
+  hostId: string;
+  hostName: string;
+  inviteCode: string;
+  title: string;
+  difficulty: "easy" | "medium" | "hard";
+  mode: QuizModeType;
+  questions: Question[];
+  participants: QuizParticipant[];
+  status: MultiplayerQuizStatus;
+  currentQuestionIndex?: number;
+  createdAt: number;
+  startedAt?: number;
+  completedAt?: number;
+}
+
+export interface QuizRanking {
+  userId: string;
+  userName: string;
+  score: number;
+  correctAnswers: number;
+  totalQuestions: number;
+  averageTime: number;
+  rank: number;
+}
+
+export interface QuizLeaderboard {
+  sessionId: string;
+  rankings: QuizRanking[];
+  generatedAt: number;
+}
+
+// Achievement Types
+export type AchievementCategory =
+  | "study"
+  | "notes"
+  | "summary"
+  | "quiz"
+  | "streak"
+  | "social";
+
+export type AchievementRarity = "common" | "rare" | "epic" | "legendary";
+
+export type AchievementCriteriaType =
+  | "study_time"
+  | "notes_created"
+  | "summaries_made"
+  | "quizzes_taken"
+  | "login_streak"
+  | "high_score"
+  | "perfect_quiz";
+
+export interface Achievement {
+  id: string;
+  name: string;
+  description: string;
+  category: AchievementCategory;
+  rarity: AchievementRarity;
+  icon: string;
+  criteria: {
+    type: AchievementCriteriaType;
+    value: number;
+  };
+}
+
+export interface UserAchievement {
+  id: string;
+  userId: string;
+  achievementId: string;
+  unlockedAt: number;
+  isUnlocked: boolean;
+  progress: number; // 0-100
+}
+
+// Per-user achievement container as persisted in storage
+export interface UserAchievements {
+  userId: string;
+  achievements: UserAchievement[];
+  lastUpdated?: number;
 }
 
 // Classroom Types

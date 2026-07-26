@@ -15,6 +15,7 @@
   TeacherStats,
   UserRole,
   UserAchievement,
+  UserAchievements,
 } from "../types";
 import { db } from "../firebaseConfig";
 import {
@@ -42,11 +43,21 @@ const LOCAL_KEYS = {
   QUIZZES: "procastify_quizzes",
   CUSTOM_MODES: "procastify_custom_modes",
   FOLDERS: "procastify_folders",
+  ACHIEVEMENTS: "procastify_achievements",
 };
 
 const getLocalDB = <T>(key: string): T[] => {
-  const data = localStorage.getItem(key);
-  return data ? JSON.parse(data) : [];
+  try {
+    const data = localStorage.getItem(key);
+    if (!data) return [];
+    const parsed = JSON.parse(data);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    // Corrupt entry would otherwise throw on every read and break the app.
+    console.error(`Corrupt localStorage entry for "${key}", resetting it.`, e);
+    localStorage.removeItem(key);
+    return [];
+  }
 };
 
 const saveLocalDB = <T>(key: string, data: T[]) => {
@@ -178,11 +189,13 @@ export const StorageService = {
         all.push(stats);
         saveLocalDB(LOCAL_KEYS.STATS, all);
       }
-      return stats;
+      return normalizeStats(stats, currentUserId);
     } else {
       const docRef = doc(db, "users", currentUserId, "data", "stats");
       const snap = await getDoc(docRef);
-      if (snap.exists()) return snap.data() as UserStats;
+      if (snap.exists()) {
+        return normalizeStats(snap.data() as Partial<UserStats>, currentUserId);
+      }
 
       const newStats = createEmptyStats(currentUserId);
       await setDoc(docRef, newStats);
@@ -240,6 +253,9 @@ export const StorageService = {
         loginStreak: newStreak,
         lastLoginDate: new Date().toISOString(),
       }));
+    } else if (!stats.loginStreak) {
+      // Already logged in today but the streak was never initialised.
+      await StorageService.updateStats((s) => ({ ...s, loginStreak: 1 }));
     }
   },
 
@@ -912,7 +928,7 @@ export const StorageService = {
     if (!currentUserId) return [];
 
     if (isGuestMode) {
-      const all = getLocalDB<{ userId: string; achievements: UserAchievement[] }>(LOCAL_KEYS.ACHIEVEMENTS);
+      const all = getLocalDB<UserAchievements>(LOCAL_KEYS.ACHIEVEMENTS);
       const userData = all.find(a => a.userId === currentUserId);
       return userData?.achievements || [];
     } else {
@@ -946,10 +962,14 @@ export const StorageService = {
     }
 
     if (isGuestMode) {
-      const all = getLocalDB<{ userId: string; achievements: UserAchievement[] }>(LOCAL_KEYS.ACHIEVEMENTS);
+      const all = getLocalDB<UserAchievements>(LOCAL_KEYS.ACHIEVEMENTS);
       const userIndex = all.findIndex(a => a.userId === currentUserId);
-      const userData = { userId: currentUserId, achievements };
-      
+      const userData: UserAchievements = {
+        userId: currentUserId,
+        achievements,
+        lastUpdated: Date.now(),
+      };
+
       if (userIndex >= 0) {
         all[userIndex] = userData;
       } else {
@@ -1006,7 +1026,7 @@ export const StorageService = {
     } else {
       const colRef = collection(db, "users", currentUserId, collectionName);
       const snap = await getDocs(colRef);
-      return snap.docs.map((d) => ({ ...d.data(), id: d.id }) as T);
+      return snap.docs.map((d) => ({ ...d.data(), id: d.id }) as unknown as T);
     }
   },
 };
@@ -1017,11 +1037,47 @@ const createEmptyStats = (userId: string): UserStats => ({
   totalTimeStudiedMinutes: 0,
   notesCreated: 0,
   quizzesTaken: 0,
-  loginStreak: 0,
+  loginStreak: 1, // today counts as day one
   lastLoginDate: new Date().toISOString(),
   dailyActivity: {},
   highScore: 0,
 });
+
+/**
+ * Stats documents written by older versions of the app can be missing fields
+ * (most importantly `dailyActivity`, which the dashboard chart indexes into).
+ * Fill in the gaps so consumers never have to null-check.
+ */
+const normalizeStats = (
+  stats: Partial<UserStats> | undefined,
+  userId: string,
+): UserStats => {
+  const base = createEmptyStats(userId);
+  if (!stats) return base;
+
+  const dailyActivity =
+    stats.dailyActivity && typeof stats.dailyActivity === "object"
+      ? Object.fromEntries(
+          Object.entries(stats.dailyActivity)
+            .filter(([, minutes]) => Number.isFinite(Number(minutes)))
+            .map(([day, minutes]) => [day, Number(minutes)]),
+        )
+      : {};
+
+  return {
+    ...base,
+    ...stats,
+    id: stats.id || base.id,
+    userId: stats.userId || userId,
+    totalTimeStudiedMinutes: Number(stats.totalTimeStudiedMinutes) || 0,
+    notesCreated: Number(stats.notesCreated) || 0,
+    quizzesTaken: Number(stats.quizzesTaken) || 0,
+    loginStreak: Number(stats.loginStreak) || 0,
+    highScore: Number(stats.highScore) || 0,
+    lastLoginDate: stats.lastLoginDate || base.lastLoginDate,
+    dailyActivity,
+  };
+};
 
 export const saveQuiz = async (quiz: Quiz) => {
   return StorageService.saveQuiz(quiz);

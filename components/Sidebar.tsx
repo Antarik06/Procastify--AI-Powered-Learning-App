@@ -1,249 +1,232 @@
 import React, { useState } from 'react';
 import { ViewState, UserRole } from '../types';
-import { LayoutDashboard, FileText, BookOpen, Clock, BrainCircuit, Gamepad2, LogOut, Flame, Globe, PanelLeftClose, PanelLeftOpen, GraduationCap, Users, KanbanSquare, BookMarked, Menu, X } from 'lucide-react';
-
+import {
+  LayoutDashboard,
+  FileText,
+  BookOpen,
+  Clock,
+  BrainCircuit,
+  Gamepad2,
+  LogOut,
+  Flame,
+  GraduationCap,
+  Menu,
+  X,
+} from 'lucide-react';
 
 interface SidebarProps {
   currentView: ViewState;
   onNavigate: (view: ViewState) => void;
   onLogout: () => void;
-  collapsed: boolean;
-  onToggleCollapse: () => void;
   userRole?: UserRole;
-  user?: { name: string; avatarUrl?: string }; // NEW: Add user prop for avatar
+  user?: { name: string; avatarUrl?: string };
 }
 
+interface NavEntry {
+  view: ViewState;
+  icon: any;
+  label: string;
+}
+
+const STUDENT_NAV: NavEntry[] = [
+  { view: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { view: 'summarizer', icon: FileText, label: 'Summarizer' },
+  { view: 'notes', icon: BookOpen, label: 'My Notes' },
+  { view: 'classrooms', icon: GraduationCap, label: 'My Classrooms' },
+  { view: 'feed', icon: Flame, label: 'Learning Feed' },
+  { view: 'quiz', icon: Gamepad2, label: 'Quiz Arena' },
+  { view: 'routine', icon: Clock, label: 'Routine' },
+  { view: 'focus', icon: BrainCircuit, label: 'Focus Mode' },
+];
+
+const TEACHER_NAV: NavEntry[] = [
+  { view: 'classrooms', icon: GraduationCap, label: 'My Classrooms' },
+  { view: 'notes', icon: BookOpen, label: 'My Notes' },
+];
+
+/**
+ * Floating vertical rail. Icon-only on desktop with hover labels; on mobile it
+ * slides in from the left with the labels always visible.
+ */
 const Sidebar: React.FC<SidebarProps> = ({
   currentView,
   onNavigate,
   onLogout,
-  collapsed,
-  onToggleCollapse,
-  userRole = "student",
+  userRole = 'student',
   user,
 }) => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const navItems = userRole === 'teacher' ? TEACHER_NAV : STUDENT_NAV;
 
   const handleNavigate = (view: ViewState) => {
     onNavigate(view);
-    setMobileMenuOpen(false); // Close mobile menu after navigation
+    setMobileOpen(false);
   };
-  const NavItem = ({
-    view,
+
+  const RailButton = ({
     icon: Icon,
     label,
+    active = false,
+    danger = false,
+    onClick,
   }: {
-    view: ViewState;
     icon: any;
     label: string;
-  }) => {
-    const active = currentView === view;
-    return (
-      <button
-        onClick={() => handleNavigate(view)}
-        className={`w-full flex items-center ${collapsed ? "justify-center px-2" : "gap-3 px-4"} py-3 rounded-xl transition-all duration-300 font-medium group relative overflow-hidden flex-1 max-h-16
-          ${active
-            ? "bg-gradient-to-r from-discord-panel to-discord-panel/80 text-white shadow-lg shadow-discord-accent/20 border border-discord-accent/30"
-            : "text-discord-textMuted hover:bg-gradient-to-r hover:from-discord-hover hover:to-discord-hover/80 hover:text-white hover:scale-105"
-          }`}
-        title={collapsed ? label : undefined}
-      >
-        {active && (
-          <div className="absolute inset-0 bg-gradient-to-r from-discord-accent/10 to-purple-500/10 rounded-xl"></div>
-        )}
-        <Icon
-          size={20}
-          className={`transition-all duration-300 relative z-10 ${collapsed ? "flex-shrink-0" : ""} ${active
-            ? "text-discord-accent drop-shadow-sm"
-            : "text-discord-textMuted group-hover:text-white group-hover:scale-110"
-            }`}
-        />
-        {!collapsed && (
-          <>
-            <span className="relative z-10 group-hover:translate-x-1 transition-transform duration-300">
-              {label}
-            </span>
-            {active && (
-              <div className="absolute right-2 w-2 h-2 bg-discord-accent rounded-full animate-pulse"></div>
-            )}
-          </>
-        )}
-      </button>
-    );
-  };
+    active?: boolean;
+    danger?: boolean;
+    onClick: () => void;
+  }) => (
+    <button
+      onClick={onClick}
+      aria-label={label}
+      aria-current={active ? 'page' : undefined}
+      className={`group relative flex items-center rounded-2xl transition-all duration-200
+        ${mobileOpen ? 'w-full gap-3 px-3 py-2.5 justify-start' : 'w-11 h-11 justify-center'}
+        ${
+          active
+            ? 'bg-discord-accent text-white shadow-lg shadow-discord-accent/30'
+            : danger
+              ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10'
+              : 'text-discord-textMuted hover:text-white hover:bg-white/[0.07]'
+        }`}
+    >
+      {/* Active indicator notch on the rail edge (desktop only) */}
+      {active && !mobileOpen && (
+        <span className="absolute -left-[13px] top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-discord-accent" />
+      )}
+
+      <Icon size={20} className="flex-shrink-0" />
+
+      {mobileOpen ? (
+        <span className="text-sm font-medium">{label}</span>
+      ) : (
+        /* Hover tooltip */
+        <span
+          className="pointer-events-none absolute left-full ml-3 z-50 whitespace-nowrap rounded-lg border border-white/10 bg-[#111214] px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-xl transition-all duration-150 -translate-x-1 group-hover:translate-x-0 group-hover:opacity-100"
+        >
+          {label}
+        </span>
+      )}
+    </button>
+  );
 
   return (
     <>
-      {/* Mobile Menu Button - Floating FAB */}
-      <button
-        onClick={() => setMobileMenuOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-40 p-3 bg-discord-accent/20 backdrop-blur-md border border-discord-accent/30 text-white rounded-full shadow-lg shadow-discord-accent/20 hover:bg-discord-accent/40 hover:shadow-discord-accent/40 transition-all duration-300 hover:scale-110"
-        aria-label="Open menu"
-      >
-        <Menu size={22} />
-      </button>
+      {/* Mobile trigger */}
+      {!mobileOpen && (
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="lg:hidden fixed top-4 left-4 z-40 flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-[#16171a]/90 text-white shadow-xl backdrop-blur-xl transition-all hover:bg-white/10"
+          aria-label="Open menu"
+        >
+          <Menu size={20} />
+        </button>
+      )}
 
-      {/* Backdrop for mobile */}
-      {mobileMenuOpen && (
+      {/* Mobile backdrop */}
+      {mobileOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity"
-          onClick={() => setMobileMenuOpen(false)}
+          className="lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+          onClick={() => setMobileOpen(false)}
         />
       )}
 
-      {/* Sidebar - Hidden on mobile by default, shown as modal when mobileMenuOpen is true */}
-      <div
-        className={`${collapsed ? "w-20" : "w-64"} bg-gradient-to-b from-[#111214] to-[#0a0b0c] flex flex-col h-screen fixed left-0 top-0 border-r border-white/10 backdrop-blur-sm transition-all duration-300 ease-in-out
-          ${mobileMenuOpen ? 'z-50 translate-x-0' : '-translate-x-full lg:translate-x-0'}
-          lg:z-50`}
+      <aside
+        className={`fixed left-3 top-1/2 z-50 flex -translate-y-1/2 flex-col gap-1 rounded-[28px] border border-white/10 bg-[#16171a]/90 p-2.5 shadow-2xl shadow-black/50 backdrop-blur-xl transition-transform duration-300
+          ${
+            mobileOpen
+              ? 'w-56 items-stretch translate-x-0'
+              : 'w-[68px] items-center -translate-x-[130%] lg:translate-x-0'
+          }`}
       >
-      {/* Header */}
-      <div
-        className={`flex items-center border-b border-white/5 bg-[#111214]/50 transition-all duration-300 ${collapsed ? "p-4 justify-center" : "px-5 py-5 justify-between"}`}
-      >
-        {!collapsed ? (
-          <>
-            <div className="flex items-center">
-              <div className="w-8 h-8 bg-gradient-to-br from-discord-accent to-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-discord-accent/30 hover:shadow-discord-accent/50 transition-all duration-300 hover:scale-110 group">
-                <BrainCircuit
-                  className="text-white group-hover:rotate-12 transition-transform duration-300"
-                  size={18}
-                />
-              </div>
-              <h1 className="text-xl font-bold text-white tracking-tight hover:text-discord-accent transition-colors duration-300 cursor-default ml-3 font-display">
-                Procastify
-              </h1>
-            </div>
-            <div className="flex items-center gap-2">
-              {/* Close button for mobile */}
-              <button
-                onClick={() => setMobileMenuOpen(false)}
-                className="lg:hidden flex items-center justify-center w-8 h-8 text-discord-textMuted hover:text-white hover:bg-discord-hover rounded-lg transition-all duration-300 group"
-                title="Close menu"
-              >
-                <X
-                  size={18}
-                  className="group-hover:scale-110 transition-transform"
-                />
-              </button>
-              {/* Collapse button for desktop */}
-              <button
-                onClick={onToggleCollapse}
-                className="hidden lg:flex items-center justify-center w-8 h-8 text-discord-textMuted hover:text-white hover:bg-discord-hover rounded-lg transition-all duration-300 group"
-                title="Collapse sidebar"
-              >
-                <PanelLeftClose
-                  size={18}
-                  className="group-hover:scale-110 transition-transform"
-                />
-              </button>
-            </div>
-          </>
-        ) : (
-          <div className="w-10 h-10 bg-gradient-to-br from-discord-accent to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-discord-accent/30 hover:shadow-discord-accent/50 transition-all duration-300 hover:scale-110 group">
-            <BrainCircuit
-              className="text-white group-hover:rotate-12 transition-transform duration-300"
-              size={24}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* Toggle Button (Collapsed Only) */}
-      {collapsed && (
-        <div className="px-4 pt-4 flex justify-center">
+        {/* Brand */}
+        <div className={`flex items-center ${mobileOpen ? 'justify-between px-1 pb-1' : 'justify-center'}`}>
           <button
-            onClick={onToggleCollapse}
-            className="flex items-center justify-center w-10 h-10 text-discord-textMuted hover:text-white hover:bg-discord-hover rounded-lg transition-all duration-300 group"
-            title="Expand sidebar"
+            onClick={() => handleNavigate(userRole === 'teacher' ? 'classrooms' : 'dashboard')}
+            className="flex items-center gap-2.5"
+            aria-label="Procastify home"
           >
-            <PanelLeftOpen
-              size={20}
-              className="group-hover:scale-110 transition-transform"
-            />
-          </button>
-        </div>
-      )}
-
-
-      <nav className="flex-1 px-3 py-4 flex flex-col justify-evenly gap-1 overflow-y-auto no-scrollbar">
-        {/* Navigation 
-        <NavItem view="dashboard" icon={LayoutDashboard} label="Dashboard" />
-        <NavItem view="classrooms" icon={GraduationCap} label="Classrooms" />
-        <NavItem view="summarizer" icon={FileText} label="Summarizer" />
-        <NavItem view="notes" icon={BookOpen} label="My Notes" />
-        <NavItem view="feed" icon={Flame} label="Learning Feed" />
-        <NavItem view="quiz" icon={Gamepad2} label="Quiz Arena" />
-        <NavItem view="routine" icon={Clock} label="Routine" />
-        <NavItem view="focus" icon={BrainCircuit} label="Focus Mode" />
-         <NavItem view="studentClassrooms" icon={Users} label="Classrooms" />
-         <NavItem view="workflow" icon={KanbanSquare} label="Workflow Board" />
-         <NavItem view="examTracker" icon={BookMarked} label="Exam Tracker" /> */}
-
-        {userRole === "teacher" ? (
-          <>
-            <NavItem view="classrooms" icon={GraduationCap} label="My Classrooms" />
-            <NavItem view="notes" icon={BookOpen} label="My Notes" />
-          </>
-        ) : (
-          <>
-            <NavItem view="dashboard" icon={LayoutDashboard} label="Dashboard" />
-            <NavItem view="summarizer" icon={FileText} label="Summarizer" />
-            <NavItem view="notes" icon={BookOpen} label="My Notes" />
-            <NavItem view="classrooms" icon={GraduationCap} label="My Classrooms" />
-            <NavItem view="feed" icon={Flame} label="Learning Feed" />
-            <NavItem view="quiz" icon={Gamepad2} label="Quiz Arena" />
-            <NavItem view="routine" icon={Clock} label="Routine" />
-            <NavItem view="focus" icon={BrainCircuit} label="Focus Mode" />
-          </>
-        )}
-      </nav>
-
-      {/* Logout Button */}
-      <div
-        className={`${collapsed ? "p-3 mb-4" : "p-4 mx-4 mb-4"} border-t border-white/10 mt-auto`}
-      >
-        {/* User Profile Section */}
-        {user && (
-          <div className={`flex items-center ${collapsed ? "justify-center mb-3" : "gap-3 mb-3 px-2"}`}>
-            {user.avatarUrl && (
-              <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-discord-accent/30 flex-shrink-0">
-                <img
-                  src={user.avatarUrl}
-                  alt={`${user.name}'s avatar`}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
-            {!collapsed && (
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">{user.name}</p>
-                <p className="text-xs text-discord-textMuted capitalize">{userRole}</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        <button
-          onClick={() => {
-            onLogout();
-            setMobileMenuOpen(false);
-          }}
-          className={`w-full flex items-center ${collapsed ? "justify-center px-2" : "gap-3 px-4"} py-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-all duration-300 font-medium group hover:scale-105 border border-transparent hover:border-red-500/20`}
-          title={collapsed ? "Log Out" : undefined}
-        >
-          <LogOut
-            size={20}
-            className="group-hover:rotate-12 transition-transform duration-300 flex-shrink-0"
-          />
-          {!collapsed && (
-            <span className="group-hover:translate-x-1 transition-transform duration-300">
-              Log Out
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-discord-accent to-purple-600 shadow-lg shadow-discord-accent/30 transition-transform hover:scale-105">
+              <BrainCircuit size={20} className="text-white" />
             </span>
+            {mobileOpen && (
+              <span className="text-base font-bold tracking-tight text-white">Procastify</span>
+            )}
+          </button>
+          {mobileOpen && (
+            <button
+              onClick={() => setMobileOpen(false)}
+              className="rounded-lg p-1.5 text-discord-textMuted transition-colors hover:bg-white/5 hover:text-white"
+              aria-label="Close menu"
+            >
+              <X size={18} />
+            </button>
           )}
-        </button>
-      </div>
-    </div >
+        </div>
+
+        <div className={`my-1.5 h-px bg-white/10 ${mobileOpen ? 'w-full' : 'w-8'}`} />
+
+        {/* Navigation */}
+        <nav className={`flex flex-col gap-1 ${mobileOpen ? 'w-full' : 'items-center'}`}>
+          {navItems.map((item) => (
+            <RailButton
+              key={item.view}
+              icon={item.icon}
+              label={item.label}
+              active={currentView === item.view}
+              onClick={() => handleNavigate(item.view)}
+            />
+          ))}
+        </nav>
+
+        <div className={`my-1.5 h-px bg-white/10 ${mobileOpen ? 'w-full' : 'w-8'}`} />
+
+        {/* User + logout */}
+        <div className={`flex flex-col gap-1 ${mobileOpen ? 'w-full' : 'items-center'}`}>
+          {user && (
+            <div
+              className={`group relative flex items-center ${
+                mobileOpen ? 'w-full gap-3 px-3 py-2' : 'h-11 w-11 justify-center'
+              }`}
+            >
+              <span className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-full border border-white/15">
+                {user.avatarUrl ? (
+                  <img
+                    src={user.avatarUrl}
+                    alt={`${user.name}'s avatar`}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="flex h-full w-full items-center justify-center bg-discord-accent/20 text-xs font-bold text-white">
+                    {user.name.charAt(0).toUpperCase()}
+                  </span>
+                )}
+              </span>
+              {mobileOpen ? (
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium text-white">{user.name}</span>
+                  <span className="block text-xs capitalize text-discord-textMuted">{userRole}</span>
+                </span>
+              ) : (
+                <span className="pointer-events-none absolute left-full ml-3 z-50 whitespace-nowrap rounded-lg border border-white/10 bg-[#111214] px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-xl transition-all duration-150 -translate-x-1 group-hover:translate-x-0 group-hover:opacity-100">
+                  {user.name} · <span className="capitalize text-discord-textMuted">{userRole}</span>
+                </span>
+              )}
+            </div>
+          )}
+
+          <RailButton
+            icon={LogOut}
+            label="Log Out"
+            danger
+            onClick={() => {
+              onLogout();
+              setMobileOpen(false);
+            }}
+          />
+        </div>
+      </aside>
     </>
   );
 };

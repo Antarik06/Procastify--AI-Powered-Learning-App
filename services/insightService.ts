@@ -1,9 +1,13 @@
 import { Note, UserStats, UserPreferences, Quiz } from '../types';
 import { GoogleGenAI, Type } from "@google/genai";
+import { getGeminiApiKey } from './env';
 
 const getAI = () => {
-  const apiKey = (import.meta.env as any).VITE_GEMINI_API_KEY || (process.env as any).VITE_GEMINI_API_KEY;
-  return new GoogleGenAI({ apiKey: apiKey || '' });
+  const apiKey = getGeminiApiKey();
+  if (!apiKey) {
+    throw new Error('Gemini API key missing. Set VITE_GEMINI_API_KEY in your .env.local file.');
+  }
+  return new GoogleGenAI({ apiKey });
 };
 
 const MODEL_TEXT = 'gemini-3-flash-preview';
@@ -166,8 +170,6 @@ const generateAIInsight = async (
   profile: UserProfile,
   topNote: NoteWithPriority | undefined
 ): Promise<{ welcomeMessage: string; mainMessage: string; insightType: InsightType }> => {
-  const ai = getAI();
-  
   const context = {
     userName: user.name || 'there',
     profile,
@@ -210,6 +212,7 @@ Guidelines:
 - Reference the specific recommended note if available`;
 
   try {
+    const ai = getAI();
     const response = await ai.models.generateContent({
       model: MODEL_TEXT,
       contents: prompt,

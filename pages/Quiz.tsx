@@ -1,6 +1,18 @@
-import { ActionFunction, LoaderFunction, redirect } from "react-router-dom"; // Just minimal dummy if needed, but keeping original imports
 import React, { useState, useEffect } from 'react';
-import { Note, Quiz, UserPreferences, UserStats, QuizReport, QuizModeType, AttemptedFillQuestion, AttemptedExplainQuestion } from '../types';
+import {
+    Note,
+    Quiz,
+    UserPreferences,
+    UserStats,
+    QuizReport,
+    QuizModeType,
+    AttemptedFillQuestion,
+    AttemptedExplainQuestion,
+    MultiplayerQuizSession,
+    QuizParticipant,
+    QuizAnswer,
+    QuizLeaderboard,
+} from '../types';
 import { generateQuizFromNotes, generateTrueFalseQuiz, generateQuizReport, generateFillInTheBlanksQuiz, generateExplainQuiz } from '../services/geminiService';
 import { StorageService } from '../services/storageService';
 import { Play, Trophy, CheckCircle, XCircle, Zap, Target, BookOpen, AlertCircle, RefreshCw, Layers, Clock, ArrowRight, BrainCircuit, TrendingUp, Users, Loader2, MoreHorizontal } from 'lucide-react';
@@ -37,10 +49,10 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
     const [generatingReport, setGeneratingReport] = useState(false);
 
     // Multiplayer state
-    const [multiplayerSession, setMultiplayerSession] = useState<import('../types').MultiplayerQuizSession | null>(null);
+    const [multiplayerSession, setMultiplayerSession] = useState<MultiplayerQuizSession | null>(null);
     const [joinCode, setJoinCode] = useState('');
     const [joiningSession, setJoiningSession] = useState(false);
-    const [leaderboard, setLeaderboard] = useState<import('../types').QuizLeaderboard | null>(null);
+    const [leaderboard, setLeaderboard] = useState<QuizLeaderboard | null>(null);
 
 
     const [quiz, setQuiz] = useState<Quiz | null>(null);
@@ -149,7 +161,7 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
             const sessionId = `quiz_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             const inviteCode = FirebaseService.generateQuizCode();
 
-            const session: import('../types').MultiplayerQuizSession = {
+            const session: MultiplayerQuizSession = {
                 id: sessionId,
                 hostId: user.id,
                 hostName: user.name,
@@ -227,7 +239,7 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
                 return;
             }
 
-            const participant: import('../types').QuizParticipant = {
+            const participant: QuizParticipant = {
                 id: user.id,
                 userId: user.id,
                 userName: user.name,
@@ -263,7 +275,7 @@ const QuizPage: React.FC<QuizProps> = ({ notes, user, stats, setStats }) => {
         // Multiplayer mode - submit answer to Firebase
         if (multiplayerSession) {
             const { FirebaseService } = await import('../services/firebaseService');
-            const answer: import('../types').QuizAnswer = {
+            const answer: QuizAnswer = {
                 questionIndex: currentQIndex,
                 selectedOption: idx,
                 isCorrect,

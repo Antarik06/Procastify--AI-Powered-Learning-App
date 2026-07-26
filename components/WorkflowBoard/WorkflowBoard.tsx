@@ -24,10 +24,9 @@ import { BoardTask } from './types';
 interface WorkflowBoardProps {
   userId: string;
   onClose: () => void;
-  sidebarCollapsed?: boolean;
 }
 
-const WorkflowBoard: React.FC<WorkflowBoardProps> = ({ userId, onClose, sidebarCollapsed = false }) => {
+const WorkflowBoard: React.FC<WorkflowBoardProps> = ({ userId, onClose }) => {
   const {
     board,
     columns,
@@ -244,7 +243,7 @@ const WorkflowBoard: React.FC<WorkflowBoardProps> = ({ userId, onClose, sidebarC
 
   return (
     <div
-      className={`fixed top-0 right-0 bottom-0 z-40 bg-discord-bg flex flex-col transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'left-20' : 'left-64'}`}
+      className="fixed top-0 right-0 bottom-0 left-0 lg:left-[92px] z-40 bg-discord-bg flex flex-col transition-all duration-300 ease-in-out"
     >
       {/* ── Top bar ── */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-discord-panel shrink-0">
