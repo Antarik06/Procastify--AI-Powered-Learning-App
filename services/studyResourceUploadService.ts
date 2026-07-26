@@ -7,7 +7,7 @@ import {
   UploadTaskSnapshot,
 } from "firebase/storage";
 import { UploadResult, ValidationResult } from "../types";
-import { validateFileType, validateFileSize } from "../utils/studyResourceValidation";
+import { validateFileType, validateFileSize } from "../features/study-resources/utils/studyResourceValidation";
 
 /**
  * Service for handling file uploads to Firebase Storage

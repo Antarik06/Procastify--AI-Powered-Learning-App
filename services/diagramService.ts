@@ -1,6 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { v4 as uuidv4 } from "uuid";
-import { Shape, ShapeBase } from "../components/canvas/types";
+import { Shape, ShapeBase } from "../features/canvas/engine/types";
 import { getGeminiApiKey } from "./env";
 
 const getAI = () => {
